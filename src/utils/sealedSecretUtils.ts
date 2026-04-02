@@ -11,6 +11,11 @@ import { getSealedSecretsCertificate, isK8sReachable, UserSecretData } from '../
 const debug = Debug('otomi:sealedSecretUtils')
 const env = cleanEnv({})
 
+// Kubeseal RSA-encrypted ciphertext, once base64-encoded, is typically 300+ characters.
+// A conservative minimum length to distinguish from plain text values like passwords or API keys.
+const MIN_SEALED_SECRET_CIPHERTEXT_LENGTH = 200
+const SEALED_SECRET_CIPHERTEXT_PATTERN = /^[A-Za-z0-9+/=]+$/
+
 export function sealedSecretManifest(
   teamId: string | undefined,
   data: SealedSecretManifestRequest,
@@ -105,11 +110,9 @@ export async function getSealedSecretsPEM(): Promise<string> {
   }
 }
 
-// Kubeseal ciphertext is a long base64 string (typically 300+ chars).
-// Plain text values are shorter and likely not valid base64.
 function isEncryptedValue(value: string): boolean {
-  if (value.length < 200) return false
-  return /^[A-Za-z0-9+/=]+$/.test(value)
+  if (value.length < MIN_SEALED_SECRET_CIPHERTEXT_LENGTH) return false
+  return SEALED_SECRET_CIPHERTEXT_PATTERN.test(value)
 }
 
 export async function encryptSecretValue(pem: string, namespace: string, value: string): Promise<string> {

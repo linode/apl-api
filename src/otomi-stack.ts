@@ -986,9 +986,7 @@ export default class OtomiStack {
     debug(`Saving sealed secrets of team: ${teamId}`)
     const { metadata } = data
 
-    // Server-side encryption fallback: ensureEncryptedData checks each value using isEncryptedValue(),
-    // which detects plain text by verifying that kubeseal ciphertext is always a long (200+ chars) base64 string.
-    // Any value that is shorter or not valid base64 is treated as plain text and encrypted server-side.
+    // Server-side encryption fallback: encrypts any plain text values that weren't sealed client-side.
     if (data.spec.encryptedData && Object.keys(data.spec.encryptedData).length > 0) {
       data.spec.encryptedData = await ensureEncryptedData(data.spec.encryptedData, teamId)
     }
