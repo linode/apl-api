@@ -22,7 +22,7 @@ import { apiRateLimiter, authRateLimiter } from 'src/middleware/rate-limit'
 import { setMockIdx } from 'src/mocks'
 import { AplResponseObject, OpenAPIDoc, Schema, SealedSecretManifestResponse } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
-import { extract, getPaths, getValuesSchema } from 'src/utils'
+import { getValuesSchema } from 'src/utils'
 import {
   CATALOG_CACHE_REFRESH_INTERVAL_MS,
   CHECK_LATEST_COMMIT_INTERVAL,
@@ -48,7 +48,6 @@ debug('NODE_ENV: ', process.env.NODE_ENV)
 
 type OtomiSpec = {
   spec: OpenAPIDoc
-  secretPaths: string[]
   valuesSchema: Record<string, any>
 }
 
@@ -84,7 +83,7 @@ const resourceStatus = async (errorSet) => {
     debug('Values are not loaded yet')
     return
   }
-  const { cluster } = otomiStack.getSettings(['cluster'])
+  const { cluster } = await otomiStack.getSettings(['cluster'])
   const domainSuffix = cluster?.domainSuffix
   const resources: Record<string, (AplResponseObject | SealedSecretManifestResponse)[]> = {
     workloads: otomiStack.getAllAplWorkloads(),
@@ -126,16 +125,10 @@ export const loadSpec = async (): Promise<void> => {
   debug(`Loading api spec from: ${openApiPath}`)
   const spec = (await $parser.parse(openApiPath)) as OpenAPIDoc
   const valuesSchema = await getValuesSchema()
-  const secrets = extract(valuesSchema, (o, i) => i === 'x-secret')
-  const secretPaths = getPaths(secrets)
-  otomiSpec = { spec, secretPaths, valuesSchema }
+  otomiSpec = { spec, valuesSchema }
 }
 export const getSpec = (): OtomiSpec => {
   return otomiSpec
-}
-export function getSecretPaths(): string[] {
-  const { secretPaths } = getSpec()
-  return secretPaths
 }
 export const getAppSchema = (appId: string): Schema => {
   let id: string = appId

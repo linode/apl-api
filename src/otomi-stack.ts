@@ -5,8 +5,9 @@ import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@lino
 import { existsSync, rmSync } from 'fs'
 import { readFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
-import { cloneDeep, filter, get, isEmpty, map, merge, omit, pick, set, unset } from 'lodash'
-import { getAppList, getAppSchema, getSecretPaths } from 'src/app'
+import { cloneDeep, filter, isEmpty, map, merge, omit, pick, set, unset } from 'lodash'
+import { getAppList, getAppSchema } from 'src/app'
+import { APL_SECRETS_NAMESPACE, APL_USERS_NAMESPACE, PLATFORM_SECRETS_NAME } from 'src/constants'
 import {
   AlreadyExists,
   BadRequestError,
@@ -114,13 +115,14 @@ import { v4 as uuidv4 } from 'uuid'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { getAIModels } from './ai/aiModelHandler'
 import { DatabaseCR } from './ai/DatabaseCR'
-import { getResourceFilePath, getSecretFilePath } from './fileStore/file-map'
+import { getResourceFilePath } from './fileStore/file-map'
 import {
   checkPodExists,
   getCloudttyActiveTime,
   getKubernetesVersion,
   getSecretValues,
   getTeamSecretsFromK8s,
+  isK8sReachable,
   watchPodUntilRunning,
 } from './k8s_operations'
 import CloudTty from './tty'
@@ -133,8 +135,26 @@ import {
   testPublicRepoConnect,
 } from './utils/codeRepoUtils'
 import { getAplObjectFromV1, getV1MergeObject, getV1ObjectFromApl } from './utils/manifests'
-import { ensureSealedSecretMetadata, getSealedSecretsPEM, sealedSecretManifest } from './utils/sealedSecretUtils'
-import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
+import {
+  createPlatformSealedSecretManifest,
+  createUserSealedSecret,
+  encryptAndMergeSecrets,
+  ensureEncryptedData,
+  ensureSealedSecretMetadata,
+  extractSecretPaths,
+  extractSettingsSecrets,
+  filterChangedSecrets,
+  getSealedSecretsPEM,
+  removeSettingsSecrets,
+  sealedSecretManifest,
+} from './utils/sealedSecretUtils'
+import {
+  getKeycloakUsers,
+  getUserSecretData,
+  isValidUsername,
+  listUserSecretData,
+  userSecretDataToUser,
+} from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
 import {
   fetchChartYaml,
@@ -220,10 +240,10 @@ export default class OtomiStack {
     return this.cloudTty
   }
 
-  getAppList() {
+  async getAppList() {
     let apps = getAppList()
     apps = apps.filter((item) => item !== 'ingress-nginx')
-    const { ingress } = this.getSettings()
+    const { ingress } = await this.getSettings()
     const allClasses = ['platform'].concat(ingress?.classes?.map((obj) => obj.className as string) || [])
     const ingressApps = allClasses.map((name) => `ingress-nginx-${name}`)
     return apps.concat(ingressApps)
@@ -317,8 +337,8 @@ export default class OtomiStack {
     debug(`Worktree created for ${this.editor} in ${this.sessionId}`)
   }
 
-  getSettingsInfo(): SettingsInfo {
-    const settings = this.getSettings(['cluster', 'dns', 'otomi', 'ingress'])
+  async getSettingsInfo(): Promise<SettingsInfo> {
+    const settings = await this.getSettings(['cluster', 'dns', 'otomi', 'smtp', 'ingress'])
     const otomiInfo = pick(settings.otomi, [
       'hasExternalDNS',
       'hasExternalIDP',
@@ -339,11 +359,11 @@ export default class OtomiStack {
   }
 
   async createObjWizard(data: ObjWizard): Promise<ObjWizard> {
-    const { obj } = this.getSettings(['obj'])
+    const { obj } = await this.getSettings(['obj'])
     const settingsdata = { obj: { ...obj, showWizard: data.showWizard } }
     const createdBuckets = [] as Array<string>
     if (data?.apiToken && data?.regionId) {
-      const { cluster } = this.getSettings(['cluster'])
+      const { cluster } = await this.getSettings(['cluster'])
       let lkeClusterId: undefined | string = defineClusterId(cluster?.name)
       if (lkeClusterId === undefined) {
         return { status: 'error', errorMessage: 'Cluster name is not found.' }
@@ -413,7 +433,7 @@ export default class OtomiStack {
     } as ObjWizard
   }
 
-  getSettings(keys?: string[]): Settings {
+  async getSettings(keys?: string[]): Promise<Settings> {
     const settings: Settings = {}
     const settingsFileMaps = getSettingsFileMaps(this.getRepoPath())
 
@@ -433,22 +453,102 @@ export default class OtomiStack {
       if (keys.includes('otomi')) {
         this.transformOtomiNodeSelector(settings)
       }
-
-      return settings
-    }
-
-    // No keys specified: fetch all settings
-    for (const [name, fileMap] of settingsFileMaps.entries()) {
-      const files = this.fileStore.getPlatformResourcesByKind(fileMap.kind)
-      for (const [, content] of files) {
-        settings[name] = content?.spec || content
+    } else {
+      // No keys specified: fetch all settings
+      for (const [name, fileMap] of settingsFileMaps.entries()) {
+        const files = this.fileStore.getPlatformResourcesByKind(fileMap.kind)
+        for (const [, content] of files) {
+          settings[name] = content?.spec || content
+        }
       }
+
+      // Apply otomi nodeSelector transformation
+      this.transformOtomiNodeSelector(settings)
     }
 
-    // Apply otomi nodeSelector transformation
-    this.transformOtomiNodeSelector(settings)
+    await this.mergeEncryptedSecretsIntoSettings(settings, keys, settingsFileMaps)
 
     return settings
+  }
+
+  private async mergeEncryptedSecretsIntoSettings(
+    settings: Settings,
+    keys: string[] | undefined,
+    settingsFileMaps: Map<string, any>,
+  ): Promise<void> {
+    const valuesSchema = await getValuesSchema()
+    const settingKeys = keys && keys.length > 0 ? keys : Array.from(settingsFileMaps.keys())
+
+    for (const settingId of settingKeys) {
+      if (!settings[settingId]) continue
+
+      const subSchema = valuesSchema.properties?.[settingId]
+      if (!subSchema) continue
+
+      const secretPaths = extractSecretPaths(subSchema)
+      if (secretPaths.length === 0) continue
+
+      const sealedSecretName = `${settingId}-secrets`
+      const manifest = this.fileStore.getNamespaceResource(
+        'AplNamespaceSealedSecret',
+        sealedSecretName,
+        APL_SECRETS_NAMESPACE,
+      )
+      if (!manifest) continue
+
+      const encryptedData = (manifest as SealedSecretManifestResponse).spec?.encryptedData || {}
+      for (const dotPath of secretPaths) {
+        const underscoreKey = dotPath.replace(/\./g, '_')
+        if (underscoreKey in encryptedData) {
+          set(settings[settingId] as Record<string, any>, dotPath, encryptedData[underscoreKey])
+        }
+      }
+    }
+  }
+
+  /**
+   * Extracts secrets from settings data, encrypts changed values,
+   * merges with existing sealed secret, and saves the result.
+   */
+  private async extractAndStoreSettingsSecrets(
+    settingId: string,
+    updatedSettingsData: Record<string, any>,
+  ): Promise<AplRecord | undefined> {
+    const valuesSchema = await getValuesSchema()
+    const subSchema = valuesSchema.properties?.[settingId]
+    if (!subSchema) return undefined
+
+    const secretPaths = extractSecretPaths(subSchema)
+    const newSecrets = extractSettingsSecrets(secretPaths, updatedSettingsData[settingId])
+    if (Object.keys(newSecrets).length === 0) return undefined
+
+    const sealedSecretName = `${settingId}-secrets`
+    const sealedSecretPath = getNamespaceSealedSecretsValuesFilePath(APL_SECRETS_NAMESPACE, sealedSecretName)
+
+    const existingManifest = await this.git.readFile(sealedSecretPath)
+    const existingEncryptedData: Record<string, string> =
+      (existingManifest?.spec?.encryptedData as Record<string, string>) || {}
+
+    const changedSecrets = filterChangedSecrets(newSecrets, existingEncryptedData)
+    const mergedEncryptedData = await encryptAndMergeSecrets(
+      sealedSecretName,
+      APL_SECRETS_NAMESPACE,
+      changedSecrets,
+      existingEncryptedData,
+    )
+
+    return this.saveNamespaceSealedSecret(APL_SECRETS_NAMESPACE, {
+      kind: 'SealedSecret',
+      metadata: { name: sealedSecretName },
+      spec: {
+        encryptedData: mergedEncryptedData,
+        template: {
+          type: 'kubernetes.io/opaque',
+          immutable: false,
+          metadata: { name: sealedSecretName, namespace: APL_SECRETS_NAMESPACE },
+        },
+      },
+    })
   }
 
   private transformOtomiNodeSelector(settings: Settings): void {
@@ -516,21 +616,12 @@ export default class OtomiStack {
   }
 
   async editSettings(data: Settings, settingId: string): Promise<Settings> {
-    const settings = this.getSettings()
+    const settings = await this.getSettings()
     await this.editIngressApps(settings, data, settingId)
     const updatedSettingsData: any = { ...data }
-    // Preserve the otomi.adminPassword and otomi.git.password if not present when editing otomi settings
     if (settingId === 'otomi') {
-      updatedSettingsData.otomi = {
-        ...updatedSettingsData.otomi,
-        adminPassword: settings.otomi?.adminPassword,
-        git: {
-          ...updatedSettingsData.otomi?.git,
-          ...(!updatedSettingsData.otomi?.git?.password && { password: settings.otomi?.git?.password }),
-        },
-      }
       // convert otomi.nodeSelector to object
-      if (Array.isArray(updatedSettingsData.otomi.nodeSelector)) {
+      if (Array.isArray(updatedSettingsData.otomi?.nodeSelector)) {
         const nodeSelectorArray = updatedSettingsData.otomi.nodeSelector
         const nodeSelectorObject = nodeSelectorArray.reduce((acc, { name, value }) => {
           return { ...acc, [name]: value }
@@ -539,7 +630,19 @@ export default class OtomiStack {
       }
     }
 
-    settings[settingId] = removeBlankAttributes(updatedSettingsData[settingId] as Record<string, any>)
+    const sealedSecretRecord = await this.extractAndStoreSettingsSecrets(settingId, updatedSettingsData)
+
+    // Strip secrets from settings before disk storage
+    const valuesSchema = await getValuesSchema()
+    const subSchema = valuesSchema.properties?.[settingId]
+    if (subSchema) {
+      const secretPaths = extractSecretPaths(subSchema)
+      const diskData = cloneDeep(updatedSettingsData[settingId])
+      removeSettingsSecrets(secretPaths, diskData)
+      settings[settingId] = removeBlankAttributes(diskData as Record<string, any>)
+    } else {
+      settings[settingId] = removeBlankAttributes(updatedSettingsData[settingId] as Record<string, any>)
+    }
 
     const settingKindMap = getSettingsFileMaps(this.getRepoPath())
     const kind = settingKindMap.get(settingId)
@@ -553,17 +656,20 @@ export default class OtomiStack {
     this.fileStore.set(filePath, aplObject)
 
     await this.saveSettings()
-    await this.doDeployment({ filePath, content: aplObject }, true, [
-      `${this.getRepoPath()}/env/settings/secrets.${settingId}.yaml`,
-    ])
+    const aplRecords: AplRecord[] = [{ filePath, content: aplObject }]
+    if (sealedSecretRecord) aplRecords.push(sealedSecretRecord)
+    await this.doDeployments(aplRecords)
+
+    // Return settings with secret values from the incoming data
+    settings[settingId] = removeBlankAttributes(updatedSettingsData[settingId] as Record<string, any>)
     return settings
   }
 
-  filterExcludedApp(apps: App | App[]) {
+  async filterExcludedApp(apps: App | App[]) {
     const preInstalledExcludedApps = env.PREINSTALLED_EXCLUDED_APPS.apps
     const hiddenApps = env.HIDDEN_APPS.apps
     const excludedApps = preInstalledExcludedApps.concat(hiddenApps)
-    const settingsInfo = this.getSettingsInfo()
+    const settingsInfo = await this.getSettingsInfo()
     if (!Array.isArray(apps)) {
       if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled && excludedApps.includes(apps.id)) {
         // eslint-disable-next-line no-param-reassign
@@ -580,9 +686,9 @@ export default class OtomiStack {
     return apps
   }
 
-  getTeamApp(teamId: string, id: string): App | ExcludedApp {
+  async getTeamApp(teamId: string, id: string): Promise<App | ExcludedApp> {
     const app = this.getApp(id)
-    this.filterExcludedApp(app)
+    await this.filterExcludedApp(app)
 
     if (teamId === 'admin') return app
     return { id: app.id, enabled: app.enabled }
@@ -599,14 +705,14 @@ export default class OtomiStack {
     return { values: content.spec, id: content.metadata.name } as App
   }
 
-  getApps(): Array<App> {
-    const appList = this.getAppList()
+  async getApps(): Promise<Array<App>> {
+    const appList = await this.getAppList()
 
     const allApps = appList.map((id) => {
       return this.getApp(id)
     })
 
-    const providerSpecificApps = this.filterExcludedApp(allApps) as App[]
+    const providerSpecificApps = (await this.filterExcludedApp(allApps)) as App[]
 
     return providerSpecificApps.map((app) => {
       return {
@@ -616,8 +722,8 @@ export default class OtomiStack {
     })
   }
 
-  getTeamApps(teamId: string): Array<App> {
-    const allApps = this.getApps()
+  async getTeamApps(teamId: string): Promise<Array<App>> {
+    const allApps = await this.getApps()
 
     if (teamId === 'admin') return allApps
 
@@ -653,7 +759,7 @@ export default class OtomiStack {
     this.fileStore.set(filePath, aplApp)
 
     await this.saveAdminApp(app)
-    await this.doDeployment({ filePath, content: aplApp }, true, [`${this.getRepoPath()}/env/apps/secrets.${id}.yaml`])
+    await this.doDeployment({ filePath, content: aplApp })
     return this.getApp(id)
   }
 
@@ -686,11 +792,7 @@ export default class OtomiStack {
     if (aplRecords.length === 0) {
       throw new Error(`Failed toggling apps ${ids.toString()}`)
     }
-    await this.doDeployments(
-      aplRecords,
-      true,
-      ids.map((id) => `${this.getRepoPath()}/env/apps/secrets.${id}.yaml`),
-    )
+    await this.doDeployments(aplRecords)
   }
 
   getTeams(): Array<Team> {
@@ -781,10 +883,10 @@ export default class OtomiStack {
     if (teamName.length < 3) throw new ValidationError('Team name must be at least 3 characters long')
     if (teamName.length > 9) throw new ValidationError('Team name must not exceed 9 characters')
 
-    if (isEmpty(data.spec.password)) {
+    let password = data.spec.password as string
+    if (isEmpty(password)) {
       debug(`creating password for team '${teamName}'`)
-      // eslint-disable-next-line no-param-reassign
-      data.spec.password = generatePassword({
+      password = generatePassword({
         length: 16,
         numbers: true,
         symbols: false,
@@ -794,9 +896,21 @@ export default class OtomiStack {
       })
     }
 
+    // Encrypt password into a SealedSecret manifest
+    const sealedSecretName = `team-${teamName}-settings-secrets`
+    const sealedSecretYaml = await createPlatformSealedSecretManifest(sealedSecretName, APL_SECRETS_NAMESPACE, {
+      password,
+    })
+    const sealedSecretPath = getNamespaceSealedSecretsValuesFilePath(APL_SECRETS_NAMESPACE, sealedSecretName)
+    await this.git.writeTextFile(sealedSecretPath, sealedSecretYaml)
+
+    // Remove password from team spec before saving settings.yaml
+    // eslint-disable-next-line no-param-reassign
+    delete data.spec.password
+
     const teamObject = toTeamObject(teamName, data)
     const team = await this.saveTeam(teamObject)
-    await this.doDeployment(team, true, [`${this.getRepoPath()}/env/teams/${teamName}/secrets.settings.yaml`])
+    await this.doDeployment(team)
     return team.content as AplTeamSettingsResponse
   }
 
@@ -817,7 +931,7 @@ export default class OtomiStack {
 
     const teamObject = buildTeamObject(currentTeam, updatedSpec)
     const team = await this.saveTeam(teamObject)
-    await this.doDeployment(team, true, [`${this.getRepoPath()}/env/teams/${name}/secrets.settings.yaml`])
+    await this.doDeployment(team)
     return team.content as AplTeamSettingsResponse
   }
 
@@ -880,9 +994,16 @@ export default class OtomiStack {
     return { filePath, content }
   }
 
-  async saveTeamSealedSecret(teamId: string, data: SealedSecretManifestRequest): Promise<AplRecord> {
+  async saveTeamSealedSecret(teamId: string, inData: SealedSecretManifestRequest): Promise<AplRecord> {
+    const data = { ...inData }
     debug(`Saving sealed secrets of team: ${teamId}`)
     const { metadata } = data
+
+    // Server-side encryption fallback: encrypts any plain text values that weren't sealed client-side.
+    if (data.spec.encryptedData && Object.keys(data.spec.encryptedData).length > 0) {
+      data.spec.encryptedData = await ensureEncryptedData(data.spec.encryptedData, teamId)
+    }
+
     const sealedSecretChartValues = sealedSecretManifest(teamId, data)
     const aplRecord = this.fileStore.set(
       getTeamSealedSecretsValuesFilePath(teamId, metadata.name),
@@ -966,7 +1087,7 @@ export default class OtomiStack {
 
     const teamObject = toTeamObject(teamId, data)
     const aplRecord = await this.saveTeamConfigItem(teamObject)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return aplRecord.content as AplNetpolResponse
   }
 
@@ -1003,7 +1124,7 @@ export default class OtomiStack {
     const teamObject = buildTeamObject(existing, updatedSpec)
 
     const aplRecord = await this.saveTeamConfigItem(teamObject)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return aplRecord.content as AplNetpolResponse
   }
 
@@ -1012,20 +1133,18 @@ export default class OtomiStack {
     await this.doDeleteDeployment([filePath])
   }
 
-  getAllUsers(sessionUser: SessionUser): Array<User> {
-    const files = this.fileStore.getPlatformResourcesByKind('AplUser')
-    const aplObjects = Array.from(files.values()) as AplObject[]
-    const users = aplObjects.map((aplObject) => {
-      return { ...aplObject.spec, id: aplObject.metadata.name } as User
-    })
+  async getAllUsers(sessionUser: SessionUser): Promise<Array<User>> {
+    const usersData = await listUserSecretData(this.getAplNamespaceSealedSecrets.bind(this))
+    const users: User[] = usersData.map((u) => userSecretDataToUser(u))
+
     if (sessionUser.isPlatformAdmin) {
       return users
     } else if (sessionUser.isTeamAdmin) {
       const usersWithBasicInfo = users.map((user) => {
         const { id, email, isPlatformAdmin, isTeamAdmin, teams } = user
-        return { id, email, isPlatformAdmin, isTeamAdmin, teams }
+        return { id, email, isPlatformAdmin, isTeamAdmin, teams } as User
       })
-      return usersWithBasicInfo as Array<User>
+      return usersWithBasicInfo
     }
     throw new ForbiddenError()
   }
@@ -1046,40 +1165,47 @@ export default class OtomiStack {
     const userId = uuidv4()
     const user: User = { ...data, id: userId, initialPassword }
 
-    // Get existing users' emails
-    const files = this.fileStore.getPlatformResourcesByKind('AplUser')
-    let existingUsersEmail = Array.from(files.values()).map((aplObject: AplObject) => aplObject.spec.email)
+    // Check for existing users
+    const existingUsers = await listUserSecretData(this.getAplNamespaceSealedSecrets.bind(this))
+    const existingUsersEmail = existingUsers.map((u) => u.email)
 
     if (!env.isDev) {
-      const { otomi, cluster } = this.getSettings(['otomi', 'cluster'])
+      // In production, also check Keycloak for existing users
+      const { cluster } = await this.getSettings(['cluster'])
       const keycloak = this.getApp('keycloak')
       const keycloakBaseUrl = `https://keycloak.${cluster?.domainSuffix}`
       const realm = 'otomi'
       const username = keycloak?.values?.adminUsername as string
-      const password = otomi?.adminPassword as string
-      existingUsersEmail = await getKeycloakUsers(keycloakBaseUrl, realm, username, password)
+      const platformSecrets = await getSecretValues(PLATFORM_SECRETS_NAME, APL_SECRETS_NAMESPACE)
+      const adminPassword = platformSecrets?.adminPassword
+      if (!adminPassword) {
+        throw new HttpError(500, 'Admin password not found in platform secrets')
+      }
+      const keycloakEmails = await getKeycloakUsers(keycloakBaseUrl, realm, username, adminPassword)
+      existingUsersEmail.push(...keycloakEmails.filter((e) => !existingUsersEmail.includes(e)))
     }
+
     if (existingUsersEmail.some((existingUser) => existingUser === user.email)) {
       throw new AlreadyExists('User email already exists')
     }
 
     const aplRecord = await this.saveUser(user)
-    await this.doDeployment(aplRecord, true, [`${this.getRepoPath()}/env/users/secrets.${userId}.yaml`])
+    await this.doDeployment(aplRecord)
     return user
   }
 
-  getUser(id: string, sessionUser: SessionUser): User {
-    const filePath = getResourceFilePath('AplUser', id)
-    const user = this.fileStore.get(filePath)
-    if (!user) {
+  async getUser(id: string, sessionUser: SessionUser): Promise<User> {
+    const userData = await getUserSecretData(id, this.fileStore)
+    if (!userData) {
       throw new NotExistError(`User ${id} not found`)
     }
+    const user = userSecretDataToUser(userData)
 
     if (sessionUser.isPlatformAdmin) {
-      return { ...user.spec, id } as User
+      return user
     }
     if (sessionUser.isTeamAdmin) {
-      const { email, isPlatformAdmin, isTeamAdmin, teams } = user.spec
+      const { email, isPlatformAdmin, isTeamAdmin, teams } = user
       return { id, email, isPlatformAdmin, isTeamAdmin, teams } as User
     }
     throw new ForbiddenError()
@@ -1090,32 +1216,44 @@ export default class OtomiStack {
       throw new ForbiddenError('Only platform admins can modify user details.')
     }
 
-    const filePath = getResourceFilePath('AplUser', id)
-    const existing = this.fileStore.get(filePath)
-    if (!existing) {
+    const existingData = await getUserSecretData(id, this.fileStore)
+    if (!existingData) {
       throw new NotExistError(`User ${id} not found`)
     }
+    const existingUser = userSecretDataToUser(existingData)
 
-    const user: User = { ...existing, ...data, id }
+    // Merge updates, preserving initialPassword from existing secret
+    const user: User = {
+      ...existingUser,
+      ...data,
+      id,
+      initialPassword: existingUser.initialPassword,
+    }
 
     const aplRecord = await this.saveUser(user)
-    await this.doDeployment(aplRecord, true, [`${this.getRepoPath()}/env/users/secrets.${id}.yaml`])
+    await this.doDeployment(aplRecord)
     return user
   }
 
   async deleteUser(id: string): Promise<void> {
-    const filePath = getResourceFilePath('AplUser', id)
-    const aplObject = this.fileStore.get(filePath)
-    if (!aplObject) {
+    const existingData = await getUserSecretData(id, this.fileStore)
+    if (!existingData) {
       throw new NotExistError(`User ${id} not found`)
     }
-    const user = aplObject.spec as User
-    if (user.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
+    if (existingData.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
       throw new ForbiddenError('Cannot delete the default platform admin user')
     }
 
-    await this.deleteUserFile(id)
-    await this.doDeleteDeployment([filePath])
+    // Remove SealedSecret manifest from git
+    const sealedSecretPath = getNamespaceSealedSecretsValuesFilePath(APL_USERS_NAMESPACE, id)
+    await this.git.removeFile(sealedSecretPath)
+
+    // Also remove legacy AplUser file if it exists
+    const legacyFilePath = getResourceFilePath('AplUser', id)
+    await this.git.removeFile(legacyFilePath)
+    this.fileStore.delete(legacyFilePath)
+
+    await this.doDeleteDeployment([sealedSecretPath])
   }
 
   private canTeamAdminUpdateUserTeams(sessionUser: SessionUser, existingUser: User, updatedUserTeams: string[]) {
@@ -1154,19 +1292,18 @@ export default class OtomiStack {
       throw new ForbiddenError("Only platform admins or team admins can modify a user's team memberships.")
     }
 
-    const secretFiles: string[] = []
     const aplRecords: AplRecord[] = []
+    const updatedUsers: Pick<User, 'id' | 'teams'>[] = []
 
     for (const userData of data) {
       if (!userData.id) {
         throw new NotExistError(`User ${userData.id} not found`)
       }
-      const filePath = getResourceFilePath('AplUser', userData.id)
-      const aplObject = this.fileStore.get(filePath)
-      if (!aplObject) {
+      const existingData = await getUserSecretData(userData.id, this.fileStore)
+      if (!existingData) {
         throw new NotExistError(`User ${userData.id} not found`)
       }
-      const existingUser = aplObject.spec as User
+      const existingUser = userSecretDataToUser(existingData)
 
       if (
         !sessionUser.isPlatformAdmin &&
@@ -1179,17 +1316,13 @@ export default class OtomiStack {
 
       const updatedUser: User = { ...existingUser, teams: userData.teams }
       const aplRecord = await this.saveUser(updatedUser)
-      secretFiles.push(`${this.getRepoPath()}/env/users/secrets.${userData.id}.yaml`)
       aplRecords.push(aplRecord)
+      updatedUsers.push({ id: updatedUser.id!, teams: updatedUser.teams || [] })
     }
 
-    await this.doDeployments(aplRecords, true, secretFiles)
+    await this.doDeployments(aplRecords)
 
-    const users = aplRecords.map((aplRecord: AplRecord) => ({
-      id: aplRecord.content.spec.id,
-      teams: aplRecord.content.spec.teams || [],
-    }))
-    return users
+    return updatedUsers
   }
 
   getTeamCodeRepos(teamId: string): CodeRepo[] {
@@ -1230,7 +1363,7 @@ export default class OtomiStack {
 
     const teamObject = toTeamObject(teamId, data)
     const aplRecord = await this.saveTeamConfigItem(teamObject)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return aplRecord.content as AplCodeRepoResponse
   }
 
@@ -1267,7 +1400,7 @@ export default class OtomiStack {
     const teamObject = buildTeamObject(existing, updatedSpec)
 
     const aplRecord = await this.saveTeamConfigItem(teamObject)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return aplRecord.content as AplCodeRepoResponse
   }
 
@@ -1280,7 +1413,7 @@ export default class OtomiStack {
     if (!codeRepoName) return ['HEAD']
     const coderepo = this.getCodeRepo(teamId, codeRepoName)
     const { repositoryUrl, secret: secretName } = coderepo
-    const { cluster } = this.getSettings(['cluster'])
+    const { cluster } = await this.getSettings(['cluster'])
     try {
       let sshPrivateKey = '',
         username = '',
@@ -1343,23 +1476,24 @@ export default class OtomiStack {
   }
 
   async getInternalRepoUrls(teamId: string): Promise<string[]> {
-    if (env.isDev || !teamId || teamId === 'admin') return []
+    if ((env.isDev && !(await isK8sReachable())) || !teamId || teamId === 'admin') return []
     const gitea = this.getApp('gitea')
     if (!gitea?.values?.enabled) return []
-    const { cluster, otomi } = this.getSettings(['cluster', 'otomi'])
-    const username = (otomi?.git?.username ?? '') as string
-    const password = (otomi?.git?.password ?? '') as string
+    const { cluster } = await this.getSettings(['cluster'])
+    const username = (gitea.values?.adminUsername as string) || 'otomi-admin'
+    const platformSecrets = await getSecretValues(PLATFORM_SECRETS_NAME, APL_SECRETS_NAMESPACE)
+    const password = platformSecrets?.git_password
     const orgName = `team-${teamId}`
     const domainSuffix = cluster?.domainSuffix
     const internalRepoUrls = (await getGiteaRepoUrls(username, password, orgName, domainSuffix)) || []
     return internalRepoUrls
   }
 
-  getDashboard(teamId: string): Array<any> {
+  async getDashboard(teamId: string): Promise<Array<any>> {
     const codeRepos = teamId ? this.getTeamAplCodeRepos(teamId) : this.getAllCodeRepos()
     const builds = teamId ? this.getTeamAplBuilds(teamId) : this.getAllBuilds()
     const workloads = teamId ? this.getTeamAplWorkloads(teamId) : this.getAllWorkloads()
-    const services = teamId ? this.getTeamAplServices(teamId) : this.getAllServices()
+    const services = teamId ? this.getTeamAplServices(teamId) : await this.getAllServices()
     const secrets = teamId ? this.getAplSealedSecrets(teamId) : this.getAllAplSealedSecrets()
     const netpols = teamId ? this.getTeamAplNetpols(teamId) : this.getAllNetpols()
 
@@ -1416,7 +1550,7 @@ export default class OtomiStack {
 
     const teamObject = toTeamObject(teamId, data)
     const aplRecord = await this.saveTeamConfigItem(teamObject)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return aplRecord.content as AplBuildResponse
   }
 
@@ -1453,7 +1587,7 @@ export default class OtomiStack {
     const teamObject = buildTeamObject(existing, updatedSpec)
 
     const aplRecord = await this.saveTeamConfigItem(teamObject)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return aplRecord.content as AplBuildResponse
   }
 
@@ -1524,7 +1658,7 @@ export default class OtomiStack {
     const teamObject = buildTeamObject(existing, updatedSpec)
 
     const aplRecord = await this.saveTeamConfigItem(teamObject)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return aplRecord.content as AplPolicyResponse
   }
 
@@ -1544,7 +1678,7 @@ export default class OtomiStack {
       SUB: sessionUser.sub,
     }
     try {
-      const { cluster } = this.getSettings(['cluster'])
+      const { cluster } = await this.getSettings(['cluster'])
       variables.FQDN = cluster?.domainSuffix || ''
     } catch (error) {
       debug('Error getting cluster settings for cloudtty:', error.message)
@@ -1591,7 +1725,7 @@ export default class OtomiStack {
     keepLocalClone: boolean = false,
     forceRefresh: boolean = false,
   ): Promise<{ url: string; helmCharts: any; catalog: any; chartsPath?: string }> {
-    const { cluster } = this.getSettings(['cluster'])
+    const { cluster } = await this.getSettings(['cluster'])
     try {
       const { helmCharts, catalog } = await fetchWorkloadCatalog(
         url,
@@ -1627,7 +1761,7 @@ export default class OtomiStack {
 
     const aplRecord = await this.saveCatalog(data)
 
-    await this.doDeployments([aplRecord], false)
+    await this.doDeployments([aplRecord])
     const { repositoryUrl, branch, name, chartsPath } = data.spec
     void this.getBYOWorkloadCatalog(repositoryUrl, branch, name, chartsPath as string | undefined, true).catch((e) =>
       debug(`Unable to warm cache for catalog ${data.spec.name}`, e),
@@ -1654,7 +1788,7 @@ export default class OtomiStack {
 
     const aplRecord = await this.saveCatalog(platformObject)
     const catalogResponse = aplRecord.content as AplCatalogResponse
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     try {
       const { repositoryUrl, branch, name: catalogName, chartsPath } = catalogResponse.spec
       void this.getBYOWorkloadCatalog(repositoryUrl, branch, catalogName, chartsPath as string | undefined, true)
@@ -1735,7 +1869,7 @@ export default class OtomiStack {
   async getAplCatalogChart(name: string, chartName: string): Promise<AplCatalogChartResponse> {
     const catalog = this.getAplCatalog(name)
     const { repositoryUrl, branch, chartsPath } = catalog.spec
-    const { cluster } = this.getSettings(['cluster'])
+    const { cluster } = await this.getSettings(['cluster'])
     const encodedCatalogName = encodeURIComponent(catalog.spec.name)
     const encodedBranch = encodeURIComponent(branch)
     const helmChartsDir = `${env.CATALOG_CACHE_PATH}/${encodedCatalogName}/${encodedBranch}`
@@ -1768,7 +1902,7 @@ export default class OtomiStack {
     const localHelmChartsDir = `/tmp/otomi/charts/${uuid}`
     const helmChartCatalogUrl = env.HELM_CHART_CATALOG
     const { user, email } = this.git
-    const { cluster } = this.getSettings(['cluster'])
+    const { cluster } = await this.getSettings(['cluster'])
 
     try {
       await sparseCloneChart(
@@ -1847,7 +1981,7 @@ export default class OtomiStack {
       data.spec.values || '{}',
       true,
     )
-    await this.doDeployments([aplRecord, valuesAplRecord], false)
+    await this.doDeployments([aplRecord, valuesAplRecord])
     return aplRecord.content as AplWorkloadResponse
   }
 
@@ -1889,9 +2023,9 @@ export default class OtomiStack {
     const workloadResponse = aplRecord.content as AplWorkloadResponse
     if (data.spec && 'values' in data.spec) {
       const valuesAplRecord = await this.saveTeamWorkloadValues(teamId, name, data.spec.values!)
-      await this.doDeployments([aplRecord, valuesAplRecord], false)
+      await this.doDeployments([aplRecord, valuesAplRecord])
     } else {
-      await this.doDeployment(aplRecord, false)
+      await this.doDeployment(aplRecord)
     }
     return workloadResponse
   }
@@ -1913,7 +2047,7 @@ export default class OtomiStack {
       spec: updatedSpec as AplWorkloadResponse['spec'],
     }
     const aplRecord = await this.saveTeamWorkloadValues(teamId, name, updatedSpec.values)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return merge(pick(getV1ObjectFromApl(workload), ['id', 'teamId', 'name']), {
       values: data.values || undefined,
     }) as WorkloadValues
@@ -1924,8 +2058,8 @@ export default class OtomiStack {
     return { teamId, name, values: workload as any }
   }
 
-  getAllServices(): Service[] {
-    return this.getAllAplServices().map((service) => this.transformService(service) as Service)
+  async getAllServices(): Promise<Service[]> {
+    return Promise.all(this.getAllAplServices().map((service) => this.transformService(service) as Promise<Service>))
   }
 
   getAllAplServices(): AplServiceResponse[] {
@@ -1933,8 +2067,10 @@ export default class OtomiStack {
     return Array.from(files.values()) as AplServiceResponse[]
   }
 
-  getTeamServices(teamId: string): Service[] {
-    return this.getTeamAplServices(teamId).map((service) => this.transformService(service) as Service)
+  async getTeamServices(teamId: string): Promise<Service[]> {
+    return Promise.all(
+      this.getTeamAplServices(teamId).map((service) => this.transformService(service) as Promise<Service>),
+    )
   }
 
   getTeamAplServices(teamId: string): AplServiceResponse[] {
@@ -1947,7 +2083,7 @@ export default class OtomiStack {
       teamId,
       getAplObjectFromV1('AplTeamService', this.convertDbServiceToValues(data)) as AplServiceRequest,
     )
-    return this.transformService(newService) as Service
+    return (await this.transformService(newService)) as Service
   }
 
   async createAplService(teamId: string, data: AplServiceRequest): Promise<AplServiceResponse> {
@@ -1959,13 +2095,13 @@ export default class OtomiStack {
     }
     const teamObject = toTeamObject(teamId, data)
     const aplRecord = await this.saveTeamConfigItem(teamObject)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return aplRecord.content as AplServiceResponse
   }
 
-  getService(teamId: string, name: string): Service {
+  async getService(teamId: string, name: string): Promise<Service> {
     const service = this.getAplService(teamId, name)
-    return this.transformService(service) as Service
+    return (await this.transformService(service)) as Service
   }
 
   getAplService(teamId: string, name: string): AplServiceResponse {
@@ -1994,7 +2130,7 @@ export default class OtomiStack {
     const teamObject = buildTeamObject(existing, updatedSpec)
 
     const aplRecord = await this.saveTeamConfigItem(teamObject)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return aplRecord.content as AplServiceResponse
   }
 
@@ -2024,12 +2160,12 @@ export default class OtomiStack {
     })
     if (servicesFiltered.length > 0) throw new PublicUrlExists()
   }
-  async doDeployments(aplRecords: AplRecord[], encryptSecrets = true, files?: string[]): Promise<void> {
+  async doDeployments(aplRecords: AplRecord[]): Promise<void> {
     const rootStack = await getSessionStack()
 
     try {
       // Commit and push Git changes
-      await this.git.save(this.editor!, encryptSecrets, files)
+      await this.git.save(this.editor!)
       // Pull the latest changes to ensure we have the most recent state
       await rootStack.git.git.pull()
 
@@ -2047,12 +2183,12 @@ export default class OtomiStack {
     }
   }
 
-  async doDeployment(aplRecord: AplRecord, encryptSecrets = true, files?: string[]): Promise<void> {
+  async doDeployment(aplRecord: AplRecord): Promise<void> {
     const rootStack = await getSessionStack()
 
     try {
       // Commit and push Git changes
-      await this.git.save(this.editor!, encryptSecrets, files)
+      await this.git.save(this.editor!)
       // Pull the latest changes to ensure we have the most recent state
       await rootStack.git.git.pull()
 
@@ -2073,7 +2209,7 @@ export default class OtomiStack {
 
     try {
       // Commit and push Git changes
-      await this.git.save(this.editor!, false)
+      await this.git.save(this.editor!)
       // Pull the latest changes to ensure we have the most recent state
       await rootStack.git.git.pull()
 
@@ -2189,7 +2325,7 @@ export default class OtomiStack {
   }
 
   async getK8sServices(teamId: string): Promise<Array<K8sService>> {
-    if (env.isDev) return []
+    if (env.isDev && !(await isK8sReachable())) return []
 
     const client = this.getApiClient()
     const collection: K8sService[] = []
@@ -2221,7 +2357,7 @@ export default class OtomiStack {
     this.getTeam(teamId) // will throw if not existing
     const {
       cluster: { name, apiName = `otomi-${name}`, apiServer },
-    } = this.getSettings(['cluster']) as Record<string, any>
+    } = (await this.getSettings(['cluster'])) as Record<string, any>
     if (!apiServer) throw new ValidationError('Missing configuration value: cluster.apiServer')
     const client = this.getApiClient()
     const namespace = `team-${teamId}`
@@ -2300,7 +2436,7 @@ export default class OtomiStack {
       throw new AlreadyExists('SealedSecret name already exists')
     }
     const aplRecord = await this.saveTeamSealedSecret(teamId, data)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return aplRecord.content as unknown as SealedSecretManifestResponse
   }
 
@@ -2313,7 +2449,7 @@ export default class OtomiStack {
       throw new AlreadyExists('SealedSecret name already exists')
     }
     const aplRecord = await this.saveNamespaceSealedSecret(namespace, data)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return aplRecord.content as unknown as SealedSecretManifestResponse
   }
 
@@ -2382,7 +2518,7 @@ export default class OtomiStack {
     }
 
     const aplRecord = await this.saveTeamSealedSecret(teamId, updatedRequest)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return aplRecord.content as unknown as SealedSecretManifestResponse
   }
 
@@ -2427,7 +2563,7 @@ export default class OtomiStack {
     }
 
     const aplRecord = await this.saveNamespaceSealedSecret(namespace, updatedRequest)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return aplRecord.content as unknown as SealedSecretManifestResponse
   }
 
@@ -2537,7 +2673,7 @@ export default class OtomiStack {
   }
 
   async getSecretsFromK8s(teamId: string): Promise<Array<string>> {
-    if (env.isDev) return []
+    if (env.isDev && !(await isK8sReachable())) return []
     return await getTeamSecretsFromK8s(`team-${teamId}`)
   }
 
@@ -2550,7 +2686,7 @@ export default class OtomiStack {
 
     const teamObject = toTeamObject(teamId, data)
     const aplRecord = await this.saveTeamKnowledgeBase(teamObject)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return aplRecord.content as AplKnowledgeBaseResponse
   }
 
@@ -2572,7 +2708,7 @@ export default class OtomiStack {
     const teamObject = buildTeamObject(existing, updatedSpec)
 
     const aplRecord = await this.saveTeamKnowledgeBase(teamObject)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return aplRecord.content as AplKnowledgeBaseResponse
   }
 
@@ -2617,7 +2753,7 @@ export default class OtomiStack {
     }
     const teamObject = toTeamObject(teamId, data)
     const aplRecord = await this.saveTeamConfigItem(teamObject)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return aplRecord.content as AplAgentResponse
   }
 
@@ -2639,7 +2775,7 @@ export default class OtomiStack {
     const teamObject = buildTeamObject(existing, updatedSpec)
 
     const aplRecord = await this.saveTeamConfigItem(teamObject)
-    await this.doDeployment(aplRecord, false)
+    await this.doDeployment(aplRecord)
     return aplRecord.content as AplAgentResponse
   }
 
@@ -2673,95 +2809,18 @@ export default class OtomiStack {
     await this.git.writeFile(dbPath, databaseCR.toRecord())
   }
 
-  async loadValues(): Promise<Promise<Promise<Promise<Promise<void>>>>> {
+  async loadValues(): Promise<void> {
     debug('Loading values')
-    await this.git.initSops()
     await this.initRepo()
     this.isLoaded = true
   }
 
-  private buildSecretObject(aplObject: AplTeamObject | AplPlatformObject, secretSpec: Record<string, any>): AplObject {
-    return {
-      kind: aplObject.kind,
-      metadata: aplObject.metadata,
-      spec: omit(secretSpec, ['id', 'teamId', 'name']),
-    }
-  }
-
-  private extractAppSecretPaths(appName: string, globalPaths: string[]): string[] {
-    const appPrefix = `apps.${appName}.`
-    return globalPaths.filter((path) => path.startsWith(appPrefix)).map((path) => path.replace(appPrefix, ''))
-  }
-
-  private extractSettingsSecretPaths(kind: AplKind, globalPaths: string[]): string[] {
-    const settingsPrefixMap: Record<string, string> = {
-      AplDns: 'dns.',
-      AplKms: 'kms.',
-      AplIdentityProvider: 'oidc.',
-      AplCapabilitySet: 'otomi.',
-      AplAlertSet: 'alerts.',
-      AplObjectStorage: 'obj.',
-    }
-
-    const prefix = settingsPrefixMap[kind]
-    if (!prefix) return []
-
-    return globalPaths.filter((path) => path.startsWith(prefix)).map((path) => path.replace(prefix, ''))
-  }
-
-  private extractTeamSecretPaths(globalPaths: string[]): string[] {
-    // Team paths use pattern: teamConfig.patternProperties.^[a-z0-9]([-a-z0-9]*[a-z0-9])+$.settings.{field}
-    const teamPattern = 'teamConfig.patternProperties.^[a-z0-9]([-a-z0-9]*[a-z0-9])+$.settings.'
-
-    return globalPaths.filter((path) => path.startsWith(teamPattern)).map((path) => path.replace(teamPattern, ''))
-  }
-
-  private async saveWithSecrets(
-    aplObject: AplTeamObject | AplPlatformObject,
-    secretPaths: string[],
-  ): Promise<AplRecord> {
-    const secretData = {}
-    const specWithoutSecrets = cloneDeep(aplObject.spec)
-    secretPaths.forEach((secretPath) => {
-      const secretValue = get(aplObject.spec, secretPath)
-      if (secretValue) {
-        set(secretData, secretPath, secretValue)
-        unset(specWithoutSecrets, secretPath)
-      }
-    })
-
-    // Determine file path and save using appropriate FileStore method
-    let filePath: string
-    if ('labels' in aplObject.metadata && 'apl.io/teamId' in aplObject.metadata.labels) {
-      // Store full object with secrets.
-      // TODO check if this is needed.
-      filePath = this.fileStore.setTeamResource(aplObject as AplTeamObject)
-    } else {
-      // Store full object with secrets.
-      // TODO check if this is needed.
-      filePath = this.fileStore.setPlatformResource(aplObject as AplPlatformObject)
-    }
-
-    // Write main file
-    await this.git.writeFile(filePath, { ...aplObject, spec: specWithoutSecrets })
-
-    // Write secrets file if there are any secrets
-    if (Object.keys(secretData).length > 0) {
-      const secretFilePath = getSecretFilePath(filePath)
-      // Build proper AplObject structure for secret file
-      const secretObject = this.buildSecretObject(aplObject, secretData)
-      await this.git.writeFile(secretFilePath, secretObject)
-    }
-
-    return { filePath, content: aplObject }
-  }
   async saveAppToggle(app: AplObject): Promise<void> {
-    const globalPaths = getSecretPaths()
-    const appSecretPaths = this.extractAppSecretPaths(app.metadata.name, globalPaths)
-    await this.saveWithSecrets(app, appSecretPaths)
+    const filePath = this.fileStore.setPlatformResource(app as AplPlatformObject)
+    await this.git.writeFile(filePath, app)
   }
 
-  async saveAdminApp(app: App, secretPaths?: string[]): Promise<void> {
+  async saveAdminApp(app: App): Promise<void> {
     const { id, enabled, values, rawValues } = app
     const spec: Record<string, any> = {
       ...(values || {}),
@@ -2776,28 +2835,35 @@ export default class OtomiStack {
     }
 
     const aplPlatformObject = buildPlatformObject('AplApp', id, spec)
-
-    const globalPaths = secretPaths ?? getSecretPaths()
-    const appSecretPaths = this.extractAppSecretPaths(id, globalPaths)
-
-    await this.saveWithSecrets(aplPlatformObject, appSecretPaths)
+    const filePath = this.fileStore.setPlatformResource(aplPlatformObject)
+    await this.git.writeFile(filePath, aplPlatformObject)
   }
 
-  async saveSettings(secretPaths?: string[]): Promise<void> {
-    const settings = cloneDeep(this.getSettings()) as Record<string, Record<string, any>>
-    settings.otomi.nodeSelector = arrayToObject(settings.otomi.nodeSelector as [])
+  async saveSettings(): Promise<void> {
+    // Read raw settings from fileStore (without sealed secret merging)
+    // to avoid writing encrypted ciphertext into settings YAML files
+    const settings: Record<string, Record<string, any>> = {}
+    const settingsFileMaps = getSettingsFileMaps(this.getRepoPath())
 
-    // Get all settings file maps
-    const settingsFileMaps = getSettingsFileMaps('')
-    const globalPaths = secretPaths ?? getSecretPaths()
+    for (const [name, fileMap] of settingsFileMaps.entries()) {
+      const files = this.fileStore.getPlatformResourcesByKind(fileMap.kind)
+      for (const [, content] of files) {
+        settings[name] = cloneDeep(content?.spec || content)
+      }
+    }
+
+    // Transform otomi nodeSelector from array back to object for disk storage
+    if (settings.otomi?.nodeSelector && Array.isArray(settings.otomi.nodeSelector)) {
+      settings.otomi.nodeSelector = arrayToObject(settings.otomi.nodeSelector as [])
+    }
 
     // Save each setting as a separate AplPlatformObject
     for (const [settingName, fileMap] of settingsFileMaps.entries()) {
       const settingValue = settings[settingName]
       if (settingValue) {
         const aplPlatformObject = buildPlatformObject(fileMap.kind, settingName, settingValue)
-        const settingsSecretPaths = this.extractSettingsSecretPaths(fileMap.kind, globalPaths)
-        await this.saveWithSecrets(aplPlatformObject, settingsSecretPaths)
+        const filePath = this.fileStore.setPlatformResource(aplPlatformObject)
+        await this.git.writeFile(filePath, aplPlatformObject)
       }
     }
   }
@@ -2808,15 +2874,16 @@ export default class OtomiStack {
     if (!user.id) {
       throw new Error('User id not set')
     }
-    const aplPlatformObject = buildPlatformObject('AplUser', user.id, user as unknown as Record<string, any>)
-    const filePath = this.fileStore.setPlatformResource(aplPlatformObject)
 
-    // Save all values to secrets files as users do not have main file
-    const secretObject = this.buildSecretObject(aplPlatformObject, user as unknown as Record<string, any>)
-    const secretFilePath = getSecretFilePath(filePath)
-    await this.git.writeFile(secretFilePath, secretObject)
+    // Write SealedSecret manifest with all user fields encrypted
+    const sealedSecretYaml = await createUserSealedSecret(user)
+    const sealedSecretPath = getNamespaceSealedSecretsValuesFilePath(APL_USERS_NAMESPACE, user.id)
+    await this.git.writeTextFile(sealedSecretPath, sealedSecretYaml)
 
-    return { filePath, content: aplPlatformObject }
+    // Store the actual SealedSecret manifest in the fileStore so it stays in sync with disk
+    const content = parseYaml(sealedSecretYaml) as unknown as AplObject
+
+    return { filePath: sealedSecretPath, content }
   }
 
   async deleteUserFile(userId: string): Promise<void> {
@@ -2824,24 +2891,17 @@ export default class OtomiStack {
     const filePath = getResourceFilePath('AplUser', userId)
 
     this.fileStore.delete(filePath)
-
     await this.git.removeFile(filePath)
-
-    const secretFilePath = getSecretFilePath(filePath)
-    const secretExists = await this.git.fileExists(secretFilePath)
-    if (secretExists) {
-      await this.git.removeFile(secretFilePath)
-    }
   }
 
-  async saveTeam(aplTeamObject: AplTeamObject, secretPaths?: string[]): Promise<AplRecord> {
+  async saveTeam(aplTeamObject: AplTeamObject): Promise<AplRecord> {
     const teamId = aplTeamObject.metadata.labels['apl.io/teamId']
     debug(`Saving team ${teamId}`)
 
-    const globalPaths = secretPaths ?? getSecretPaths()
-    const teamSecretPaths = this.extractTeamSecretPaths(globalPaths)
+    const filePath = this.fileStore.setTeamResource(aplTeamObject)
+    await this.git.writeFile(filePath, aplTeamObject)
 
-    return await this.saveWithSecrets(aplTeamObject, teamSecretPaths)
+    return { filePath, content: aplTeamObject }
   }
 
   async deleteTeamObjects(name: string): Promise<string[]> {
@@ -2859,7 +2919,7 @@ export default class OtomiStack {
     return filePaths
   }
 
-  transformService(service: AplServiceResponse): Record<string, any> {
+  async transformService(service: AplServiceResponse): Promise<Record<string, any>> {
     const serviceSpec = service.spec
     const serviceMeta = {
       name: service.metadata.name,
@@ -2881,7 +2941,7 @@ export default class OtomiStack {
     ]
     const inService = omit(serviceSpec, publicIngressFields)
 
-    const { cluster, dns } = this.getSettings(['cluster', 'dns'])
+    const { cluster, dns } = await this.getSettings(['cluster', 'dns'])
     const managedByKnative = service.spec.ksvc?.predeployed ? true : false
     const url = getServiceUrl({
       domain: serviceSpec.domain,
@@ -2934,8 +2994,8 @@ export default class OtomiStack {
     }
   }
 
-  private getVersions(currentSha: string): Record<string, string> {
-    const { otomi } = this.getSettings(['otomi'])
+  private async getVersions(currentSha: string): Promise<Record<string, string>> {
+    const { otomi } = await this.getSettings(['otomi'])
     return {
       core: otomi?.version ?? env.VERSIONS.core,
       api: env.VERSIONS.api ?? process.env.npm_package_version!,
@@ -2948,7 +3008,7 @@ export default class OtomiStack {
     const rootStack = await getSessionStack()
     const valuesSchema = await getValuesSchema()
     const currentSha = rootStack.git.commitSha
-    const { obj } = this.getSettings(['obj'])
+    const { obj } = await this.getSettings(['obj'])
     const objStorageRegions = await this.getObjStorageRegions()
     const data: Session = {
       ca: env.CUSTOM_ROOT_CA,
@@ -2964,7 +3024,7 @@ export default class OtomiStack {
         objStorageApps: env.OBJ_STORAGE_APPS,
         objStorageRegions,
       },
-      versions: this.getVersions(currentSha),
+      versions: await this.getVersions(currentSha),
       valuesSchema,
     }
     return data

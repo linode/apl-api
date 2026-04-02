@@ -6,6 +6,16 @@ import { Git } from '../git'
 import * as getValuesSchemaModule from '../utils'
 import { getUser } from './jwt'
 
+jest.mock('../utils/sealedSecretUtils', () => {
+  const originalModule = jest.requireActual('../utils/sealedSecretUtils')
+  return {
+    __esModule: true,
+    ...originalModule,
+    createPlatformSealedSecretManifest: jest.fn().mockResolvedValue('mock-sealed-secret-yaml'),
+    createUserSealedSecret: jest.fn().mockResolvedValue('mock-user-sealed-secret-yaml'),
+  }
+})
+
 const email = 'test@user.net'
 const platformAdminGroups = ['platform-admin', 'all-teams-admin']
 const teamAdminGroups = ['team-admin']
