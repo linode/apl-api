@@ -2,6 +2,7 @@ import { encryptSecretItem } from '@linode/kubeseal-encrypt'
 import { X509Certificate } from 'crypto'
 import Debug from 'debug'
 import { get, isEmpty, unset } from 'lodash'
+import { APL_USERS_NAMESPACE } from 'src/constants'
 import { SealedSecretManifestRequest, SealedSecretManifestResponse, User } from 'src/otomi-models'
 import { cleanEnv } from 'src/validators'
 import { stringify as stringifyYaml } from 'yaml'
@@ -206,7 +207,7 @@ export async function createPlatformSealedSecretManifest(
  * All user fields are encrypted as individual keys.
  */
 export async function createUserSealedSecret(user: User): Promise<string> {
-  const namespace = 'apl-users'
+  const namespace = APL_USERS_NAMESPACE
   const name = user.id as string
 
   const data: Record<string, string> = {

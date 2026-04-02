@@ -7,6 +7,7 @@ import { readFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, isEmpty, map, merge, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema } from 'src/app'
+import { APL_SECRETS_NAMESPACE, APL_USERS_NAMESPACE, PLATFORM_SECRETS_NAME } from 'src/constants'
 import {
   AlreadyExists,
   BadRequestError,
@@ -477,7 +478,11 @@ export default class OtomiStack {
       if (secretPaths.length === 0) continue
 
       const sealedSecretName = `${settingId}-secrets`
-      const manifest = this.fileStore.getNamespaceResource('AplNamespaceSealedSecret', sealedSecretName, 'apl-secrets')
+      const manifest = this.fileStore.getNamespaceResource(
+        'AplNamespaceSealedSecret',
+        sealedSecretName,
+        APL_SECRETS_NAMESPACE,
+      )
       if (!manifest) continue
 
       const encryptedData = (manifest as SealedSecretManifestResponse).spec?.encryptedData || {}
@@ -579,7 +584,7 @@ export default class OtomiStack {
       const secretPaths = extractSecretPaths(subSchema)
       const newSecrets = extractSettingsSecrets(secretPaths, updatedSettingsData[settingId])
       const sealedSecretName = `${settingId}-secrets`
-      const sealedSecretPath = `env/manifests/namespaces/apl-secrets/sealedsecrets/${sealedSecretName}.yaml`
+      const sealedSecretPath = getNamespaceSealedSecretsValuesFilePath(APL_SECRETS_NAMESPACE, sealedSecretName)
 
       // Merge new secrets with existing sealed secret so unchanged secrets are preserved.
       // Existing values are already encrypted; only new plaintext values get encrypted by
@@ -601,7 +606,11 @@ export default class OtomiStack {
         let mergedEncryptedData: Record<string, string>
         if (Object.keys(changedSecrets).length > 0) {
           // Encrypt only the actually changed values
-          const freshYaml = await createPlatformSealedSecretManifest(sealedSecretName, 'apl-secrets', changedSecrets)
+          const freshYaml = await createPlatformSealedSecretManifest(
+            sealedSecretName,
+            APL_SECRETS_NAMESPACE,
+            changedSecrets,
+          )
           const freshManifest = parseYaml(freshYaml) as Record<string, any>
           const freshEncryptedData: Record<string, string> = freshManifest.spec.encryptedData as Record<string, string>
           mergedEncryptedData = { ...existingEncryptedData, ...freshEncryptedData }
@@ -612,7 +621,7 @@ export default class OtomiStack {
 
         // Save via saveNamespaceSealedSecret to update both disk and fileStore
         // using the same code path as the /namespaces endpoint
-        sealedSecretRecord = await this.saveNamespaceSealedSecret('apl-secrets', {
+        sealedSecretRecord = await this.saveNamespaceSealedSecret(APL_SECRETS_NAMESPACE, {
           kind: 'SealedSecret',
           metadata: { name: sealedSecretName },
           spec: {
@@ -620,7 +629,7 @@ export default class OtomiStack {
             template: {
               type: 'kubernetes.io/opaque',
               immutable: false,
-              metadata: { name: sealedSecretName, namespace: 'apl-secrets' },
+              metadata: { name: sealedSecretName, namespace: APL_SECRETS_NAMESPACE },
             },
           },
         })
@@ -887,8 +896,10 @@ export default class OtomiStack {
 
     // Encrypt password into a SealedSecret manifest
     const sealedSecretName = `team-${teamName}-settings-secrets`
-    const sealedSecretYaml = await createPlatformSealedSecretManifest(sealedSecretName, 'apl-secrets', { password })
-    const sealedSecretPath = `env/manifests/namespaces/apl-secrets/sealedsecrets/${sealedSecretName}.yaml`
+    const sealedSecretYaml = await createPlatformSealedSecretManifest(sealedSecretName, APL_SECRETS_NAMESPACE, {
+      password,
+    })
+    const sealedSecretPath = getNamespaceSealedSecretsValuesFilePath(APL_SECRETS_NAMESPACE, sealedSecretName)
     await this.git.writeTextFile(sealedSecretPath, sealedSecretYaml)
 
     // Remove password from team spec before saving settings.yaml
@@ -1163,7 +1174,7 @@ export default class OtomiStack {
       const keycloakBaseUrl = `https://keycloak.${cluster?.domainSuffix}`
       const realm = 'otomi'
       const username = keycloak?.values?.adminUsername as string
-      const platformSecrets = await getSecretValues('otomi-platform-secrets', 'apl-secrets')
+      const platformSecrets = await getSecretValues(PLATFORM_SECRETS_NAME, APL_SECRETS_NAMESPACE)
       const adminPassword = platformSecrets?.adminPassword
       if (!adminPassword) {
         throw new HttpError(500, 'Admin password not found in platform secrets')
@@ -1232,7 +1243,7 @@ export default class OtomiStack {
     }
 
     // Remove SealedSecret manifest from git
-    const sealedSecretPath = `env/manifests/namespaces/apl-users/sealedsecrets/${id}.yaml`
+    const sealedSecretPath = getNamespaceSealedSecretsValuesFilePath(APL_USERS_NAMESPACE, id)
     await this.git.removeFile(sealedSecretPath)
 
     // Also remove legacy AplUser file if it exists
@@ -1468,8 +1479,8 @@ export default class OtomiStack {
     if (!gitea?.values?.enabled) return []
     const { cluster } = await this.getSettings(['cluster'])
     const username = (gitea.values?.adminUsername as string) || 'otomi-admin'
-    const otomiSecrets = await getSecretValues('otomi-secrets', 'apl-secrets')
-    const password = otomiSecrets?.git_password
+    const platformSecrets = await getSecretValues(PLATFORM_SECRETS_NAME, APL_SECRETS_NAMESPACE)
+    const password = platformSecrets?.git_password
     const orgName = `team-${teamId}`
     const domainSuffix = cluster?.domainSuffix
     const internalRepoUrls = (await getGiteaRepoUrls(username, password, orgName, domainSuffix)) || []
@@ -2864,7 +2875,7 @@ export default class OtomiStack {
 
     // Write SealedSecret manifest with all user fields encrypted
     const sealedSecretYaml = await createUserSealedSecret(user)
-    const sealedSecretPath = `env/manifests/namespaces/apl-users/sealedsecrets/${user.id}.yaml`
+    const sealedSecretPath = getNamespaceSealedSecretsValuesFilePath(APL_USERS_NAMESPACE, user.id)
     await this.git.writeTextFile(sealedSecretPath, sealedSecretYaml)
 
     // Store the actual SealedSecret manifest in the fileStore so it stays in sync with disk
