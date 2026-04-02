@@ -464,7 +464,16 @@ export default class OtomiStack {
       this.transformOtomiNodeSelector(settings)
     }
 
-    // Merge sealed secret encrypted data back into settings at their original dot-paths
+    await this.mergeEncryptedSecretsIntoSettings(settings, keys, settingsFileMaps)
+
+    return settings
+  }
+
+  private async mergeEncryptedSecretsIntoSettings(
+    settings: Settings,
+    keys: string[] | undefined,
+    settingsFileMaps: Map<string, any>,
+  ): Promise<void> {
     const valuesSchema = await getValuesSchema()
     const settingKeys = keys && keys.length > 0 ? keys : Array.from(settingsFileMaps.keys())
 
@@ -493,8 +502,6 @@ export default class OtomiStack {
         }
       }
     }
-
-    return settings
   }
 
   private transformOtomiNodeSelector(settings: Settings): void {
