@@ -27,7 +27,7 @@ ENV NODE_ENV=production
 ENV NODE_PATH='dist'
 
 # Install dependencies
-RUN apk --no-cache add python3 git jq openssh
+RUN apk --no-cache add python3 git jq openssh tini
 
 # Install app
 RUN mkdir /app
@@ -42,4 +42,5 @@ RUN echo 'nouser:x:999:999::/home/nouser:/bin/sh' >> /etc/passwd
 USER node
 EXPOSE 8080
 
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "--max-http-header-size", "16384", "dist/src/app.js"]
