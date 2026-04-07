@@ -2,7 +2,7 @@ import Debug from 'debug'
 import { Response } from 'express'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
-const debug = Debug('otomi:api:v1:teams:kubernetes:services')
+const debug = Debug('otomi:api:v2:teams:kubernetes:services')
 
 /**
  * GET /v2/teams/{teamId}/kubernetes/services
