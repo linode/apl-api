@@ -13,9 +13,7 @@ const env = cleanEnv({
 
 export default async function getLatestRemoteCommitSha(): Promise<string | undefined> {
   try {
-    // Timeout ensures the git-remote-http child process is killed after 30 seconds if the remote is unreachable,
-    // preventing hung processes from accumulating and exhausting system fork() resources.
-    const git = simpleGit({ timeout: { block: 30000 } })
+    const git = simpleGit()
     const repoUrl = new URL(env.GIT_REPO_URL)
     repoUrl.username = encodeURIComponent(env.GIT_USER)
     repoUrl.password = encodeURIComponent(env.GIT_PASSWORD)

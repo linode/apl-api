@@ -233,10 +233,7 @@ export class chartRepo {
     this.chartRepoUrl = chartRepoUrl
     this.gitUser = gitUser
     this.gitEmail = gitEmail
-    // Timeout kills the git child process if it produces no output for 30 seconds.
-    // This is safe for large repositories: active clones/fetches continuously emit progress,
-    // so the timer only triggers on truly hung processes (e.g. unresponsive remote).
-    this.git = simpleGit(this.localPath, { timeout: { block: 30000 } })
+    this.git = simpleGit(this.localPath)
   }
   async clone(branch: string = 'main') {
     await this.git.clone(this.chartRepoUrl, this.localPath, ['--branch', branch, '--single-branch', '--depth', '1'])

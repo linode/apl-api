@@ -42,5 +42,7 @@ RUN echo 'nouser:x:999:999::/home/nouser:/bin/sh' >> /etc/passwd
 USER node
 EXPOSE 8080
 
+# tini is used as PID 1 to reap zombie child processes (e.g. git-remote-http)
+# that Node.js would otherwise leave unreaped, causing PID exhaustion over time
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "--max-http-header-size", "16384", "dist/src/app.js"]
