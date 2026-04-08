@@ -1,6 +1,6 @@
 import Debug from 'debug'
 import { Request, Response } from 'express'
-import { getSealedSecretsKeys } from 'src/k8s_operations'
+import { getSealedSecretsKeys } from 'src/k8s-operations'
 import YAML from 'yaml'
 
 const debug = Debug('otomi:api:v1:sealedsecrets')
