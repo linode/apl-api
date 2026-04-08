@@ -33,7 +33,7 @@ import {
 } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
 import getLatestRemoteCommitSha from './git/connect'
-import { getBuildStatus, getSealedSecretStatus, getServiceStatus, getWorkloadStatus } from './k8s_operations'
+import { getBuildStatus, getSealedSecretStatus, getServiceStatus, getWorkloadStatus } from './k8s-operations'
 
 const env = cleanEnv({
   CATALOG_CACHE_REFRESH_INTERVAL_MS,
