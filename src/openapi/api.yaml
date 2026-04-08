@@ -295,12 +295,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/Service'
 
-  '/v1/teams/{teamId}/kubernetes/services':
+  '/v2/teams/{teamId}/kubernetes/services':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getK8sServices
-      x-eov-operation-handler: v1/teams/{teamId}/kubernetes/services
+      x-eov-operation-handler: v2/teams/{teamId}/kubernetes/services
       description: Get services from a given team
       x-aclSchema: Service
       responses:
@@ -315,12 +315,12 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  '/v1/teams/{teamId}/kubernetes/networkPolicies':
+  '/v2/teams/{teamId}/kubernetes/networkPolicies':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getK8sPodLabelsForWorkload
-      x-eov-operation-handler: v1/teams/{teamId}/kubernetes/networkPolicies
+      x-eov-operation-handler: v2/teams/{teamId}/kubernetes/networkPolicies
       description: Get Podlabels from given workload
       x-aclSchema: Netpol
       parameters:
@@ -346,12 +346,12 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  '/v1/teams/{teamId}/kubernetes/fetchPodsFromLabel':
+  '/v2/teams/{teamId}/kubernetes/fetchPodsFromLabel':
     parameters:
       - $ref: '#/components/parameters/teamParams'
     get:
       operationId: fetchPodsFromLabel
-      x-eov-operation-handler: v1/teams/{teamId}/kubernetes/fetchPodsFromLabel
+      x-eov-operation-handler: v2/teams/{teamId}/kubernetes/fetchPodsFromLabel
       description: Get pods name from label
       parameters:
         - name: labelSelector
