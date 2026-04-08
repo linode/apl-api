@@ -2,10 +2,10 @@ import Debug from 'debug'
 import { Response } from 'express'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
-const debug = Debug('otomi:api:v1:teams:kubernetes:fetchPodsFromLabel')
+const debug = Debug('otomi:api:v2:teams:kubernetes:fetchPodsFromLabel')
 
 /**
- * GET /v1/teams/{teamId}/kubernetes/fetchPodsFromLabel
+ * GET /v2/teams/{teamId}/kubernetes/fetchPodsFromLabel
  * Fetch pods by label selector
  */
 export const fetchPodsFromLabel = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
