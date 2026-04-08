@@ -27,7 +27,7 @@ function createTeamResource(kind: AplKind, spec: Record<string, any>) {
   }
 }
 
-jest.mock('./k8s_operations')
+jest.mock('./k8s-operations')
 jest.mock('./utils/sealedSecretUtils')
 beforeAll(async () => {
   jest.spyOn(console, 'log').mockImplementation(() => {})

@@ -3,7 +3,7 @@ import { isEmpty } from 'lodash'
 import { SealedSecretManifestRequest, SealedSecretManifestResponse } from 'src/otomi-models'
 import { cleanEnv } from 'src/validators'
 import { ValidationError } from '../error'
-import { getSealedSecretsCertificate } from '../k8s_operations'
+import { getSealedSecretsCertificate } from '../k8s-operations'
 
 const env = cleanEnv({})
 export function sealedSecretManifest(
