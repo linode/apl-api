@@ -9,10 +9,10 @@ const debug = Debug('otomi:api:v1:apps')
  * Get apps for a team
  * Returns list of team apps with their ids and enabled status
  */
-export const getTeamApps = (req: OpenApiRequestExt, res: Response): void => {
+export const getTeamApps = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId } = req.params
   debug('getTeamApps', teamId)
-  res.json(req.otomi.getTeamApps(teamId))
+  res.json(await req.otomi.getTeamApps(teamId))
 }
 
 /**
