@@ -2,7 +2,7 @@ import axios from 'axios'
 import { SealedSecretManifestResponse, User } from 'src/otomi-models'
 import { cleanEnv, ROOT_KEYCLOAK_USER } from 'src/validators'
 import { FileStore } from '../fileStore/file-store'
-import { getUserSecretFromK8s, isK8sReachable, listUserSecretsFromK8s, UserSecretData } from '../k8s_operations'
+import { getUserSecretFromK8s, isK8sReachable, listUserSecretsFromK8s, UserSecretData } from '../k8s-operations'
 import { sealedSecretToUserData } from './sealedSecretUtils'
 
 const env = cleanEnv({

@@ -48,8 +48,8 @@ jest.mock('src/utils/userUtils', () => {
 
 const mockListUserSecretsFromK8s = jest.fn().mockResolvedValue([])
 const mockGetUserSecretFromK8s = jest.fn().mockResolvedValue(undefined)
-jest.mock('./k8s_operations', () => {
-  const originalModule = jest.requireActual('./k8s_operations')
+jest.mock('./k8s-operations', () => {
+  const originalModule = jest.requireActual('./k8s-operations')
   return {
     __esModule: true,
     ...originalModule,
