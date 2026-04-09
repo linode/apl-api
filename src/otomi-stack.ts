@@ -123,8 +123,10 @@ import {
   getSecretValues,
   getTeamSecretsFromK8s,
   isK8sReachable,
+  mergeCanaryServices,
+  toK8sService,
   watchPodUntilRunning,
-} from './k8s_operations'
+} from './k8s-operations'
 import CloudTty from './tty'
 import {
   getGiteaRepoUrls,
@@ -2327,30 +2329,10 @@ export default class OtomiStack {
   async getK8sServices(teamId: string): Promise<Array<K8sService>> {
     if (env.isDev && !(await isK8sReachable())) return []
 
-    const client = this.getApiClient()
-    const collection: K8sService[] = []
+    const { items } = await this.getApiClient().listNamespacedService({ namespace: `team-${teamId}` })
+    const mapped = items.flatMap((item) => toK8sService(item) ?? [])
 
-    const svcList = await client.listNamespacedService({ namespace: `team-${teamId}` })
-    svcList.items.map((item) => {
-      let name = item.metadata!.name ?? 'unknown'
-      let managedByKnative = false
-      // Filter out knative private services
-      if (item.metadata?.labels?.['networking.internal.knative.dev/serviceType'] === 'Private') return
-      // Filter out services that are knative service revision
-      if (item.spec?.type === 'ClusterIP' && item.metadata?.labels?.['serving.knative.dev/service']) return
-      if (item.spec?.type === 'ExternalName' && item.metadata?.labels?.['serving.knative.dev/service']) {
-        name = item.metadata?.labels?.['serving.knative.dev/service']
-        managedByKnative = true
-      }
-
-      collection.push({
-        name,
-        ports: item.spec?.ports?.map((portItem) => portItem.port) ?? [],
-        managedByKnative,
-      })
-    })
-
-    return collection
+    return mergeCanaryServices(mapped)
   }
 
   async getKubecfg(teamId: string): Promise<KubeConfig> {

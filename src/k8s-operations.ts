@@ -1,6 +1,12 @@
-import { CoreV1Api, CustomObjectsApi, KubeConfig, VersionApi } from '@kubernetes/client-node'
+import { CoreV1Api, CustomObjectsApi, KubeConfig, V1Service, VersionApi } from '@kubernetes/client-node'
 import Debug from 'debug'
-import { AplBuildResponse, AplServiceResponse, AplWorkloadResponse, SealedSecretManifestResponse } from './otomi-models'
+import {
+  AplBuildResponse,
+  AplServiceResponse,
+  AplWorkloadResponse,
+  K8sService,
+  SealedSecretManifestResponse,
+} from './otomi-models'
 
 const debug = Debug('otomi:api:k8sOperations')
 
@@ -497,4 +503,45 @@ export async function isK8sReachable(): Promise<boolean> {
     _k8sReachable = false
   }
   return _k8sReachable
+}
+
+export function toK8sService(item: V1Service): K8sService | null {
+  const knativeServiceTypeLabel = 'networking.internal.knative.dev/serviceType'
+  const knativeServiceLabel = 'serving.knative.dev/service'
+
+  const labels = item.metadata?.labels ?? {}
+
+  // Filter out knative private services
+  if (labels[knativeServiceTypeLabel] === 'Private') return null
+  // Filter out services that are knative service revision
+  if (item.spec?.type === 'ClusterIP' && labels[knativeServiceLabel]) return null
+
+  let name = item.metadata?.name ?? 'unknown'
+  let managedByKnative = false
+
+  if (item.spec?.type === 'ExternalName' && labels[knativeServiceLabel]) {
+    name = labels[knativeServiceLabel]
+    managedByKnative = true
+  }
+
+  const ports = item.spec?.ports?.map((p) => p.port) ?? []
+
+  return { name, ports, managedByKnative }
+}
+
+// Canary deployments produce two services: <name>-v1 and <name>-v2.
+// This function consolidates them into a single entry with the base name.
+// It works in two steps:
+//   1. Filter: drop -v2 when a matching -v1 exists (keeping only one representative)
+//   2. Map: rename the remaining -v1 to the base name when a matching -v2 exists
+// Services without a matching counterpart are left unchanged.
+export function mergeCanaryServices(services: K8sService[]): K8sService[] {
+  const nameSet = new Set(services.map((s) => s.name))
+
+  return services
+    .filter((svc) => !svc.name.endsWith('-v2') || !nameSet.has(svc.name.replace(/-v2$/, '-v1')))
+    .map((svc) => {
+      const baseName = svc.name.replace(/-v1$/, '')
+      return nameSet.has(`${baseName}-v2`) ? { ...svc, name: baseName } : svc
+    })
 }

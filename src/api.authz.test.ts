@@ -20,8 +20,8 @@ const userToken = getToken([])
 const teamId = 'team1'
 const otherTeamId = 'team2'
 
-jest.mock('./k8s_operations', () => {
-  const original = jest.requireActual('./k8s_operations')
+jest.mock('./k8s-operations', () => {
+  const original = jest.requireActual('./k8s-operations')
   return {
     ...original,
     apply: jest.fn(),

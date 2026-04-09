@@ -7,7 +7,7 @@ import { SealedSecretManifestRequest, SealedSecretManifestResponse, User } from 
 import { cleanEnv } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { ValidationError } from '../error'
-import { getSealedSecretsCertificate, isK8sReachable, UserSecretData } from '../k8s_operations'
+import { getSealedSecretsCertificate, isK8sReachable, UserSecretData } from '../k8s-operations'
 
 const debug = Debug('otomi:sealedSecretUtils')
 const env = cleanEnv({})
