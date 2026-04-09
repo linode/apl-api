@@ -260,7 +260,6 @@ Settings:
               description: The branch to use in the Git repository
           required:
             - repoUrl
-            - username
             - email
             - branch
         adminPassword:
