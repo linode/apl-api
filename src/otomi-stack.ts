@@ -568,6 +568,11 @@ export default class OtomiStack {
     const excludedApps = preInstalledExcludedApps.concat(hiddenApps)
     const settingsInfo = this.getSettingsInfo()
     if (!Array.isArray(apps)) {
+      if (k8sVersion && !isKnativeSupported(k8sVersion) && apps.id === 'knative') {
+        // eslint-disable-next-line no-param-reassign
+        ;(apps as ExcludedApp).managed = true
+        return apps as ExcludedApp
+      }
       if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled && excludedApps.includes(apps.id)) {
         // eslint-disable-next-line no-param-reassign
         ;(apps as ExcludedApp).managed = true
