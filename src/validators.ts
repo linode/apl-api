@@ -185,6 +185,10 @@ export const OBJECT_STORAGE_UI_EXCLUSIONS = json<string[]>({
   desc: 'Object Storage regions hidden in the UI',
   default: ['fr-par-2', 'in-bom-2'],
 })
+export const MIN_KNATIVE_K8S_VERSION = str({
+  desc: 'Minimum Kubernetes version required for Knative support',
+  default: '1.33.0',
+})
 const { env } = process
 export function cleanEnv<T>(validators: { [K in keyof T]: ValidatorSpec<T[K]> }, options: CleanOptions<T> = {}) {
   if (env.NODE_ENV === 'test') {
