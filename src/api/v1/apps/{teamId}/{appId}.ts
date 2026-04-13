@@ -5,9 +5,9 @@ import { App, OpenApiRequestExt } from 'src/otomi-models'
  * GET /v1/apps/{teamId}/{appId}
  * Get a specific team app
  */
-export const getTeamApp = (req: OpenApiRequestExt, res: Response): void => {
+export const getTeamApp = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, appId } = req.params
-  res.json(req.otomi.getTeamApp(teamId, appId))
+  res.json(await req.otomi.getTeamApp(teamId, appId))
 }
 
 /**
