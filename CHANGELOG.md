@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.18.0](https://github.com/redkubes/otomi-api/compare/v4.17.0...v4.18.0) (2026-04-14)
+
+
+### Features
+
+* add tini to Dockerfile for cleaning up zombie processes ([#969](https://github.com/redkubes/otomi-api/issues/969)) ([5865383](https://github.com/redkubes/otomi-api/commit/58653839b1bf171689e2814cab9fa086cf81cf45))
+* consolidate k8s service fetching ([#966](https://github.com/redkubes/otomi-api/issues/966)) ([11c1e9f](https://github.com/redkubes/otomi-api/commit/11c1e9f8e3c526486ac4cb7f3d81505194288db5))
+* disable ingress-nginx ([#965](https://github.com/redkubes/otomi-api/issues/965)) ([89d7661](https://github.com/redkubes/otomi-api/commit/89d7661b5a5c3650c88748fe71e0b47a1a6b31b1))
+* expose raw swagger.json ([#955](https://github.com/redkubes/otomi-api/issues/955)) ([b1555fa](https://github.com/redkubes/otomi-api/commit/b1555fab9ec37c74f2df796c02b3451968eca512))
+* hide knative when k8s version is below 1.33 ([#970](https://github.com/redkubes/otomi-api/issues/970)) ([190682c](https://github.com/redkubes/otomi-api/commit/190682c0284c7f607a5fb9687553cbca986a46fe))
+* k8s v2 endpoints ([#968](https://github.com/redkubes/otomi-api/issues/968)) ([8391b9f](https://github.com/redkubes/otomi-api/commit/8391b9fecdeeca07d4c4f13b3e355b241d1bd131))
+* make git username optional ([#971](https://github.com/redkubes/otomi-api/issues/971)) ([af8c6ce](https://github.com/redkubes/otomi-api/commit/af8c6cecfab5b8f15919f5dfe3599de8fc909f40))
+* only allow container creation when tekton is enabled ([#960](https://github.com/redkubes/otomi-api/issues/960)) ([b255d95](https://github.com/redkubes/otomi-api/commit/b255d95cc13b2fc479a54db5c924bdea697fcbdd))
+* update manifests for gateway api ([#943](https://github.com/redkubes/otomi-api/issues/943)) ([52f9b6e](https://github.com/redkubes/otomi-api/commit/52f9b6e3ced448b271dffb57476ea26f43605213))
+
+
+### Bug Fixes
+
+* remove smtp from settings ([#956](https://github.com/redkubes/otomi-api/issues/956)) ([0787034](https://github.com/redkubes/otomi-api/commit/07870342f7de07109f05bbaf8bc452bb0a2eaf7a))
+
+
+### Others
+
+* **deps:** bump the npm-dependencies group with 6 updates ([#957](https://github.com/redkubes/otomi-api/issues/957)) ([02f3def](https://github.com/redkubes/otomi-api/commit/02f3def991303d180917f10f97054f8ae67657df))
+* post release v4.17 ([#974](https://github.com/redkubes/otomi-api/issues/974)) ([77621f3](https://github.com/redkubes/otomi-api/commit/77621f3d020c9302c87a3db498e18a9cda495963))
+
 ## [4.17.0](https://github.com/redkubes/otomi-api/compare/v4.16.0...v4.17.0) (2026-03-20)
 
 
