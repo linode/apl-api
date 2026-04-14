@@ -680,7 +680,7 @@ describe('API authz tests', () => {
       secret: 'demo',
     }
     test('team member can create its own codeRepo', async () => {
-      jest.spyOn(otomiStack, 'createCodeRepo').mockResolvedValue({} as CodeRepo)
+      jest.spyOn(otomiStack.codeRepos, 'createV1').mockResolvedValue({} as CodeRepo)
       await agent
         .post(`/v1/teams/${teamId}/coderepos`)
         .send(data)
@@ -689,7 +689,7 @@ describe('API authz tests', () => {
     })
 
     test('team member can read its own codeRepo', async () => {
-      jest.spyOn(otomiStack, 'getCodeRepo').mockResolvedValue({} as never)
+      jest.spyOn(otomiStack.codeRepos, 'getV1').mockReturnValue({} as CodeRepo)
       await agent
         .get(`/v1/teams/${teamId}/coderepos/my-uuid`)
         .set('Authorization', `Bearer ${teamMemberToken}`)
@@ -697,7 +697,7 @@ describe('API authz tests', () => {
     })
 
     test('team member can update its own codeRepo', async () => {
-      jest.spyOn(otomiStack, 'editCodeRepo').mockResolvedValue({} as CodeRepo)
+      jest.spyOn(otomiStack.codeRepos, 'editV1').mockResolvedValue({} as CodeRepo)
 
       await agent
         .put(`/v1/teams/${teamId}/coderepos/my-uuid`)
@@ -707,7 +707,7 @@ describe('API authz tests', () => {
     })
 
     test('team member can delete its own codeRepo', async () => {
-      jest.spyOn(otomiStack, 'deleteCodeRepo').mockResolvedValue()
+      jest.spyOn(otomiStack.codeRepos, 'delete').mockResolvedValue()
 
       await agent
         .delete(`/v1/teams/${teamId}/coderepos/my-uuid`)

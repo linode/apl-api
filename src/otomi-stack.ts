@@ -1,5 +1,7 @@
 import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
+import { Deployer } from 'src/deployer'
+import { CodeRepos } from 'src/domains/code-repos'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
 import { existsSync, rmSync } from 'fs'
@@ -20,7 +22,7 @@ import {
 import { getSettingsFileMaps } from 'src/fileStore/file-map'
 import { FileStore } from 'src/fileStore/file-store'
 import getRepo, { getWorktreeRepo, Git } from 'src/git'
-import { cleanSession, getSessionStack } from 'src/middleware'
+import { getSessionStack } from 'src/middleware'
 import {
   AplAgentRequest,
   AplAgentResponse,
@@ -30,8 +32,6 @@ import {
   AplCatalogChartResponse,
   AplCatalogRequest,
   AplCatalogResponse,
-  AplCodeRepoRequest,
-  AplCodeRepoResponse,
   AplKind,
   AplKnowledgeBaseRequest,
   AplKnowledgeBaseResponse,
@@ -54,7 +54,6 @@ import {
   buildPlatformObject,
   buildTeamObject,
   Cloudtty,
-  CodeRepo,
   Core,
   DeepPartial,
   K8sService,
@@ -204,12 +203,14 @@ function getTeamDatabaseValuesFilePath(teamId: string, databaseName: string): st
 
 export default class OtomiStack {
   private coreValues: Core
+  private cloudTty: CloudTty
   editor?: string
-  sessionId?: string
+  sessionId: string
   isLoaded = false
   git: Git
   fileStore: FileStore
-  private cloudTty: CloudTty
+  deployer: Deployer
+  codeRepos: CodeRepos
 
   constructor(editor?: string, sessionId?: string) {
     this.editor = editor
@@ -221,6 +222,12 @@ export default class OtomiStack {
       this.cloudTty = new CloudTty()
     }
     return this.cloudTty
+  }
+
+  // We can do this, or we can do lazy loading and create a get function
+  initDomain() {
+    this.deployer = new Deployer(this.git, this.fileStore, this.editor, this.sessionId)
+    this.codeRepos = new CodeRepos(this.fileStore, this.deployer)
   }
 
   getAppList() {
@@ -290,6 +297,7 @@ export default class OtomiStack {
       await this.loadValues()
     }
     debug(`Values are loaded for ${this.editor} in ${this.sessionId}`)
+    this.initDomain()
   }
 
   async initGitWorktree(mainRepo: Git): Promise<void> {
@@ -838,14 +846,7 @@ export default class OtomiStack {
   }
 
   async saveTeamConfigItem(aplTeamObject: AplTeamObject): Promise<AplRecord> {
-    debug(
-      `Saving ${aplTeamObject.kind} ${aplTeamObject.metadata.name} for team ${aplTeamObject.metadata.labels['apl.io/teamId']}`,
-    )
-
-    const filePath = this.fileStore.setTeamResource(aplTeamObject)
-    await this.git.writeFile(filePath, aplTeamObject)
-
-    return { filePath, content: aplTeamObject }
+    return this.deployer.saveTeamConfigItem(aplTeamObject)
   }
 
   async saveTeamWorkload(aplTeamObject: AplTeamObject): Promise<AplRecord> {
@@ -918,11 +919,7 @@ export default class OtomiStack {
   }
 
   async deleteTeamConfigItem(kind: AplKind, teamId: string, name: string): Promise<string> {
-    debug(`Removing ${kind} ${name} for team ${teamId}`)
-
-    const filePath = this.fileStore.deleteTeamResource(kind, teamId, name)
-    await this.git.removeFile(filePath)
-    return filePath
+    return this.deployer.deleteTeamConfigItem(kind, teamId, name)
   }
 
   async deleteTeamWorkload(kind: AplKind, teamId: string, name: string): Promise<string> {
@@ -1203,93 +1200,27 @@ export default class OtomiStack {
     return users
   }
 
-  getTeamCodeRepos(teamId: string): CodeRepo[] {
-    return this.getTeamAplCodeRepos(teamId).map((codeRepo) => getV1ObjectFromApl(codeRepo) as CodeRepo)
-  }
+  getDashboard(teamId: string): Array<any> {
+    const codeRepos = teamId ? this.codeRepos.getByTeamApl(teamId) : this.codeRepos.getAllApl()
+    const builds = teamId ? this.getTeamAplBuilds(teamId) : this.getAllBuilds()
+    const workloads = teamId ? this.getTeamAplWorkloads(teamId) : this.getAllWorkloads()
+    const services = teamId ? this.getTeamAplServices(teamId) : this.getAllServices()
+    const secrets = teamId ? this.getAplSealedSecrets(teamId) : this.getAllAplSealedSecrets()
+    const netpols = teamId ? this.getTeamAplNetpols(teamId) : this.getAllNetpols()
 
-  getTeamAplCodeRepos(teamId: string): AplCodeRepoResponse[] {
-    const files = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamCodeRepo', teamId)
-    return Array.from(files.values()) as AplCodeRepoResponse[]
-  }
-
-  getAllCodeRepos(): CodeRepo[] {
-    return this.getAllAplCodeRepos().map((codeRepo) => getV1ObjectFromApl(codeRepo) as CodeRepo)
-  }
-
-  getAllAplCodeRepos(): AplCodeRepoResponse[] {
-    const files = this.fileStore.getAllTeamResourcesByKind('AplTeamCodeRepo')
-    return Array.from(files.values()) as AplCodeRepoResponse[]
-  }
-
-  async createCodeRepo(teamId: string, data: CodeRepo): Promise<CodeRepo> {
-    const newCodeRepo = await this.createAplCodeRepo(
-      teamId,
-      getAplObjectFromV1('AplTeamCodeRepo', data) as AplCodeRepoRequest,
-    )
-    return getV1ObjectFromApl(newCodeRepo) as CodeRepo
-  }
-
-  async createAplCodeRepo(teamId: string, data: AplCodeRepoRequest): Promise<AplCodeRepoResponse> {
-    // Check if URL already exists
-    const existingRepos = this.getTeamAplCodeRepos(teamId)
-    const allRepoUrls = existingRepos.map((repo) => repo.spec.repositoryUrl) || []
-    if (allRepoUrls.includes(data.spec.repositoryUrl)) throw new AlreadyExists('Code repository URL already exists')
-    const allNames = existingRepos.map((repo) => repo.metadata.name) || []
-    if (allNames.includes(data.metadata.name)) throw new AlreadyExists('Code repo name already exists')
-    if (!data.spec.private) unset(data.spec, 'secret')
-    if (data.spec.gitService === 'gitea') unset(data.spec, 'private')
-
-    const teamObject = toTeamObject(teamId, data)
-    const aplRecord = await this.saveTeamConfigItem(teamObject)
-    await this.doDeployment(aplRecord, false)
-    return aplRecord.content as AplCodeRepoResponse
-  }
-
-  getCodeRepo(teamId: string, name: string): CodeRepo {
-    return getV1ObjectFromApl(this.getAplCodeRepo(teamId, name)) as CodeRepo
-  }
-
-  getAplCodeRepo(teamId: string, name: string): AplCodeRepoResponse {
-    const codeRepo = this.fileStore.getTeamResource('AplTeamCodeRepo', teamId, name)
-    if (!codeRepo) {
-      throw new NotExistError(`Code repo ${name} not found in team ${teamId}`)
-    }
-    return codeRepo as AplCodeRepoResponse
-  }
-
-  async editCodeRepo(teamId: string, name: string, data: CodeRepo): Promise<CodeRepo> {
-    const mergeObj = getV1MergeObject(data) as DeepPartial<AplCodeRepoRequest>
-    const mergedCodeRepo = await this.editAplCodeRepo(teamId, name, mergeObj)
-    return getV1ObjectFromApl(mergedCodeRepo) as CodeRepo
-  }
-
-  async editAplCodeRepo(
-    teamId: string,
-    name: string,
-    data: DeepPartial<AplCodeRepoRequest>,
-    patch = false,
-  ): Promise<AplCodeRepoResponse> {
-    if (!data.spec?.private) unset(data.spec, 'secret')
-    if (data.spec?.gitService === 'gitea') unset(data.spec, 'private')
-
-    const existing = this.getAplCodeRepo(teamId, name)
-    const updatedSpec = patch ? merge(cloneDeep(existing.spec), data.spec) : { ...existing.spec, ...data.spec }
-
-    const teamObject = buildTeamObject(existing, updatedSpec)
-
-    const aplRecord = await this.saveTeamConfigItem(teamObject)
-    await this.doDeployment(aplRecord, false)
-    return aplRecord.content as AplCodeRepoResponse
-  }
-
-  async deleteCodeRepo(teamId: string, name: string): Promise<void> {
-    const filePath = await this.deleteTeamConfigItem('AplTeamCodeRepo', teamId, name)
-    await this.doDeleteDeployment([filePath])
+    return [
+      { name: 'code-repositories', count: codeRepos?.length },
+      { name: 'container-images', count: builds?.length },
+      { name: 'workloads', count: workloads?.length },
+      { name: 'services', count: services?.length },
+      { name: 'secrets', count: secrets?.length },
+      { name: 'network-policies', count: netpols?.length },
+    ]
   }
 
   async getRepoBranches(codeRepoName: string, teamId: string): Promise<string[]> {
     if (!codeRepoName) return ['HEAD']
-    const coderepo = this.getCodeRepo(teamId, codeRepoName)
+    const coderepo = this.codeRepos.getV1(teamId, codeRepoName)
     const { repositoryUrl, secret: secretName } = coderepo
     const { cluster } = this.getSettings(['cluster'])
     try {
@@ -1318,7 +1249,7 @@ export default class OtomiStack {
       return await getPublicRepoBranches(repoUrl)
     } catch (error) {
       const errorMessage = error.response?.data?.message || error?.message || 'Failed to get repo branches'
-      debug('Error getting branches:', errorMessage)
+      debug(`Error getting branches: ${errorMessage}`)
       return []
     }
   }
@@ -1364,24 +1295,6 @@ export default class OtomiStack {
     const domainSuffix = cluster?.domainSuffix
     const internalRepoUrls = (await getGiteaRepoUrls(username, password, orgName, domainSuffix)) || []
     return internalRepoUrls
-  }
-
-  getDashboard(teamId: string): Array<any> {
-    const codeRepos = teamId ? this.getTeamAplCodeRepos(teamId) : this.getAllCodeRepos()
-    const builds = teamId ? this.getTeamAplBuilds(teamId) : this.getAllBuilds()
-    const workloads = teamId ? this.getTeamAplWorkloads(teamId) : this.getAllWorkloads()
-    const services = teamId ? this.getTeamAplServices(teamId) : this.getAllServices()
-    const secrets = teamId ? this.getAplSealedSecrets(teamId) : this.getAllAplSealedSecrets()
-    const netpols = teamId ? this.getTeamAplNetpols(teamId) : this.getAllNetpols()
-
-    return [
-      { name: 'code-repositories', count: codeRepos?.length },
-      { name: 'container-images', count: builds?.length },
-      { name: 'workloads', count: workloads?.length },
-      { name: 'services', count: services?.length },
-      { name: 'secrets', count: secrets?.length },
-      { name: 'network-policies', count: netpols?.length },
-    ]
   }
 
   getTeamBuilds(teamId: string): Build[] {
@@ -2036,70 +1949,15 @@ export default class OtomiStack {
     if (servicesFiltered.length > 0) throw new PublicUrlExists()
   }
   async doDeployments(aplRecords: AplRecord[], encryptSecrets = true, files?: string[]): Promise<void> {
-    const rootStack = await getSessionStack()
-
-    try {
-      // Commit and push Git changes
-      await this.git.save(this.editor!, encryptSecrets, files)
-      // Pull the latest changes to ensure we have the most recent state
-      await rootStack.git.git.pull()
-
-      for (const aplRecord of aplRecords) {
-        rootStack.fileStore.set(aplRecord.filePath, aplRecord.content)
-      }
-
-      debug(`Updated root stack values with ${this.sessionId} changes`)
-    } catch (e) {
-      e.message = getSanitizedErrorMessage(e)
-      throw e
-    } finally {
-      // Clean up the session
-      await cleanSession(this.sessionId!)
-    }
+    return this.deployer.doDeployments(aplRecords, encryptSecrets, files)
   }
 
   async doDeployment(aplRecord: AplRecord, encryptSecrets = true, files?: string[]): Promise<void> {
-    const rootStack = await getSessionStack()
-
-    try {
-      // Commit and push Git changes
-      await this.git.save(this.editor!, encryptSecrets, files)
-      // Pull the latest changes to ensure we have the most recent state
-      await rootStack.git.git.pull()
-
-      rootStack.fileStore.set(aplRecord.filePath, aplRecord.content)
-
-      debug(`Updated root stack values with ${this.sessionId} changes`)
-    } catch (e) {
-      e.message = getSanitizedErrorMessage(e)
-      throw e
-    } finally {
-      // Clean up the session
-      await cleanSession(this.sessionId!)
-    }
+    return this.deployer.doDeployment(aplRecord, encryptSecrets, files)
   }
 
   async doDeleteDeployment(filePaths: string[]): Promise<void> {
-    const rootStack = await getSessionStack()
-
-    try {
-      // Commit and push Git changes
-      await this.git.save(this.editor!, false)
-      // Pull the latest changes to ensure we have the most recent state
-      await rootStack.git.git.pull()
-
-      for (const filePath of filePaths) {
-        rootStack.fileStore.delete(filePath)
-      }
-
-      debug(`Updated root stack values with ${this.sessionId} changes`)
-    } catch (e) {
-      e.message = getSanitizedErrorMessage(e)
-      throw e
-    } finally {
-      // Clean up the session
-      await cleanSession(this.sessionId!)
-    }
+    return this.deployer.doDeleteDeployment(filePaths)
   }
 
   apiClient?: CoreV1Api

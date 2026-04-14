@@ -11,7 +11,7 @@ const debug = Debug('otomi:api:v1:teams:codeRepos')
 export const getCodeRepo = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId, codeRepositoryName } = req.params
   debug(`getCodeRepo(${codeRepositoryName})`)
-  const data = req.otomi.getCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
+  const data = req.otomi.codeRepos.getV1(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
   res.json(data)
 }
 
@@ -22,7 +22,7 @@ export const getCodeRepo = (req: OpenApiRequestExt, res: Response): void => {
 export const editCodeRepo = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, codeRepositoryName } = req.params
   debug(`editCodeRepo(${codeRepositoryName})`)
-  const data = await req.otomi.editCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName), {
+  const data = await req.otomi.codeRepos.editV1(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName), {
     ...req.body,
   } as CodeRepo)
   res.json(data)
@@ -35,6 +35,6 @@ export const editCodeRepo = async (req: OpenApiRequestExt, res: Response): Promi
 export const deleteCodeRepo = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, codeRepositoryName } = req.params
   debug(`deleteCodeRepo(${codeRepositoryName})`)
-  await req.otomi.deleteCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
+  await req.otomi.codeRepos.delete(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
   res.json({})
 }
