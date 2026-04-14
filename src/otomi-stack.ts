@@ -136,6 +136,7 @@ import {
   testPrivateRepoConnect,
   testPublicRepoConnect,
 } from './utils/codeRepoUtils'
+import { isKnativeSupported } from './utils/k8sUtils'
 import { getAplObjectFromV1, getV1MergeObject, getV1ObjectFromApl } from './utils/manifests'
 import {
   createPlatformSealedSecretManifest,
@@ -667,30 +668,37 @@ export default class OtomiStack {
     return settings
   }
 
-  async filterExcludedApp(apps: App | App[]) {
+  async filterExcludedApp(apps: App | App[], k8sVersion?: string) {
     const preInstalledExcludedApps = env.PREINSTALLED_EXCLUDED_APPS.apps
     const hiddenApps = env.HIDDEN_APPS.apps
     const excludedApps = preInstalledExcludedApps.concat(hiddenApps)
     const settingsInfo = await this.getSettingsInfo()
     if (!Array.isArray(apps)) {
+      if (k8sVersion && !isKnativeSupported(k8sVersion) && apps.id === 'knative') {
+        // eslint-disable-next-line no-param-reassign
+        ;(apps as ExcludedApp).managed = true
+        return apps as ExcludedApp
+      }
       if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled && excludedApps.includes(apps.id)) {
         // eslint-disable-next-line no-param-reassign
         ;(apps as ExcludedApp).managed = true
         return apps as ExcludedApp
       }
     } else if (Array.isArray(apps)) {
+      let filtered = k8sVersion && !isKnativeSupported(k8sVersion) ? apps.filter((app) => app.id !== 'knative') : apps
       if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled) {
-        return apps.filter((app) => !excludedApps.includes(app.id))
+        return filtered.filter((app) => !excludedApps.includes(app.id))
       } else {
-        return apps
+        return filtered
       }
     }
     return apps
   }
 
   async getTeamApp(teamId: string, id: string): Promise<App | ExcludedApp> {
+    const k8sVersion = (await getKubernetesVersion()) as string | undefined
     const app = this.getApp(id)
-    await this.filterExcludedApp(app)
+    this.filterExcludedApp(app, k8sVersion)
 
     if (teamId === 'admin') return app
     return { id: app.id, enabled: app.enabled }
@@ -709,12 +717,13 @@ export default class OtomiStack {
 
   async getApps(): Promise<Array<App>> {
     const appList = await this.getAppList()
+    const k8sVersion = (await getKubernetesVersion()) as string | undefined
 
     const allApps = appList.map((id) => {
       return this.getApp(id)
     })
 
-    const providerSpecificApps = (await this.filterExcludedApp(allApps)) as App[]
+    const providerSpecificApps = (await this.filterExcludedApp(allApps, k8sVersion)) as App[]
 
     return providerSpecificApps.map((app) => {
       return {

@@ -51,8 +51,11 @@ export async function checkPodExists(namespace: string, podName: string): Promis
   }
 }
 
+let cachedKubernetesVersion: string | undefined
+
 export async function getKubernetesVersion() {
   if (process.env.NODE_ENV === 'development') return 'x.x.x'
+  if (cachedKubernetesVersion) return cachedKubernetesVersion
 
   const kc = new KubeConfig()
   kc.loadFromDefault()
@@ -62,7 +65,8 @@ export async function getKubernetesVersion() {
   try {
     const response = await k8sApi.getCode()
     console.log('Kubernetes Server Version:', response.gitVersion)
-    return response.gitVersion
+    cachedKubernetesVersion = response.gitVersion
+    return cachedKubernetesVersion
   } catch (error) {
     debug(`Failed to get Kubernetes version.`)
   }
