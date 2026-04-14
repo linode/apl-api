@@ -260,7 +260,6 @@ Settings:
               description: The branch to use in the Git repository
           required:
             - repoUrl
-            - username
             - email
             - branch
         adminPassword:
@@ -378,41 +377,4 @@ Settings:
         platformAdmin: [read-any, update-any]
         teamAdmin: [read]
         teamMember: [read]
-    smtp:
-      title: SMTP
-      additionalProperties: false
-      nullable: true
-      properties:
-        auth_identity:
-          title: Authentication identity
-          type: string
-        auth_password:
-          title: Authentication password
-          type: string
-        auth_secret:
-          title: Authentication secret
-          type: string
-        auth_username:
-          title: Authentication username
-          type: string
-        from:
-          $ref: 'definitions.yaml#/email'
-          description: The from address. Defaults to alerts@$clusterDomain.
-          title: From address
-        hello:
-          description: The hostname to identify to the SMTP server.
-          title: Hello
-          type: string
-        smarthost:
-          description: The smtp host:port combination.
-          pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):()([1-9]|[1-5]?[0-9]{2,4}|6[1-4][0-9]{3}|65[1-4][0-9]{2}|655[1-2][0-9]|6553[1-5])$
-          type: string
-          title: Smart Host
-      required:
-        - smarthost
-      type: object
-      x-acl:
-        platformAdmin: [read-any, update-any]
-        teamAdmin: []
-        teamMember: []
   type: object

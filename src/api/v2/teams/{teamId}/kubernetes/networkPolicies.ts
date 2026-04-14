@@ -2,10 +2,10 @@ import Debug from 'debug'
 import { Response } from 'express'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
-const debug = Debug('otomi:api:v1:teams:kubernetes:networkPolicies')
+const debug = Debug('otomi:api:v2:teams:kubernetes:networkPolicies')
 
 /**
- * GET /v1/teams/{teamId}/kubernetes/networkPolicies
+ * GET /v2/teams/{teamId}/kubernetes/networkPolicies
  * Get K8s pod labels for a workload
  */
 export const getK8sPodLabelsForWorkload = async (req: OpenApiRequestExt, res: Response): Promise<void> => {

@@ -3,8 +3,7 @@ import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
 import { existsSync, rmSync } from 'fs'
-import { pathExists, unlink } from 'fs-extra'
-import { readdir, readFile, writeFile } from 'fs/promises'
+import { readFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, filter, get, isEmpty, map, merge, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema, getSecretPaths } from 'src/app'
@@ -117,15 +116,16 @@ import { getAIModels } from './ai/aiModelHandler'
 import { DatabaseCR } from './ai/DatabaseCR'
 import { getResourceFilePath, getSecretFilePath } from './fileStore/file-map'
 import {
-  apply,
   checkPodExists,
   getCloudttyActiveTime,
   getKubernetesVersion,
   getSecretValues,
   getTeamSecretsFromK8s,
-  k8sdelete,
+  mergeCanaryServices,
+  toK8sService,
   watchPodUntilRunning,
-} from './k8s_operations'
+} from './k8s-operations'
+import CloudTty from './tty'
 import {
   getGiteaRepoUrls,
   getPrivateRepoBranches,
@@ -135,6 +135,7 @@ import {
   testPublicRepoConnect,
 } from './utils/codeRepoUtils'
 import { getAplObjectFromV1, getV1MergeObject, getV1ObjectFromApl } from './utils/manifests'
+import { isKnativeSupported } from './utils/k8sUtils'
 import { ensureSealedSecretMetadata, getSealedSecretsPEM, sealedSecretManifest } from './utils/sealedSecretUtils'
 import { getKeycloakUsers, isValidUsername } from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
@@ -208,10 +209,18 @@ export default class OtomiStack {
   isLoaded = false
   git: Git
   fileStore: FileStore
+  private cloudTty: CloudTty
 
   constructor(editor?: string, sessionId?: string) {
     this.editor = editor
     this.sessionId = sessionId ?? 'main'
+  }
+
+  getCloudTty() {
+    if (!this.cloudTty) {
+      this.cloudTty = new CloudTty()
+    }
+    return this.cloudTty
   }
 
   getAppList() {
@@ -312,7 +321,7 @@ export default class OtomiStack {
   }
 
   getSettingsInfo(): SettingsInfo {
-    const settings = this.getSettings(['cluster', 'dns', 'otomi', 'smtp', 'ingress'])
+    const settings = this.getSettings(['cluster', 'dns', 'otomi', 'ingress'])
     const otomiInfo = pick(settings.otomi, [
       'hasExternalDNS',
       'hasExternalIDP',
@@ -328,7 +337,6 @@ export default class OtomiStack {
       cluster: pick(settings.cluster, ['name', 'domainSuffix', 'apiServer', 'provider', 'linode']),
       dns: pick(settings.dns, ['zones']),
       otomi: otomiInfo,
-      smtp: pick(settings.smtp, ['smarthost']),
       ingressClassNames: map(settings.ingress?.classes, 'className') ?? [],
     } as SettingsInfo
   }
@@ -554,30 +562,37 @@ export default class OtomiStack {
     return settings
   }
 
-  filterExcludedApp(apps: App | App[]) {
+  filterExcludedApp(apps: App | App[], k8sVersion?: string) {
     const preInstalledExcludedApps = env.PREINSTALLED_EXCLUDED_APPS.apps
     const hiddenApps = env.HIDDEN_APPS.apps
     const excludedApps = preInstalledExcludedApps.concat(hiddenApps)
     const settingsInfo = this.getSettingsInfo()
     if (!Array.isArray(apps)) {
+      if (k8sVersion && !isKnativeSupported(k8sVersion) && apps.id === 'knative') {
+        // eslint-disable-next-line no-param-reassign
+        ;(apps as ExcludedApp).managed = true
+        return apps as ExcludedApp
+      }
       if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled && excludedApps.includes(apps.id)) {
         // eslint-disable-next-line no-param-reassign
         ;(apps as ExcludedApp).managed = true
         return apps as ExcludedApp
       }
     } else if (Array.isArray(apps)) {
+      let filtered = k8sVersion && !isKnativeSupported(k8sVersion) ? apps.filter((app) => app.id !== 'knative') : apps
       if (settingsInfo.otomi && settingsInfo.otomi.isPreInstalled) {
-        return apps.filter((app) => !excludedApps.includes(app.id))
+        return filtered.filter((app) => !excludedApps.includes(app.id))
       } else {
-        return apps
+        return filtered
       }
     }
     return apps
   }
 
-  getTeamApp(teamId: string, id: string): App | ExcludedApp {
+  async getTeamApp(teamId: string, id: string): Promise<App | ExcludedApp> {
+    const k8sVersion = (await getKubernetesVersion()) as string | undefined
     const app = this.getApp(id)
-    this.filterExcludedApp(app)
+    this.filterExcludedApp(app, k8sVersion)
 
     if (teamId === 'admin') return app
     return { id: app.id, enabled: app.enabled }
@@ -594,14 +609,15 @@ export default class OtomiStack {
     return { values: content.spec, id: content.metadata.name } as App
   }
 
-  getApps(): Array<App> {
+  async getApps(): Promise<Array<App>> {
     const appList = this.getAppList()
+    const k8sVersion = (await getKubernetesVersion()) as string | undefined
 
     const allApps = appList.map((id) => {
       return this.getApp(id)
     })
 
-    const providerSpecificApps = this.filterExcludedApp(allApps) as App[]
+    const providerSpecificApps = this.filterExcludedApp(allApps, k8sVersion) as App[]
 
     return providerSpecificApps.map((app) => {
       return {
@@ -611,8 +627,8 @@ export default class OtomiStack {
     })
   }
 
-  getTeamApps(teamId: string): Array<App> {
-    const allApps = this.getApps()
+  async getTeamApps(teamId: string): Promise<Array<App>> {
+    const allApps = await this.getApps()
 
     if (teamId === 'admin') return allApps
 
@@ -1392,6 +1408,10 @@ export default class OtomiStack {
   }
 
   async createAplBuild(teamId: string, data: AplBuildRequest): Promise<AplBuildResponse> {
+    const tekton = this.getApp('tekton')
+    const harbor = this.getApp('harbor')
+    if (!tekton?.values?.enabled || !harbor?.values?.enabled)
+      throw new ForbiddenError('Tekton and Harbor need to be enabled, cannot create container image')
     const buildName = `${data?.spec?.imageName}-${data?.spec?.tag}`
     if (data.spec.secretName && data.spec.secretName.length < 2)
       throw new ValidationError('Secret name must be at least 2 characters long')
@@ -1524,11 +1544,12 @@ export default class OtomiStack {
   }
 
   async connectCloudtty(teamId: string, sessionUser: SessionUser): Promise<Cloudtty> {
+    const isAdmin = sessionUser.isPlatformAdmin
+    const targetNamespace = isAdmin ? 'team-admin' : `team-${teamId}`
     if (!sessionUser.sub) {
       debug('No user sub found, cannot connect to shell.')
       throw new OtomiError(500, 'No user sub found, cannot connect to shell.')
     }
-    const userTeams = sessionUser.teams.map((teamName) => `team-${teamName}`)
     const variables = {
       FQDN: '',
       SUB: sessionUser.sub,
@@ -1545,62 +1566,20 @@ export default class OtomiStack {
     }
 
     // if cloudtty shell does not exists then check if the pod is running and return it
-    if (await checkPodExists('team-admin', `tty-${sessionUser.sub}`)) {
+    if (await checkPodExists(targetNamespace, `tty-${sessionUser.sub}`)) {
       return { iFrameUrl: `https://tty.${variables.FQDN}/${sessionUser.sub}` }
     }
 
-    if (await pathExists('/tmp/ttyd.yaml')) await unlink('/tmp/ttyd.yaml')
-
-    //if user is admin then read the manifests from ./dist/src/ttyManifests/adminTtyManifests
-    const files = sessionUser.isPlatformAdmin
-      ? await readdir('./dist/src/ttyManifests/adminTtyManifests', 'utf-8')
-      : await readdir('./dist/src/ttyManifests', 'utf-8')
-    const filteredFiles = files.filter((file) => file.startsWith('tty'))
-    const variableKeys = Object.keys(variables)
-
-    const podContentAddTargetTeam = (fileContent) => {
-      const regex = new RegExp(`\\$TARGET_TEAM`, 'g')
-      return fileContent.replace(regex, teamId)
-    }
-
-    // iterates over the rolebinding file and replace the $TARGET_TEAM with the team name for teams
-    const rolebindingContentsForUsers = (fileContent) => {
-      const rolebindingArray: string[] = []
-      userTeams?.forEach((team: string) => {
-        const regex = new RegExp(`\\$TARGET_TEAM`, 'g')
-        const rolebindingForTeam: string = fileContent.replace(regex, team)
-        rolebindingArray.push(rolebindingForTeam)
-      })
-      return rolebindingArray.join('\n')
-    }
-
-    const fileContents = await Promise.all(
-      filteredFiles.map(async (file) => {
-        let fileContent = sessionUser.isPlatformAdmin
-          ? await readFile(`./dist/src/ttyManifests/adminTtyManifests/${file}`, 'utf-8')
-          : await readFile(`./dist/src/ttyManifests/${file}`, 'utf-8')
-        variableKeys.forEach((key) => {
-          const regex = new RegExp(`\\$${key}`, 'g')
-          fileContent = fileContent.replace(regex, variables[key] as string)
-        })
-        if (file === 'tty_02_Pod.yaml') fileContent = podContentAddTargetTeam(fileContent)
-        if (!sessionUser.isPlatformAdmin && file === 'tty_03_Rolebinding.yaml') {
-          fileContent = rolebindingContentsForUsers(fileContent)
-        }
-        return fileContent
-      }),
-    )
-    await writeFile('/tmp/ttyd.yaml', fileContents, 'utf-8')
-    await apply('/tmp/ttyd.yaml')
-    await watchPodUntilRunning('team-admin', `tty-${sessionUser.sub}`)
+    await this.getCloudTty().createTty(teamId, sessionUser, variables.FQDN)
+    await watchPodUntilRunning(targetNamespace, `tty-${sessionUser.sub}`)
 
     // check the pod every 30 minutes and terminate it after 2 hours of inactivity
     const ISACTIVE_INTERVAL = 30 * 60 * 1000
     const TERMINATE_TIMEOUT = 2 * 60 * 60 * 1000
     const intervalId = setInterval(() => {
-      getCloudttyActiveTime('team-admin', `tty-${sessionUser.sub}`).then((activeTime: number) => {
+      getCloudttyActiveTime(targetNamespace, `tty-${sessionUser.sub}`).then(async (activeTime: number) => {
         if (activeTime > TERMINATE_TIMEOUT) {
-          this.deleteCloudtty(sessionUser)
+          await this.getCloudTty().deleteTty(teamId, sessionUser)
           clearInterval(intervalId)
           debug(`Cloudtty terminated after ${TERMINATE_TIMEOUT / (60 * 60 * 1000)} hours of inactivity`)
         }
@@ -1610,16 +1589,8 @@ export default class OtomiStack {
     return { iFrameUrl: `https://tty.${variables.FQDN}/${sessionUser.sub}` }
   }
 
-  async deleteCloudtty(sessionUser: SessionUser): Promise<void> {
-    const { sub, isPlatformAdmin, teams } = sessionUser as { sub: string; isPlatformAdmin: boolean; teams: string[] }
-    const userTeams = teams.map((teamName) => `team-${teamName}`)
-    try {
-      if (await checkPodExists('team-admin', `tty-${sessionUser.sub}`)) {
-        await k8sdelete({ sub, isPlatformAdmin, userTeams })
-      }
-    } catch (error) {
-      debug('Failed to delete cloudtty')
-    }
+  async deleteCloudtty(teamId: string, sessionUser: SessionUser): Promise<void> {
+    await this.getCloudTty().deleteTty(teamId, sessionUser)
   }
 
   private async fetchCatalog(
@@ -2231,30 +2202,10 @@ export default class OtomiStack {
   async getK8sServices(teamId: string): Promise<Array<K8sService>> {
     if (env.isDev) return []
 
-    const client = this.getApiClient()
-    const collection: K8sService[] = []
+    const { items } = await this.getApiClient().listNamespacedService({ namespace: `team-${teamId}` })
+    const mapped = items.flatMap((item) => toK8sService(item) ?? [])
 
-    const svcList = await client.listNamespacedService({ namespace: `team-${teamId}` })
-    svcList.items.map((item) => {
-      let name = item.metadata!.name ?? 'unknown'
-      let managedByKnative = false
-      // Filter out knative private services
-      if (item.metadata?.labels?.['networking.internal.knative.dev/serviceType'] === 'Private') return
-      // Filter out services that are knative service revision
-      if (item.spec?.type === 'ClusterIP' && item.metadata?.labels?.['serving.knative.dev/service']) return
-      if (item.spec?.type === 'ExternalName' && item.metadata?.labels?.['serving.knative.dev/service']) {
-        name = item.metadata?.labels?.['serving.knative.dev/service']
-        managedByKnative = true
-      }
-
-      collection.push({
-        name,
-        ports: item.spec?.ports?.map((portItem) => portItem.port) ?? [],
-        managedByKnative,
-      })
-    })
-
-    return collection
+    return mergeCanaryServices(mapped)
   }
 
   async getKubecfg(teamId: string): Promise<KubeConfig> {
@@ -2737,7 +2688,6 @@ export default class OtomiStack {
     const settingsPrefixMap: Record<string, string> = {
       AplDns: 'dns.',
       AplKms: 'kms.',
-      AplSmtp: 'smtp.',
       AplIdentityProvider: 'oidc.',
       AplCapabilitySet: 'otomi.',
       AplAlertSet: 'alerts.',

@@ -1,64 +1,14 @@
-import {
-  CoreV1Api,
-  CustomObjectsApi,
-  KubeConfig,
-  KubernetesObject,
-  KubernetesObjectApi,
-  RbacAuthorizationV1Api,
-  VersionApi,
-} from '@kubernetes/client-node'
+import { CoreV1Api, CustomObjectsApi, KubeConfig, V1Service, VersionApi } from '@kubernetes/client-node'
 import Debug from 'debug'
-import * as fs from 'fs'
-import * as yaml from 'js-yaml'
-import { promisify } from 'util'
-import { AplBuildResponse, AplServiceResponse, AplWorkloadResponse, SealedSecretManifestResponse } from './otomi-models'
+import {
+  AplBuildResponse,
+  AplServiceResponse,
+  AplWorkloadResponse,
+  K8sService,
+  SealedSecretManifestResponse,
+} from './otomi-models'
 
 const debug = Debug('otomi:api:k8sOperations')
-
-/**
- * Replicate the functionality of `kubectl apply`.  That is, create the resources defined in the `specFile` if they do
- * not exist, patch them if they do exist.
- *
- * @param specPath File system path to a YAML Kubernetes spec.
- * @return Array of resources created
- */
-export async function apply(specPath: string): Promise<KubernetesObject[]> {
-  const kc = new KubeConfig()
-  kc.loadFromDefault()
-  const client = KubernetesObjectApi.makeApiClient(kc) as any
-  const fsReadFileP = promisify(fs.readFile)
-  const specString = await fsReadFileP(specPath, 'utf8')
-  const specs: any = yaml.loadAll(specString)
-  const validSpecs = specs.filter((s) => s && s.kind && s.metadata)
-  const created: KubernetesObject[] = []
-  for (const spec of validSpecs) {
-    // this is to convince the old version of TypeScript that metadata exists even though we already filtered specs
-    // without metadata out
-    spec.metadata = spec.metadata || {}
-    spec.metadata.annotations = spec.metadata.annotations || {}
-    delete spec.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration']
-    spec.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration'] = JSON.stringify(spec)
-    try {
-      // try to get the resource, if it does not exist an error will be thrown and we will end up in the catch
-      // block.
-      await client.read(spec)
-      // we got the resource, so it exists, so patch it
-      //
-      // Note that this could fail if the spec refers to a custom resource. For custom resources you may need
-      // to specify a different patch merge strategy in the content-type header.
-      //
-      // See: https://github.com/kubernetes/kubernetes/issues/97423
-      const response = await client.patch(spec)
-      created.push(response.body)
-    } catch (e) {
-      // we did not get the resource, so it does not exist, so create it
-      const response = await client.create(spec)
-      created.push(response.body)
-    }
-  }
-  debug(`Cloudtty is created!`)
-  return created
-}
 
 export async function watchPodUntilRunning(namespace: string, podName: string) {
   let isRunning = false
@@ -101,65 +51,11 @@ export async function checkPodExists(namespace: string, podName: string): Promis
   }
 }
 
-export async function k8sdelete({
-  sub,
-  isPlatformAdmin,
-  userTeams,
-}: {
-  sub: string
-  isPlatformAdmin: boolean
-  userTeams: string[]
-}): Promise<void> {
-  const kc = new KubeConfig()
-  kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(CoreV1Api)
-  const customObjectsApi = kc.makeApiClient(CustomObjectsApi)
-  const rbacAuthorizationV1Api = kc.makeApiClient(RbacAuthorizationV1Api)
-  const resourceName = sub
-  const namespace = 'team-admin'
-  try {
-    const apiVersion = 'v1beta1'
-    const apiGroupAuthz = 'security.istio.io'
-    const apiGroupVS = 'networking.istio.io'
-    const pluralAuth = 'authorizationpolicies'
-    const pluralVS = 'virtualservices'
-
-    await customObjectsApi.deleteNamespacedCustomObject({
-      group: apiGroupAuthz,
-      version: apiVersion,
-      namespace,
-      plural: pluralAuth,
-      name: `tty-${resourceName}`,
-    })
-
-    await k8sApi.deleteNamespacedServiceAccount({ name: `tty-${resourceName}`, namespace })
-    await k8sApi.deleteNamespacedPod({ name: `tty-${resourceName}`, namespace })
-    if (!isPlatformAdmin) {
-      for (const team of userTeams!) {
-        await rbacAuthorizationV1Api.deleteNamespacedRoleBinding({
-          name: `tty-${team}-${resourceName}-rolebinding`,
-          namespace: team,
-        })
-      }
-    } else {
-      await rbacAuthorizationV1Api.deleteClusterRoleBinding({ name: 'tty-admin-clusterrolebinding' })
-    }
-    await k8sApi.deleteNamespacedService({ name: `tty-${resourceName}`, namespace })
-
-    await customObjectsApi.deleteNamespacedCustomObject({
-      group: apiGroupVS,
-      version: apiVersion,
-      namespace,
-      plural: pluralVS,
-      name: `tty-${resourceName}`,
-    })
-  } catch (error) {
-    debug(`Failed to delete resources for ${resourceName} in namespace ${namespace}.`)
-  }
-}
+let cachedKubernetesVersion: string | undefined
 
 export async function getKubernetesVersion() {
   if (process.env.NODE_ENV === 'development') return 'x.x.x'
+  if (cachedKubernetesVersion) return cachedKubernetesVersion
 
   const kc = new KubeConfig()
   kc.loadFromDefault()
@@ -169,7 +65,8 @@ export async function getKubernetesVersion() {
   try {
     const response = await k8sApi.getCode()
     console.log('Kubernetes Server Version:', response.gitVersion)
-    return response.gitVersion
+    cachedKubernetesVersion = response.gitVersion
+    return cachedKubernetesVersion
   } catch (error) {
     debug(`Failed to get Kubernetes version.`)
   }
@@ -526,4 +423,45 @@ export async function getTeamSecretsFromK8s(namespace: string) {
   } catch (error) {
     debug(`Failed to get team secrets from k8s for ${namespace}.`)
   }
+}
+
+export function toK8sService(item: V1Service): K8sService | null {
+  const knativeServiceTypeLabel = 'networking.internal.knative.dev/serviceType'
+  const knativeServiceLabel = 'serving.knative.dev/service'
+
+  const labels = item.metadata?.labels ?? {}
+
+  // Filter out knative private services
+  if (labels[knativeServiceTypeLabel] === 'Private') return null
+  // Filter out services that are knative service revision
+  if (item.spec?.type === 'ClusterIP' && labels[knativeServiceLabel]) return null
+
+  let name = item.metadata?.name ?? 'unknown'
+  let managedByKnative = false
+
+  if (item.spec?.type === 'ExternalName' && labels[knativeServiceLabel]) {
+    name = labels[knativeServiceLabel]
+    managedByKnative = true
+  }
+
+  const ports = item.spec?.ports?.map((p) => p.port) ?? []
+
+  return { name, ports, managedByKnative }
+}
+
+// Canary deployments produce two services: <name>-v1 and <name>-v2.
+// This function consolidates them into a single entry with the base name.
+// It works in two steps:
+//   1. Filter: drop -v2 when a matching -v1 exists (keeping only one representative)
+//   2. Map: rename the remaining -v1 to the base name when a matching -v2 exists
+// Services without a matching counterpart are left unchanged.
+export function mergeCanaryServices(services: K8sService[]): K8sService[] {
+  const nameSet = new Set(services.map((s) => s.name))
+
+  return services
+    .filter((svc) => !svc.name.endsWith('-v2') || !nameSet.has(svc.name.replace(/-v2$/, '-v1')))
+    .map((svc) => {
+      const baseName = svc.name.replace(/-v1$/, '')
+      return nameSet.has(`${baseName}-v2`) ? { ...svc, name: baseName } : svc
+    })
 }

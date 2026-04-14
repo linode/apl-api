@@ -20,7 +20,7 @@ const userToken = getToken([])
 const teamId = 'team1'
 const otherTeamId = 'team2'
 
-jest.mock('./k8s_operations')
+jest.mock('./k8s-operations')
 jest.mock('./utils/sealedSecretUtils')
 beforeAll(async () => {
   jest.spyOn(console, 'log').mockImplementation(() => {})
