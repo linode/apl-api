@@ -159,7 +159,6 @@ export async function extractRepositoryRefs(repoUrl: string, git: SimpleGit = si
     let formattedRepoUrl = repoUrl
     if (repoUrl.startsWith('https://gitea')) {
       git.env({
-        GIT_ASKPASS: 'echo',
         GIT_TERMINAL_PROMPT: '0',
         GIT_SSL_NO_VERIFY: 'true',
       })
