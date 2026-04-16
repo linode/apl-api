@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
@@ -706,11 +706,10 @@ export default class OtomiStack {
     branch: string
     remoteHasContent: boolean
   }): Promise<void> {
-    const { otomi } = this.getSettings()
+    const { otomi } = await this.getSettings()
     const updatedOtomi = buildUpdatedOtomiSettings(otomi, params)
     const { filePath, aplObject } = await this.persistOtomiSettings(updatedOtomi)
-    const secretFiles = [getSecretFilePath(filePath)]
-    await this.commitAndPushMigration({ ...params, filePath, aplObject, secretFiles })
+    await this.commitAndPushMigration({ ...params, filePath, aplObject })
   }
 
   private async persistOtomiSettings(
@@ -731,12 +730,11 @@ export default class OtomiStack {
     remoteHasContent: boolean
     filePath: string
     aplObject: AplObject
-    secretFiles: string[]
   }): Promise<void> {
-    const { repoUrl, branch, password, username, remoteHasContent, filePath, aplObject, secretFiles } = params
+    const { repoUrl, branch, password, username, remoteHasContent, filePath, aplObject } = params
     const rootStack = await getSessionStack()
     try {
-      await this.git.commitAndEncrypt(this.editor!, true, secretFiles)
+      await this.git.commitAndEncrypt(this.editor!)
       if (!remoteHasContent) {
         // Remote is empty: push so the new remote has the config pointing to itself
         await this.git.pushToNewRemote(repoUrl, branch, password, username)

@@ -382,7 +382,7 @@ export class Git {
     return this.git.revparse('HEAD')
   }
 
-  async commitAndEncrypt(editor: string, encryptSecrets = true, files?: string[]): Promise<void> {
+  async commitAndEncrypt(editor: string): Promise<void> {
     await this.commit(editor)
   }
 
@@ -414,10 +414,10 @@ export class Git {
     }
   }
 
-  async save(editor: string, encryptSecrets = true, files?: string[]): Promise<void> {
+  async save(editor: string): Promise<void> {
     // we are in a unique developer branch, so we can pull, push, and merge
     // with the remote root, which might have been modified by another developer
-    await this.commitAndEncrypt(editor, encryptSecrets, files)
+    await this.commitAndEncrypt(editor)
     await this.pushWithRetry()
   }
 }
