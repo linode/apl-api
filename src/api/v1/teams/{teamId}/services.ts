@@ -8,10 +8,10 @@ const debug = Debug('otomi:api:v1:teams:services')
  * GET /v1/teams/{teamId}/services
  * Get services from a given team
  */
-export const getTeamServices = (req: OpenApiRequestExt, res: Response): void => {
+export const getTeamServices = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId } = req.params
   debug(`getTeamServices(${teamId})`)
-  const v = req.otomi.getTeamServices(teamId)
+  const v = await req.otomi.getTeamServices(teamId)
   res.json(v)
 }
 

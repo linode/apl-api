@@ -8,9 +8,9 @@ const debug = Debug('otomi:api:v1:dashboard')
  * GET /v1/dashboard
  * Get dashboard information
  */
-export const getDashboard = (req: OpenApiRequestExt, res: Response): void => {
+export const getDashboard = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId } = req.query
   debug(`getDashboard(${teamId})`)
-  const v = req.otomi.getDashboard(teamId as string)
+  const v = await req.otomi.getDashboard(teamId as string)
   res.json(v)
 }
