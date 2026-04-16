@@ -45,13 +45,14 @@ const getProtocol = (url): string => (url && url.includes('://') ? url.split(':/
 
 const getUrl = (url): string => (!url || url.includes('://') ? url : `${getProtocol(url)}://${url}`)
 
-function getUrlAuth(url, user, password): string | undefined {
+function getUrlAuth(url, user: string | undefined, password): string | undefined {
   if (!url) return
   const protocol = getProtocol(url)
   const [_, bareUrl] = url.split('://')
-  const encodedUser = encodeURIComponent(user as string)
-  const encodedPassword = encodeURIComponent(password as string)
-  return protocol === 'file' ? `${protocol}://${bareUrl}` : `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
+  const credentials = user
+    ? `${encodeURIComponent(user)}:${encodeURIComponent(password)}`
+    : encodeURIComponent(password)
+  return protocol === 'file' ? `${protocol}://${bareUrl}` : `${protocol}://${credentials}@${bareUrl}`
 }
 
 const secretFileRegex = new RegExp(`^(.*/)?secrets.*.yaml(.dec)?$`)
@@ -362,6 +363,27 @@ export class Git {
     return
   }
 
+  async testRemoteConnection(url: string, password: string, user?: string): Promise<boolean> {
+    const authUrl = password ? getUrlAuth(url, user, password) : url
+    // returns true if remote has existing refs (non-empty), false if empty
+    const result = await this.git.raw(['ls-remote', authUrl!])
+    return result.trim().length > 0
+  }
+
+  async pushToNewRemote(url: string, branch: string, password: string, user?: string): Promise<void> {
+    const authUrl = password ? getUrlAuth(url, user, password) : url
+    try {
+      await this.git.remote(['add', 'migration-remote', authUrl!])
+      await this.git.push('migration-remote', branch)
+    } finally {
+      try {
+        await this.git.remote(['remove', 'migration-remote'])
+      } catch (e) {
+        debug(`Could not remove migration-remote: ${getSanitizedErrorMessage(e)}`)
+      }
+    }
+  }
+
   async createWorktree(worktreePath: string, branch: string = this.branch): Promise<void> {
     debug(`Creating worktree at: ${worktreePath} from branch: ${branch}`)
     await ensureDir(dirname(worktreePath), { mode: 0o744 })
@@ -401,8 +423,7 @@ export class Git {
     return this.git.revparse('HEAD')
   }
 
-  async save(editor: string, encryptSecrets = true, files?: string[]): Promise<void> {
-    // prepare values first
+  async commitAndEncrypt(editor: string, encryptSecrets = true, files?: string[]): Promise<void> {
     try {
       if (encryptSecrets) {
         await this.requestPrepareValues(files)
@@ -418,13 +439,11 @@ export class Git {
       }
       throw new HttpError(500, `${e}`)
     }
-    // all good? commit
     await this.commit(editor)
+  }
+
+  async pushWithRetry(): Promise<void> {
     try {
-      // we are in a unique developer branch, so we can pull, push, and merge
-      // with the remote root, which might have been modified by another developer
-      // since this is a child branch, we don't need to re-init
-      // retry up to 10 times to pull and push if there are conflicts
       const retries = env.GIT_PUSH_RETRIES
       for (let attempt = 1; attempt <= retries; attempt++) {
         try {
@@ -449,6 +468,13 @@ export class Git {
       debug('Git save error')
       throw new GitPullError()
     }
+  }
+
+  async save(editor: string, encryptSecrets = true, files?: string[]): Promise<void> {
+    // we are in a unique developer branch, so we can pull, push, and merge
+    // with the remote root, which might have been modified by another developer
+    await this.commitAndEncrypt(editor, encryptSecrets, files)
+    await this.pushWithRetry()
   }
 }
 

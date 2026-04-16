@@ -2,19 +2,20 @@ import Debug from 'debug'
 import { RequestHandler } from 'express'
 import { remove } from 'fs-extra'
 import http from 'http'
-import { cloneDeep } from 'lodash'
 import { join } from 'path'
 import { Server } from 'socket.io'
-import { ApiNotReadyError } from 'src/error'
+import { ApiLockedError, ApiNotReadyError } from 'src/error'
 import { OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack, rootPath } from 'src/otomi-stack'
-import { cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validators'
+import { APL_NAMESPACE, cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validators'
 import { v4 as uuidv4 } from 'uuid'
 import { getSanitizedErrorMessage } from '../utils'
+import { setApiStatusInConfigMap } from '../k8s-operations'
 
 const debug = Debug('otomi:session')
 const env = cleanEnv({
   EDITOR_INACTIVITY_TIMEOUT,
+  APL_NAMESPACE,
 })
 
 export type DbMessage = {
@@ -48,6 +49,16 @@ export const setSessionStack = async (editor: string, sessionId: string): Promis
 }
 
 export const getEditors = () => Object.keys(sessions)
+
+export const lockApi = async (): Promise<void> => {
+  if (!readOnlyStack) {
+    debug('readOnlyStack is not set')
+  }
+  readOnlyStack.setLocked(true)
+  if (process.env.NODE_ENV !== 'test') {
+    await setApiStatusInConfigMap(env.APL_NAMESPACE, true)
+  }
+}
 
 export const cleanAllSessions = (): void => {
   debug(`Cleaning all editor sessions`)
@@ -111,6 +122,9 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
     if (['post', 'put', 'delete'].includes(req.method.toLowerCase())) {
       // in the workloadCatalog endpoint(s), don't need to create a session
       if (req.path === '/v1/workloadCatalog' || req.path === '/v1/createWorkloadCatalog') return next()
+
+      // Block all write operations when the API is locked (git migration completed)
+      if (readOnlyStack?.locked) throw new ApiLockedError()
 
       // bootstrap session stack with unique sessionId to manipulate data
       const sessionId = uuidv4() as string

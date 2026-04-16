@@ -90,6 +90,7 @@ import {
 } from 'src/utils'
 import { deepQuote } from 'src/utils/yamlUtils'
 import {
+  APL_NAMESPACE,
   CATALOG_CACHE_PATH,
   cleanEnv,
   CUSTOM_ROOT_CA,
@@ -122,6 +123,7 @@ import {
   getSecretValues,
   getTeamSecretsFromK8s,
   mergeCanaryServices,
+  setApiStatusInConfigMap,
   toK8sService,
   watchPodUntilRunning,
 } from './k8s-operations'
@@ -155,6 +157,7 @@ interface ExcludedApp extends App {
 const debug = Debug('otomi:otomi-stack')
 
 const env = cleanEnv({
+  APL_NAMESPACE,
   CATALOG_CACHE_PATH,
   CUSTOM_ROOT_CA,
   DEFAULT_PLATFORM_ADMIN_EMAIL,
@@ -202,11 +205,30 @@ function getTeamDatabaseValuesFilePath(teamId: string, databaseName: string): st
   return `env/teams/${teamId}/databases/${databaseName}`
 }
 
+function buildUpdatedOtomiSettings(
+  otomi: Settings['otomi'],
+  params: { repoUrl: string; username?: string; password: string; email: string; branch: string },
+): Record<string, any> {
+  const { repoUrl, username, password, email, branch } = params
+  return {
+    ...otomi,
+    git: {
+      ...(otomi?.git ?? {}),
+      repoUrl,
+      email,
+      branch,
+      ...(username !== undefined && { username }),
+      password,
+    },
+  }
+}
+
 export default class OtomiStack {
   private coreValues: Core
   editor?: string
   sessionId?: string
   isLoaded = false
+  public locked = false
   git: Git
   fileStore: FileStore
   private cloudTty: CloudTty
@@ -214,6 +236,14 @@ export default class OtomiStack {
   constructor(editor?: string, sessionId?: string) {
     this.editor = editor
     this.sessionId = sessionId ?? 'main'
+  }
+
+  getApiStatus(): { locked: boolean } {
+    return { locked: this.locked }
+  }
+
+  setLocked(value: boolean): void {
+    this.locked = value
   }
 
   getCloudTty() {
@@ -560,6 +590,62 @@ export default class OtomiStack {
       `${this.getRepoPath()}/env/settings/secrets.${settingId}.yaml`,
     ])
     return settings
+  }
+
+  async migrateGitSettings(params: {
+    repoUrl: string
+    username?: string
+    password: string
+    email: string
+    branch: string
+    remoteHasContent: boolean
+  }): Promise<void> {
+    const { otomi } = this.getSettings()
+    const updatedOtomi = buildUpdatedOtomiSettings(otomi, params)
+    const { filePath, aplObject } = await this.persistOtomiSettings(updatedOtomi)
+    const secretFiles = [getSecretFilePath(filePath)]
+    await this.commitAndPushMigration({ ...params, filePath, aplObject, secretFiles })
+  }
+
+  private async persistOtomiSettings(
+    updatedOtomi: Record<string, any>,
+  ): Promise<{ filePath: string; aplObject: AplObject }> {
+    const filePath = getResourceFilePath('AplCapabilitySet', 'otomi')
+    const aplObject = toPlatformObject('AplCapabilitySet', 'otomi', updatedOtomi)
+    this.fileStore.set(filePath, aplObject)
+    await this.saveSettings()
+    return { filePath, aplObject }
+  }
+
+  private async commitAndPushMigration(params: {
+    repoUrl: string
+    branch: string
+    password: string
+    username?: string
+    remoteHasContent: boolean
+    filePath: string
+    aplObject: AplObject
+    secretFiles: string[]
+  }): Promise<void> {
+    const { repoUrl, branch, password, username, remoteHasContent, filePath, aplObject, secretFiles } = params
+    const rootStack = await getSessionStack()
+    try {
+      await this.git.commitAndEncrypt(this.editor!, true, secretFiles)
+      if (!remoteHasContent) {
+        // Remote is empty: push so the new remote has the config pointing to itself
+        await this.git.pushToNewRemote(repoUrl, branch, password, username)
+      }
+      // Push to current remote so the operator picks up the git config change
+      await this.git.pushWithRetry()
+      await rootStack.git.git.pull()
+      rootStack.fileStore.set(filePath, aplObject)
+      debug(`Updated root stack values with ${this.sessionId} migration changes`)
+    } catch (e) {
+      e.message = getSanitizedErrorMessage(e)
+      throw e
+    } finally {
+      await cleanSession(this.sessionId!)
+    }
   }
 
   filterExcludedApp(apps: App | App[], k8sVersion?: string) {
@@ -2668,6 +2754,11 @@ export default class OtomiStack {
     debug('Loading values')
     await this.git.initSops()
     await this.initRepo()
+    // Always start unlocked on startup and persist that to the ConfigMap
+    this.locked = false
+    if (!env.isTest) {
+      await setApiStatusInConfigMap(env.APL_NAMESPACE, false)
+    }
     this.isLoaded = true
   }
 
