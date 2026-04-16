@@ -708,8 +708,17 @@ export default class OtomiStack {
   }): Promise<void> {
     const { otomi } = await this.getSettings()
     const updatedOtomi = buildUpdatedOtomiSettings(otomi, params)
+
+    // Encrypt the password into the otomi-secrets SealedSecret and strip it from the settings YAML
+    const sealedSecretRecord = await this.extractAndStoreSettingsSecrets('otomi', { otomi: updatedOtomi })
+    const valuesSchema = await getValuesSchema()
+    const subSchema = valuesSchema.properties?.otomi
+    if (subSchema) {
+      removeSettingsSecrets(extractSecretPaths(subSchema), updatedOtomi)
+    }
+
     const { filePath, aplObject } = await this.persistOtomiSettings(updatedOtomi)
-    await this.commitAndPushMigration({ ...params, filePath, aplObject })
+    await this.commitAndPushMigration({ ...params, filePath, aplObject, sealedSecretRecord })
   }
 
   private async persistOtomiSettings(
@@ -730,11 +739,12 @@ export default class OtomiStack {
     remoteHasContent: boolean
     filePath: string
     aplObject: AplObject
+    sealedSecretRecord?: AplRecord
   }): Promise<void> {
-    const { repoUrl, branch, password, username, remoteHasContent, filePath, aplObject } = params
+    const { repoUrl, branch, password, username, remoteHasContent, filePath, aplObject, sealedSecretRecord } = params
     const rootStack = await getSessionStack()
     try {
-      await this.git.commitAndEncrypt(this.editor!)
+      await this.git.commit(this.editor!)
       if (!remoteHasContent) {
         // Remote is empty: push so the new remote has the config pointing to itself
         await this.git.pushToNewRemote(repoUrl, branch, password, username)
@@ -743,6 +753,9 @@ export default class OtomiStack {
       await this.git.pushWithRetry()
       await rootStack.git.git.pull()
       rootStack.fileStore.set(filePath, aplObject)
+      if (sealedSecretRecord) {
+        rootStack.fileStore.set(sealedSecretRecord.filePath, sealedSecretRecord.content)
+      }
       debug(`Updated root stack values with ${this.sessionId} migration changes`)
     } catch (e) {
       e.message = getSanitizedErrorMessage(e)

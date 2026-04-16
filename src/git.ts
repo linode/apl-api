@@ -382,10 +382,6 @@ export class Git {
     return this.git.revparse('HEAD')
   }
 
-  async commitAndEncrypt(editor: string): Promise<void> {
-    await this.commit(editor)
-  }
-
   async pushWithRetry(): Promise<void> {
     try {
       const retries = env.GIT_PUSH_RETRIES
@@ -417,7 +413,7 @@ export class Git {
   async save(editor: string): Promise<void> {
     // we are in a unique developer branch, so we can pull, push, and merge
     // with the remote root, which might have been modified by another developer
-    await this.commitAndEncrypt(editor)
+    await this.commit(editor)
     await this.pushWithRetry()
   }
 }
