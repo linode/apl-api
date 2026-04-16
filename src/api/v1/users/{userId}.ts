@@ -8,10 +8,10 @@ const debug = Debug('otomi:api:v1:users')
  * GET /v1/users/{userId}
  * Get a specific user
  */
-export const getUser = (req: OpenApiRequestExt, res: Response): void => {
+export const getUser = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { userId } = req.params
   debug(`getUser(${userId})`)
-  const data = req.otomi.getUser(decodeURIComponent(userId), req.user)
+  const data = await req.otomi.getUser(decodeURIComponent(userId), req.user)
   res.json(data)
 }
 
