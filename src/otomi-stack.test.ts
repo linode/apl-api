@@ -1320,7 +1320,7 @@ describe('Code repositories tests', () => {
 
 describe('OtomiStack.migrateGitSettings', () => {
   let stack: OtomiStack
-  const mockCommitAndEncrypt = jest.fn().mockResolvedValue(undefined)
+  const mockCommit = jest.fn().mockResolvedValue(undefined)
   const mockPushToNewRemote = jest.fn().mockResolvedValue(undefined)
   const mockPushWithRetry = jest.fn().mockResolvedValue(undefined)
   const mockRootPull = jest.fn().mockResolvedValue(undefined)
@@ -1334,10 +1334,12 @@ describe('OtomiStack.migrateGitSettings', () => {
     jest.spyOn(stack as any, 'getSettings').mockReturnValue({
       otomi: { git: { repoUrl: 'https://old.example.com/repo.git', branch: 'main', email: 'old@example.com' } },
     })
+    jest.spyOn(stack as any, 'extractAndStoreSettingsSecrets').mockResolvedValue(undefined)
+    jest.spyOn(require('src/utils'), 'getValuesSchema').mockResolvedValue({ properties: {} })
     jest.spyOn(stack as any, 'saveSettings').mockResolvedValue(undefined)
     ;(stack as any).fileStore = { set: jest.fn() }
     ;(stack as any).git = {
-      commitAndEncrypt: mockCommitAndEncrypt,
+      commit: mockCommit,
       pushToNewRemote: mockPushToNewRemote,
       pushWithRetry: mockPushWithRetry,
     }
@@ -1350,12 +1352,12 @@ describe('OtomiStack.migrateGitSettings', () => {
 
   afterEach(() => jest.restoreAllMocks())
 
-  it('calls saveSettings, commitAndEncrypt, pushToNewRemote, pushWithRetry in order', async () => {
+  it('calls saveSettings, commit, pushToNewRemote, pushWithRetry in order', async () => {
     const order: string[] = []
     const saveSettingsSpy = jest.spyOn(stack as any, 'saveSettings').mockImplementation(async () => {
       order.push('saveSettings')
     })
-    mockCommitAndEncrypt.mockImplementation(async () => order.push('commitAndEncrypt'))
+    mockCommit.mockImplementation(async () => order.push('commit'))
     mockPushToNewRemote.mockImplementation(async () => order.push('pushToNewRemote'))
     mockPushWithRetry.mockImplementation(async () => order.push('pushWithRetry'))
 
@@ -1369,13 +1371,13 @@ describe('OtomiStack.migrateGitSettings', () => {
     })
 
     expect(saveSettingsSpy).toHaveBeenCalled()
-    expect(order).toEqual(['saveSettings', 'commitAndEncrypt', 'pushToNewRemote', 'pushWithRetry'])
+    expect(order).toEqual(['saveSettings', 'commit', 'pushToNewRemote', 'pushWithRetry'])
   })
 
   it('skips pushToNewRemote when remote already has content', async () => {
     const order: string[] = []
     jest.spyOn(stack as any, 'saveSettings').mockImplementation(async () => order.push('saveSettings'))
-    mockCommitAndEncrypt.mockImplementation(async () => order.push('commitAndEncrypt'))
+    mockCommit.mockImplementation(async () => order.push('commit'))
     mockPushToNewRemote.mockImplementation(async () => order.push('pushToNewRemote'))
     mockPushWithRetry.mockImplementation(async () => order.push('pushWithRetry'))
 
@@ -1388,7 +1390,7 @@ describe('OtomiStack.migrateGitSettings', () => {
       remoteHasContent: true,
     })
 
-    expect(order).toEqual(['saveSettings', 'commitAndEncrypt', 'pushWithRetry'])
+    expect(order).toEqual(['saveSettings', 'commit', 'pushWithRetry'])
     expect(mockPushToNewRemote).not.toHaveBeenCalled()
   })
 })
