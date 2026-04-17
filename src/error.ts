@@ -72,7 +72,7 @@ export class BadRequestError extends OtomiError {
 }
 export class ApiLockedError extends OtomiError {
   public constructor(err?: string) {
-    super('Api is locked. A git migration has completed. No further changes are accepted.', err)
+    super('Api is locked. No further changes are accepted.', err)
     this.code = 503
   }
 }
