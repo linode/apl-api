@@ -60,6 +60,8 @@ jobs:
       - name: Sync values schema from apl-core
         run: cp apl-core/values-schema.yaml src/values-schema.yaml
       - name: Start api
+        env:
+          APL_CORE_PATH: apl-core
         run: |
           npm install
           cp .env.sample .env
