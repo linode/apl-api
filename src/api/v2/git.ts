@@ -28,7 +28,7 @@ export const migrateGit = async (req: OpenApiRequestExt, res: Response): Promise
   // Validate new remote connectivity; returns true if remote already has content
   let remoteHasContent: boolean
   try {
-    remoteHasContent = await req.otomi.git.testRemoteConnection(repoUrl, password, username)
+    remoteHasContent = await req.otomi.git.testRemoteConnection(repoUrl, password, branch, username)
   } catch (e: any) {
     throw new BadRequestError(`Cannot connect to new git remote: ${e.message}`)
   }

@@ -322,18 +322,27 @@ export class Git {
     return
   }
 
-  async testRemoteConnection(url: string, password: string, user?: string): Promise<boolean> {
+  async testRemoteConnection(url: string, password: string, branch: string, user?: string): Promise<boolean> {
     const authUrl = password ? getUrlAuth(url, user, password) : url
-    // returns true if remote has existing refs (non-empty), false if empty
-    const result = await this.git.raw(['ls-remote', authUrl!])
+    // returns true only if the configured branch exists on the remote
+    const result = await this.git.raw(['ls-remote', authUrl!, `refs/heads/${branch}`])
     return result.trim().length > 0
   }
 
   async pushToNewRemote(url: string, branch: string, password: string, user?: string): Promise<void> {
     const authUrl = password ? getUrlAuth(url, user, password) : url
+    // Pulls use --depth which can leave the clone shallow. A shallow clone cannot be pushed to a
+    // fresh empty remote because referenced parent objects are missing. Unshallow first to restore
+    // full history; ignore failures when the repo is already complete.
+    try {
+      await this.git.fetch([this.remote, '--unshallow'])
+    } catch {
+      debug('Unshallow fetch skipped (repo is not shallow or fetch failed)')
+    }
     try {
       await this.git.remote(['add', 'migration-remote', authUrl!])
-      await this.git.push('migration-remote', branch)
+      // Push HEAD so the worktree's session branch commit is included, not the stale local main
+      await this.git.push('migration-remote', `HEAD:refs/heads/${branch}`)
     } finally {
       try {
         await this.git.remote(['remove', 'migration-remote'])
