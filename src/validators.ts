@@ -189,9 +189,9 @@ export const MIN_KNATIVE_K8S_VERSION = str({
   desc: 'Minimum Kubernetes version required for Knative support',
   default: '1.33.0',
 })
-export const APL_NAMESPACE = str({
+export const API_NAMESPACE = str({
   desc: 'The Kubernetes namespace where apl-api status resources are stored',
-  default: 'default',
+  default: 'otomi',
 })
 const { env } = process
 export function cleanEnv<T>(validators: { [K in keyof T]: ValidatorSpec<T[K]> }, options: CleanOptions<T> = {}) {

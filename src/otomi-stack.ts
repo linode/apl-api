@@ -91,7 +91,7 @@ import {
 } from 'src/utils'
 import { deepQuote } from 'src/utils/yamlUtils'
 import {
-  APL_NAMESPACE,
+  API_NAMESPACE,
   CATALOG_CACHE_PATH,
   cleanEnv,
   CUSTOM_ROOT_CA,
@@ -177,7 +177,7 @@ interface ExcludedApp extends App {
 const debug = Debug('otomi:otomi-stack')
 
 const env = cleanEnv({
-  APL_NAMESPACE,
+  API_NAMESPACE,
   CATALOG_CACHE_PATH,
   CUSTOM_ROOT_CA,
   DEFAULT_PLATFORM_ADMIN_EMAIL,
@@ -2903,7 +2903,7 @@ export default class OtomiStack {
     // Always start unlocked on startup and persist that to the ConfigMap
     this.locked = false
     if (!env.isTest) {
-      await setApiStatusInConfigMap(env.APL_NAMESPACE, false)
+      await setApiStatusInConfigMap(env.API_NAMESPACE, false)
     }
     this.isLoaded = true
   }

@@ -7,7 +7,7 @@ import { Server } from 'socket.io'
 import { ApiLockedError, ApiNotReadyError } from 'src/error'
 import { OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack, rootPath } from 'src/otomi-stack'
-import { APL_NAMESPACE, cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validators'
+import { API_NAMESPACE, cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validators'
 import { v4 as uuidv4 } from 'uuid'
 import { getSanitizedErrorMessage } from '../utils'
 import { setApiStatusInConfigMap } from '../k8s-operations'
@@ -15,7 +15,7 @@ import { setApiStatusInConfigMap } from '../k8s-operations'
 const debug = Debug('otomi:session')
 const env = cleanEnv({
   EDITOR_INACTIVITY_TIMEOUT,
-  APL_NAMESPACE,
+  API_NAMESPACE,
 })
 
 export type DbMessage = {
@@ -56,7 +56,7 @@ export const lockApi = async (): Promise<void> => {
   }
   readOnlyStack.setLocked(true)
   if (process.env.NODE_ENV !== 'test') {
-    await setApiStatusInConfigMap(env.APL_NAMESPACE, true)
+    await setApiStatusInConfigMap(env.API_NAMESPACE, true)
   }
 }
 
