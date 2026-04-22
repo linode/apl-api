@@ -38,5 +38,5 @@ export const migrateGit = async (req: OpenApiRequestExt, res: Response): Promise
 
   await lockApi()
 
-  res.sendStatus(200)
+  res.json({})
 }
