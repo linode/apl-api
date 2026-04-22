@@ -3026,7 +3026,6 @@ export default class OtomiStack {
       'paths',
       'type',
       'ownHost',
-      'tlsPass',
       'ingressClassName',
       'headers',
       'useCname',
