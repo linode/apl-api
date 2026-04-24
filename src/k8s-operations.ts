@@ -1,4 +1,12 @@
-import { CoreV1Api, CustomObjectsApi, KubeConfig, V1Service, VersionApi } from '@kubernetes/client-node'
+import {
+  CoreV1Api,
+  CustomObjectsApi,
+  KubeConfig,
+  KubernetesObjectApi,
+  PatchStrategy,
+  V1Service,
+  VersionApi,
+} from '@kubernetes/client-node'
 import Debug from 'debug'
 import {
   AplBuildResponse,
@@ -548,4 +556,46 @@ export function mergeCanaryServices(services: K8sService[]): K8sService[] {
       const baseName = svc.name.replace(/-v1$/, '')
       return nameSet.has(`${baseName}-v2`) ? { ...svc, name: baseName } : svc
     })
+}
+
+export const APL_API_STATUS_CONFIGMAP = 'apl-api-status'
+
+export interface ApiStatus {
+  locked: boolean
+}
+
+export async function getApiStatusFromConfigMap(namespace: string): Promise<ApiStatus> {
+  const kc = new KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(CoreV1Api)
+  try {
+    const res = await k8sApi.readNamespacedConfigMap({ name: APL_API_STATUS_CONFIGMAP, namespace })
+    return { locked: res.data?.locked === 'true' }
+  } catch (error) {
+    debug(`ConfigMap ${APL_API_STATUS_CONFIGMAP} not found in ${namespace}, defaulting locked=false`)
+    return { locked: false }
+  }
+}
+
+export async function setApiStatusInConfigMap(namespace: string, locked: boolean): Promise<void> {
+  if (process.env.NODE_ENV === 'development') {
+    debug(`Skipping ConfigMap patch in ${process.env.NODE_ENV} environment (locked=${locked})`)
+    return
+  }
+  const kc = new KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(KubernetesObjectApi)
+  await k8sApi.patch(
+    {
+      apiVersion: 'v1',
+      kind: 'ConfigMap',
+      metadata: { name: APL_API_STATUS_CONFIGMAP, namespace },
+      data: { locked: locked ? 'true' : 'false' },
+    },
+    undefined,
+    undefined,
+    'apl-api',
+    true,
+    PatchStrategy.ServerSideApply,
+  )
 }
