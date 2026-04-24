@@ -97,8 +97,8 @@ ruleType:
       type: object
       properties:
         domain:
-          title: FQDN or IP address
-          $ref: 'definitions.yaml#/domain'
+          title: FQDN, wildcard domain, or IP address
+          $ref: 'definitions.yaml#/wildcardDomainOrIp'
         ports:
           type: array
           items:
