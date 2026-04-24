@@ -338,6 +338,7 @@ export default class OtomiStack {
 
     if (inflateValues) {
       await this.loadValues()
+      await this.unlockApi()
     }
     debug(`Values are loaded for ${this.editor} in ${this.sessionId}`)
   }
@@ -2900,12 +2901,15 @@ export default class OtomiStack {
   async loadValues(): Promise<void> {
     debug('Loading values')
     await this.initRepo()
+    this.isLoaded = true
+  }
+
+  private async unlockApi() {
     // Always start unlocked on startup and persist that to the ConfigMap
     this.locked = false
     if (!env.isTest) {
       await setApiStatusInConfigMap(env.API_NAMESPACE, false)
     }
-    this.isLoaded = true
   }
 
   async saveAppToggle(app: AplObject): Promise<void> {
