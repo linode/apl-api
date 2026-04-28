@@ -111,6 +111,8 @@ import {
   PREINSTALLED_EXCLUDED_APPS,
   TOOLS_HOST,
   VERSIONS,
+  GIT_INIT_MAX_RETRIES,
+  GIT_INIT_RETRY_INTERVAL_MS,
 } from 'src/validators'
 import { v4 as uuidv4 } from 'uuid'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
@@ -184,6 +186,8 @@ const env = cleanEnv({
   EDITOR_INACTIVITY_TIMEOUT,
   GIT_BRANCH,
   GIT_EMAIL,
+  GIT_INIT_MAX_RETRIES,
+  GIT_INIT_RETRY_INTERVAL_MS,
   GIT_LOCAL_PATH,
   GIT_PASSWORD,
   GIT_REPO_URL,
@@ -318,6 +322,9 @@ export default class OtomiStack {
     const path = this.getRepoPath()
     const branch = env.GIT_BRANCH
     const url = env.GIT_REPO_URL
+    const maxRetries = env.GIT_INIT_MAX_RETRIES
+    const timeoutMs = env.GIT_INIT_RETRY_INTERVAL_MS
+    let attempt = 0
     for (;;) {
       try {
         this.git = await getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, env.GIT_PASSWORD, branch)
@@ -331,8 +338,12 @@ export default class OtomiStack {
         debug(`Error while initializing git repository: ${errorMessage}`)
         debug(`Git repository is not ready: ${url}:${branch}`)
       }
-      const timeoutMs = 10000
-      debug(`Trying again in ${timeoutMs} ms`)
+      attempt++
+      if (attempt >= maxRetries) {
+        console.error(`Git repository could not be initialized after ${maxRetries} attempts, exiting`)
+        process.exit(1)
+      }
+      debug(`Trying again in ${timeoutMs} ms (attempt ${attempt}/${maxRetries})`)
       await new Promise((resolve) => setTimeout(resolve, timeoutMs))
     }
 

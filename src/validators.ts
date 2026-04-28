@@ -116,6 +116,14 @@ export const GIT_PUSH_RETRIES = num({
   desc: 'Amount of retries we do to push and pull in the git save function',
   default: 12,
 })
+export const GIT_INIT_MAX_RETRIES = num({
+  desc: 'Maximum number of retries for git initialization before exiting',
+  default: 10,
+})
+export const GIT_INIT_RETRY_INTERVAL_MS = num({
+  desc: 'Interval in milliseconds between git initialization retries',
+  default: 10000,
+})
 export const PIPELINE_NAME = str({
   desc: 'The name of the current pipeline',
   default: 'doc-ingest-pipeline',
