@@ -29,9 +29,15 @@ export const migrateGit = async (req: OpenApiRequestExt, res: Response): Promise
   try {
     remoteHasContent = await req.otomi.git.testRemoteConnection(repoUrl, password, branch, username)
   } catch (e: any) {
-    const error = { message: `Cannot connect to new git remote: ${e.message}`, statusCode: 404 }
-    res.json(error)
-    return
+    if (e.message.includes('not found')) {
+      const error = { message: `Cannot connect to new git remote: ${e.message}`, statusCode: 404 }
+      res.json(error)
+      return
+    } else {
+      const error = { message: `Error connecting to new git remote: ${e.message}`, statusCode: 400 }
+      res.json(error)
+      return
+    }
   }
 
   // Write config + commit locally → push to new remote (if empty) → push to current remote
