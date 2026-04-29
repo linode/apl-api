@@ -184,13 +184,28 @@ const makeServiceResponse = (name: string, teamName: string, overrides: Record<s
     ...overrides,
   }) as unknown as AplServiceResponse
 
-const makeHTTPRoute = (conditions: { type: string; status: string }[]) => ({
+const makeHTTPRoute = (
+  conditions: { type: string; status: string }[],
+  options: { parentGatewayName?: string; visibility?: string } = {},
+) => ({
+  metadata: {
+    labels: {
+      'networking.knative.dev/visibility': options.visibility ?? '',
+    },
+  },
+  spec: {
+    parentRefs: [{ name: options.parentGatewayName ?? 'platform' }],
+  },
   status: {
     parents: [
       {
         conditions,
         controllerName: 'istio.io/gateway-controller',
-        parentRef: { group: 'gateway.networking.k8s.io', kind: 'Gateway', name: 'knative-local-gateway' },
+        parentRef: {
+          group: 'gateway.networking.k8s.io',
+          kind: 'Gateway',
+          name: options.parentGatewayName ?? 'platform',
+        },
       },
     ],
   },
@@ -252,6 +267,20 @@ describe('getServiceStatus', () => {
     expect(result).toBe('NotFound')
   })
 
+  test('returns NotFound when only local HTTPRoutes exist', async () => {
+    mockList([
+      makeHTTPRoute(
+        [
+          { type: 'Accepted', status: 'True' },
+          { type: 'ResolvedRefs', status: 'True' },
+        ],
+        { parentGatewayName: 'knative-local-gateway', visibility: 'cluster-local' },
+      ),
+    ])
+    const result = await getServiceStatus(makeServiceResponse('web', 'alpha'))
+    expect(result).toBe('NotFound')
+  })
+
   test('returns Unknown when multiple HTTPRoutes are found', async () => {
     mockList([makeHTTPRoute([]), makeHTTPRoute([])])
     const result = await getServiceStatus(makeServiceResponse('web', 'alpha'))
@@ -260,6 +289,24 @@ describe('getServiceStatus', () => {
 
   test('returns Succeeded when single HTTPRoute is accepted', async () => {
     mockList([
+      makeHTTPRoute([
+        { type: 'Accepted', status: 'True' },
+        { type: 'ResolvedRefs', status: 'True' },
+      ]),
+    ])
+    const result = await getServiceStatus(makeServiceResponse('web', 'alpha'))
+    expect(result).toBe('Succeeded')
+  })
+
+  test('returns Succeeded when local and public routes exist and public is accepted', async () => {
+    mockList([
+      makeHTTPRoute(
+        [
+          { type: 'Accepted', status: 'True' },
+          { type: 'ResolvedRefs', status: 'True' },
+        ],
+        { parentGatewayName: 'knative-local-gateway', visibility: 'cluster-local' },
+      ),
       makeHTTPRoute([
         { type: 'Accepted', status: 'True' },
         { type: 'ResolvedRefs', status: 'True' },

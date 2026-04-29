@@ -243,6 +243,15 @@ export function parseHTTPRouteStatus(httpRoute: any): boolean {
   return isAccepted
 }
 
+function isPublicHTTPRoute(httpRoute: any): boolean {
+  const visibility = httpRoute?.metadata?.labels?.['networking.knative.dev/visibility']
+  if (visibility === 'cluster-local') return false
+
+  const parentRefs: any[] = Array.isArray(httpRoute?.spec?.parentRefs) ? httpRoute.spec.parentRefs : []
+  const hasLocalGateway = parentRefs.some((parentRef) => parentRef?.name === 'knative-local-gateway')
+  return !hasLocalGateway
+}
+
 export async function getServiceStatus(service: AplServiceResponse): Promise<'Succeeded' | 'Unknown' | 'NotFound'> {
   const { name, labels } = service.metadata
   const teamName = labels['apl.io/teamId']
@@ -257,18 +266,19 @@ export async function getServiceStatus(service: AplServiceResponse): Promise<'Su
   )
 
   const httpRoutes = Array.isArray(res?.items) ? res.items : []
+  const publicHttpRoutes = httpRoutes.filter((httpRoute) => isPublicHTTPRoute(httpRoute))
 
-  if (httpRoutes.length === 0) {
-    debug(`No HTTPRoutes found for service ${name} in namespace ${namespace}.`)
+  if (publicHttpRoutes.length === 0) {
+    debug(`No public HTTPRoutes found for service ${name} in namespace ${namespace}.`)
     return 'NotFound'
-  } else if (httpRoutes.length > 1) {
+  } else if (publicHttpRoutes.length > 1) {
     debug(
-      `Multiple HTTPRoutes found for service ${name} in namespace ${namespace}. This may indicate an issue with the service configuration.`,
+      `Multiple public HTTPRoutes found for service ${name} in namespace ${namespace}. This may indicate an issue with the service configuration.`,
     )
     return 'Unknown'
   }
 
-  const [httpRoute] = httpRoutes
+  const [httpRoute] = publicHttpRoutes
   const isAccepted = parseHTTPRouteStatus(httpRoute)
   return isAccepted ? 'Succeeded' : 'Unknown'
 }
