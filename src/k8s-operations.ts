@@ -152,6 +152,7 @@ export async function getWorkloadStatus(workload: AplWorkloadResponse): Promise<
 
 async function listNamespacedCustomObject(
   group: string,
+  version: string,
   namespace: string,
   plural: string,
   labelSelector: string | undefined,
@@ -162,7 +163,7 @@ async function listNamespacedCustomObject(
   try {
     const res: any = await k8sApi.listNamespacedCustomObject({
       group,
-      version: 'v1beta1',
+      version,
       namespace,
       plural,
       labelSelector,
@@ -179,6 +180,7 @@ export async function getBuildStatus(build: AplBuildResponse): Promise<string> {
   const labelSelector = `tekton.dev/pipeline=${build.spec.mode?.type}-build-${name}`
   const resPipelineruns = await listNamespacedCustomObject(
     'tekton.dev',
+    'v1beta1',
     `team-${teamName}`,
     'pipelineruns',
     labelSelector,
@@ -205,6 +207,7 @@ export async function getBuildStatus(build: AplBuildResponse): Promise<string> {
     } else {
       const resEventlisteners = await listNamespacedCustomObject(
         'triggers.tekton.dev',
+        'v1beta1',
         `team-${teamName}`,
         'eventlisteners',
         labelSelector,
@@ -228,54 +231,47 @@ export async function getBuildStatus(build: AplBuildResponse): Promise<string> {
   }
 }
 
-async function getNamespacedCustomObject(namespace: string, name: string) {
-  const kc = new KubeConfig()
-  kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(CustomObjectsApi)
-  try {
-    const res: any = await k8sApi.getNamespacedCustomObject({
-      group: 'networking.istio.io',
-      version: 'v1beta1',
-      namespace,
-      plural: 'gateways',
-      name,
-    })
-    const { hosts } = res.spec.servers[0]
-    return hosts
-  } catch (error) {
-    return 'NotFound'
-  }
+export function parseHTTPRouteStatus(httpRoute: any): boolean {
+  const parents: any[] = Array.isArray(httpRoute?.status?.parents) ? httpRoute.status.parents : []
+
+  const isAccepted = parents.some(
+    (parent: any) =>
+      Array.isArray(parent?.conditions) &&
+      parent.conditions.some((c: any) => c.type === 'Accepted' && c.status === 'True') &&
+      parent.conditions.some((c: any) => c.type === 'ResolvedRefs' && c.status === 'True'),
+  )
+  return isAccepted
 }
 
-async function checkHostStatus(namespace: string, name: string, host: string) {
-  const hosts = await getNamespacedCustomObject(namespace, name)
-  return hosts.includes(host) ? 'Succeeded' : 'Unknown'
-}
-
-export async function getServiceStatus(service: AplServiceResponse, domainSuffix: string): Promise<string> {
-  const isKsvc = service.spec.ksvc?.predeployed
+export async function getServiceStatus(service: AplServiceResponse): Promise<'Succeeded' | 'Unknown' | 'NotFound'> {
   const { name, labels } = service.metadata
   const teamName = labels['apl.io/teamId']
   const namespace = `team-${teamName}`
-  const host = `team-${teamName}/${name}-${teamName}.${domainSuffix}`
 
-  if (isKsvc) {
-    const res = await listNamespacedCustomObject('networking.istio.io', namespace, 'virtualservices', undefined)
-    const virtualservices = res?.items?.map((item) => item.metadata.name) || []
-    if (virtualservices.includes(`${name}-ingress`)) {
-      return 'Succeeded'
-    } else {
-      return 'NotFound'
-    }
+  const res = await listNamespacedCustomObject(
+    'gateway.networking.k8s.io',
+    'v1',
+    namespace,
+    'httproutes',
+    `otomi.io/app=${name}`,
+  )
+
+  const httpRoutes = Array.isArray(res?.items) ? res.items : []
+
+  if (httpRoutes.length === 0) {
+    debug(`No HTTPRoutes found for service ${name} in namespace ${namespace}.`)
+    return 'NotFound'
+  } else if (httpRoutes.length > 1) {
+    debug(
+      `Multiple HTTPRoutes found for service ${name} in namespace ${namespace}. This may indicate an issue with the service configuration.`,
+    )
+    return 'Unknown'
   }
 
-  const tlstermStatus = await checkHostStatus(namespace, `team-${teamName}-public-tlsterm`, host)
-  if (tlstermStatus === 'Succeeded') return 'Succeeded'
-
-  const tlspassStatus = await checkHostStatus(namespace, `team-${teamName}-public-tlspass`, host)
-  return tlspassStatus
+  const [httpRoute] = httpRoutes
+  const isAccepted = parseHTTPRouteStatus(httpRoute)
+  return isAccepted ? 'Succeeded' : 'Unknown'
 }
-
 export async function getSecretValues(name: string, namespace: string): Promise<Record<string, string> | undefined> {
   const kc = new KubeConfig()
   kc.loadFromDefault()
