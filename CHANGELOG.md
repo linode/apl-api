@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.18.2](https://github.com/redkubes/otomi-api/compare/v4.18.1...v4.18.2) (2026-04-30)
+
+
+### Features
+
+* get team service status from HTTPRoute ([#985](https://github.com/redkubes/otomi-api/issues/985)) ([ec9f19a](https://github.com/redkubes/otomi-api/commit/ec9f19a94402abd1b54e6b0596e9a1fbf9371fe8))
+
 ### [4.18.1](https://github.com/redkubes/otomi-api/compare/v4.17.0...v4.18.1) (2026-04-24)
 
 
