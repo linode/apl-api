@@ -43,13 +43,14 @@ const getProtocol = (url): string => (url && url.includes('://') ? url.split(':/
 
 const getUrl = (url): string => (!url || url.includes('://') ? url : `${getProtocol(url)}://${url}`)
 
-function getUrlAuth(url, user, password): string | undefined {
+function getUrlAuth(url, user: string | undefined, password): string | undefined {
   if (!url) return
   const protocol = getProtocol(url)
   const [_, bareUrl] = url.split('://')
-  const encodedUser = encodeURIComponent(user as string)
-  const encodedPassword = encodeURIComponent(password as string)
-  return protocol === 'file' ? `${protocol}://${bareUrl}` : `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
+  const credentials = user
+    ? `${encodeURIComponent(user)}:${encodeURIComponent(password)}`
+    : encodeURIComponent(password)
+  return protocol === 'file' ? `${protocol}://${bareUrl}` : `${protocol}://${credentials}@${bareUrl}`
 }
 
 export class Git {
@@ -321,6 +322,36 @@ export class Git {
     return
   }
 
+  async testRemoteConnection(url: string, password: string, branch: string, user?: string): Promise<boolean> {
+    const authUrl = password ? getUrlAuth(url, user, password) : url
+    // returns true only if the configured branch exists on the remote
+    const result = await this.git.raw(['ls-remote', authUrl!, `refs/heads/${branch}`])
+    return result.trim().length > 0
+  }
+
+  async pushToNewRemote(url: string, branch: string, password: string, user?: string): Promise<void> {
+    const authUrl = password ? getUrlAuth(url, user, password) : url
+    // Pulls use --depth which can leave the clone shallow. A shallow clone cannot be pushed to a
+    // fresh empty remote because referenced parent objects are missing. Unshallow first to restore
+    // full history; ignore failures when the repo is already complete.
+    try {
+      await this.git.fetch([this.remote, '--unshallow'])
+    } catch {
+      debug('Unshallow fetch skipped (repo is not shallow or fetch failed)')
+    }
+    try {
+      await this.git.remote(['add', 'migration-remote', authUrl!])
+      // Push HEAD so the worktree's session branch commit is included, not the stale local main
+      await this.git.push('migration-remote', `HEAD:refs/heads/${branch}`)
+    } finally {
+      try {
+        await this.git.remote(['remove', 'migration-remote'])
+      } catch (e) {
+        debug(`Could not remove migration-remote: ${getSanitizedErrorMessage(e)}`)
+      }
+    }
+  }
+
   async createWorktree(worktreePath: string, branch: string = this.branch): Promise<void> {
     debug(`Creating worktree at: ${worktreePath} from branch: ${branch}`)
     await ensureDir(dirname(worktreePath), { mode: 0o744 })
@@ -360,13 +391,8 @@ export class Git {
     return this.git.revparse('HEAD')
   }
 
-  async save(editor: string): Promise<void> {
-    await this.commit(editor)
+  async pushWithRetry(): Promise<void> {
     try {
-      // we are in a unique developer branch, so we can pull, push, and merge
-      // with the remote root, which might have been modified by another developer
-      // since this is a child branch, we don't need to re-init
-      // retry up to 10 times to pull and push if there are conflicts
       const retries = env.GIT_PUSH_RETRIES
       for (let attempt = 1; attempt <= retries; attempt++) {
         try {
@@ -391,6 +417,13 @@ export class Git {
       debug('Git save error')
       throw new GitPullError()
     }
+  }
+
+  async save(editor: string): Promise<void> {
+    // we are in a unique developer branch, so we can pull, push, and merge
+    // with the remote root, which might have been modified by another developer
+    await this.commit(editor)
+    await this.pushWithRetry()
   }
 }
 

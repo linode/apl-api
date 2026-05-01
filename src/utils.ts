@@ -87,12 +87,10 @@ export async function loadRawYaml(path: string) {
 let valuesSchema: Record<string, any>
 
 export const getValuesSchema = async (): Promise<Record<string, any>> => {
-  debug('Loading values schema from local file...')
   const schemaPath = join(__dirname, 'values-schema.yaml')
   const schema = await loadYaml(schemaPath)
   const derefSchema = await $RefParser.dereference(schema as JSONSchema)
   valuesSchema = omit(derefSchema as Record<string, any>, ['definitions'])
-  debug('Values schema loaded successfully')
   return valuesSchema
 }
 

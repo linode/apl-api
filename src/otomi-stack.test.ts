@@ -1317,3 +1317,107 @@ describe('Code repositories tests', () => {
     expect(stored).toBeUndefined()
   })
 })
+
+describe('OtomiStack.migrateGitSettings', () => {
+  let stack: OtomiStack
+  const mockCommit = jest.fn().mockResolvedValue(undefined)
+  const mockPushToNewRemote = jest.fn().mockResolvedValue(undefined)
+  const mockPushWithRetry = jest.fn().mockResolvedValue(undefined)
+  const mockRootPull = jest.fn().mockResolvedValue(undefined)
+  const mockRootFileStoreSet = jest.fn()
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    stack = new OtomiStack()
+    stack.editor = 'test@example.com'
+    ;(stack as any).sessionId = 'test-session-id'
+    jest.spyOn(stack as any, 'getSettings').mockReturnValue({
+      otomi: { git: { repoUrl: 'https://old.example.com/repo.git', branch: 'main', email: 'old@example.com' } },
+    })
+    jest.spyOn(stack as any, 'extractAndStoreSettingsSecrets').mockResolvedValue(undefined)
+    jest.spyOn(require('src/utils'), 'getValuesSchema').mockResolvedValue({ properties: {} })
+    jest.spyOn(stack as any, 'saveSettings').mockResolvedValue(undefined)
+    ;(stack as any).fileStore = { set: jest.fn() }
+    ;(stack as any).git = {
+      commit: mockCommit,
+      pushToNewRemote: mockPushToNewRemote,
+      pushWithRetry: mockPushWithRetry,
+    }
+    jest.spyOn(require('src/middleware/session'), 'getSessionStack').mockResolvedValue({
+      git: { git: { pull: mockRootPull } },
+      fileStore: { set: mockRootFileStoreSet },
+    })
+    jest.spyOn(require('src/middleware/session'), 'cleanSession').mockResolvedValue(undefined)
+  })
+
+  afterEach(() => jest.restoreAllMocks())
+
+  it('calls saveSettings, commit, pushToNewRemote, pushWithRetry in order', async () => {
+    const order: string[] = []
+    const saveSettingsSpy = jest.spyOn(stack as any, 'saveSettings').mockImplementation(async () => {
+      order.push('saveSettings')
+    })
+    mockCommit.mockImplementation(async () => order.push('commit'))
+    mockPushToNewRemote.mockImplementation(async () => order.push('pushToNewRemote'))
+    mockPushWithRetry.mockImplementation(async () => order.push('pushWithRetry'))
+
+    await stack.migrateGitSettings({
+      repoUrl: 'https://new.example.com/repo.git',
+      username: 'user',
+      password: 'pass',
+      email: 'new@example.com',
+      branch: 'main',
+      remoteHasContent: false,
+    })
+
+    expect(saveSettingsSpy).toHaveBeenCalled()
+    expect(order).toEqual(['saveSettings', 'commit', 'pushToNewRemote', 'pushWithRetry'])
+  })
+
+  it('skips pushToNewRemote when remote already has content', async () => {
+    const order: string[] = []
+    jest.spyOn(stack as any, 'saveSettings').mockImplementation(async () => order.push('saveSettings'))
+    mockCommit.mockImplementation(async () => order.push('commit'))
+    mockPushToNewRemote.mockImplementation(async () => order.push('pushToNewRemote'))
+    mockPushWithRetry.mockImplementation(async () => order.push('pushWithRetry'))
+
+    await stack.migrateGitSettings({
+      repoUrl: 'https://new.example.com/repo.git',
+      username: 'user',
+      password: 'pass',
+      email: 'new@example.com',
+      branch: 'main',
+      remoteHasContent: true,
+    })
+
+    expect(order).toEqual(['saveSettings', 'commit', 'pushWithRetry'])
+    expect(mockPushToNewRemote).not.toHaveBeenCalled()
+  })
+})
+
+describe('OtomiStack locked state', () => {
+  let stack: OtomiStack
+
+  beforeEach(() => {
+    stack = new OtomiStack()
+  })
+
+  it('starts with locked = false', () => {
+    expect(stack.locked).toBe(false)
+  })
+
+  it('getApiStatus returns { locked: false } initially', () => {
+    expect(stack.getApiStatus()).toEqual({ locked: false })
+  })
+
+  it('setLocked(true) makes getApiStatus return { locked: true }', () => {
+    stack.setLocked(true)
+    expect(stack.getApiStatus()).toEqual({ locked: true })
+  })
+
+  it('setLocked(false) resets locked', () => {
+    stack.setLocked(true)
+    stack.setLocked(false)
+    expect(stack.getApiStatus()).toEqual({ locked: false })
+  })
+})
