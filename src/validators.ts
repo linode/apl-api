@@ -116,6 +116,14 @@ export const GIT_PUSH_RETRIES = num({
   desc: 'Amount of retries we do to push and pull in the git save function',
   default: 12,
 })
+export const GIT_INIT_MAX_RETRIES = num({
+  desc: 'Maximum number of retries for git initialization before exiting',
+  default: 10,
+})
+export const GIT_INIT_RETRY_INTERVAL_MS = num({
+  desc: 'Interval in milliseconds between git initialization retries',
+  default: 10000,
+})
 export const PIPELINE_NAME = str({
   desc: 'The name of the current pipeline',
   default: 'doc-ingest-pipeline',
@@ -188,6 +196,10 @@ export const OBJECT_STORAGE_UI_EXCLUSIONS = json<string[]>({
 export const MIN_KNATIVE_K8S_VERSION = str({
   desc: 'Minimum Kubernetes version required for Knative support',
   default: '1.33.0',
+})
+export const API_NAMESPACE = str({
+  desc: 'The Kubernetes namespace where apl-api status resources are stored',
+  default: 'otomi',
 })
 const { env } = process
 export function cleanEnv<T>(validators: { [K in keyof T]: ValidatorSpec<T[K]> }, options: CleanOptions<T> = {}) {
