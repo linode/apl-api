@@ -3001,6 +3001,61 @@ paths:
         '200':
           description: Successfully edited app values.
 
+  /v2/git:
+    put:
+      operationId: migrateGit
+      x-eov-operation-handler: v2/git
+      description: Migrate the values repository to a new git remote location.
+      x-aclSchema: AplGit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AplGit'
+        description: New git configuration to migrate to.
+      responses:
+        '200':
+          description: Migration successful. API is now locked.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Unauthorized
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Internal Server Error
+        '503':
+          description: Service Unavailable (API locked or not ready)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtomiStackError'
+
+  /v2/status:
+    get:
+      operationId: getApiStatus
+      x-eov-operation-handler: v2/status
+      description: Get the current API status.
+      x-aclSchema: AplApiStatus
+      responses:
+        '200':
+          description: Successfully obtained API status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplApiStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Unauthorized
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Internal Server Error
+        '503':
+          description: Service Unavailable
+
 ## -------------------------------------------- Servers
 #
 #servers:
@@ -3512,6 +3567,10 @@ components:
       $ref: 'app.yaml#/AppEnabled'
     AppList:
       $ref: 'app.yaml#/AppList'
+    AplApiStatus:
+      $ref: 'git.yaml#/AplApiStatus'
+    AplGit:
+      $ref: 'git.yaml#/AplGit'
     Build:
       $ref: 'build.yaml#/Build'
     Cloudtty:

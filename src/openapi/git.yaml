@@ -1,0 +1,47 @@
+AplGit:
+  x-acl:
+    platformAdmin:
+      - update-any
+    teamAdmin: []
+    teamMember: []
+  type: object
+  additionalProperties: false
+  properties:
+    repoUrl:
+      type: string
+      pattern: '^https?://.+'
+      description: URL of the new git remote to migrate the values repository to.
+    username:
+      type: string
+      description: Optional git username for authentication.
+    password:
+      type: string
+      description: Optional git password or token for authentication.
+    email:
+      type: string
+      format: email
+      description: Email address to use for git commits.
+    branch:
+      type: string
+      description: Git branch to push to on the new remote.
+  required:
+    - repoUrl
+    - email
+    - branch
+    - password
+
+AplApiStatus:
+  x-acl:
+    platformAdmin:
+      - read-any
+    teamAdmin:
+      - read-any
+    teamMember:
+      - read-any
+  type: object
+  properties:
+    locked:
+      type: boolean
+      description: Whether the API is locked due to a completed git migration.
+  required:
+    - locked
