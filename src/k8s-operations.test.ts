@@ -1,10 +1,12 @@
-import { CoreV1Api, CustomObjectsApi, V1Service } from '@kubernetes/client-node'
+import { CoreV1Api, CustomObjectsApi, KubernetesObjectApi, PatchStrategy, V1Service } from '@kubernetes/client-node'
 import {
+  getApiStatusFromConfigMap,
   getCloudttyActiveTime,
   getLogTime,
   getServiceStatus,
   mergeCanaryServices,
   parseHTTPRouteStatus,
+  setApiStatusInConfigMap,
   toK8sService,
 } from './k8s-operations'
 import { AplServiceResponse } from './otomi-models'
@@ -19,6 +21,9 @@ jest.mock('@kubernetes/client-node', () => {
       makeApiClient: jest.fn((apiClientType) => {
         if (apiClientType === actual.CoreV1Api) {
           return new actual.CoreV1Api()
+        }
+        if (apiClientType === actual.KubernetesObjectApi) {
+          return new actual.KubernetesObjectApi()
         }
         if (apiClientType === actual.CustomObjectsApi) {
           return new actual.CustomObjectsApi()
@@ -169,6 +174,67 @@ describe('getCloudttyActiveTime', () => {
 
     const result = await getCloudttyActiveTime(namespace, podName)
     expect(result).toBeUndefined()
+  })
+})
+
+describe('getApiStatusFromConfigMap', () => {
+  afterEach(() => jest.clearAllMocks())
+
+  it('returns { locked: true } when configmap data.locked is "true"', async () => {
+    jest.spyOn(CoreV1Api.prototype, 'readNamespacedConfigMap').mockResolvedValue({
+      data: { locked: 'true' },
+    } as any)
+    const result = await getApiStatusFromConfigMap('default')
+    expect(result).toEqual({ locked: true })
+  })
+
+  it('returns { locked: false } when configmap data.locked is "false"', async () => {
+    jest.spyOn(CoreV1Api.prototype, 'readNamespacedConfigMap').mockResolvedValue({
+      data: { locked: 'false' },
+    } as any)
+    const result = await getApiStatusFromConfigMap('default')
+    expect(result).toEqual({ locked: false })
+  })
+
+  it('returns { locked: false } when configmap does not exist', async () => {
+    jest.spyOn(CoreV1Api.prototype, 'readNamespacedConfigMap').mockRejectedValue(new Error('not found'))
+    const result = await getApiStatusFromConfigMap('default')
+    expect(result).toEqual({ locked: false })
+  })
+})
+
+describe('setApiStatusInConfigMap', () => {
+  afterEach(() => jest.clearAllMocks())
+
+  it('patches the configmap with server-side apply', async () => {
+    const patchSpy = jest.spyOn(KubernetesObjectApi.prototype, 'patch').mockResolvedValue({} as any)
+    await setApiStatusInConfigMap('default', true)
+    expect(patchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        apiVersion: 'v1',
+        kind: 'ConfigMap',
+        metadata: { name: 'apl-api-status', namespace: 'default' },
+        data: { locked: 'true' },
+      }),
+      undefined,
+      undefined,
+      'apl-api',
+      true,
+      PatchStrategy.ServerSideApply,
+    )
+  })
+
+  it('patches the configmap with locked "false"', async () => {
+    const patchSpy = jest.spyOn(KubernetesObjectApi.prototype, 'patch').mockResolvedValue({} as any)
+    await setApiStatusInConfigMap('default', false)
+    expect(patchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { locked: 'false' } }),
+      undefined,
+      undefined,
+      'apl-api',
+      true,
+      PatchStrategy.ServerSideApply,
+    )
   })
 })
 
