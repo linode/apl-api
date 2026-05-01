@@ -156,7 +156,14 @@ describe('API V2 authz tests', () => {
       'deleteCloudtty',
       // Other
       'createTeam',
+      // Git migration
+      'migrateGitSettings',
+      // API status
+      'getApiStatus',
     ]
+
+    // Reset locked state so a prior git migration test does not bleed into subsequent tests
+    otomiStack.locked = false
 
     // Mock all methods with default return values
     v2Methods.forEach((method) => {
@@ -1105,6 +1112,66 @@ describe('API V2 authz tests', () => {
     describe('Unauthenticated', () => {
       test('anonymous user cannot connect dashboard', async () => {
         await agent.get('/v1/dashboard').query({ teamId: 'team1' }).expect(401)
+      })
+    })
+  })
+
+  describe('V2 Git Migration Endpoint', () => {
+    const gitBody = {
+      repoUrl: 'https://new.example.com/repo.git',
+      username: 'user',
+      password: 'pass',
+      email: 'admin@example.com',
+      branch: 'main',
+    }
+
+    describe('Platform Admin', () => {
+      test('platform admin can migrate git', async () => {
+        await agent.put('/v2/git').send(gitBody).set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
+      })
+    })
+
+    describe('Team Admin', () => {
+      test('team admin cannot migrate git', async () => {
+        await agent.put('/v2/git').send(gitBody).set('Authorization', `Bearer ${teamAdminToken}`).expect(403)
+      })
+    })
+
+    describe('Team Member', () => {
+      test('team member cannot migrate git', async () => {
+        await agent.put('/v2/git').send(gitBody).set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
+      })
+    })
+
+    describe('Unauthenticated', () => {
+      test('anonymous user cannot migrate git', async () => {
+        await agent.put('/v2/git').send(gitBody).expect(401)
+      })
+    })
+  })
+
+  describe('V2 API Status Endpoint', () => {
+    describe('Platform Admin', () => {
+      test('platform admin can get api status', async () => {
+        await agent.get('/v2/status').set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
+      })
+    })
+
+    describe('Team Admin', () => {
+      test('team admin can get api status', async () => {
+        await agent.get('/v2/status').set('Authorization', `Bearer ${teamAdminToken}`).expect(200)
+      })
+    })
+
+    describe('Team Member', () => {
+      test('team member can get api status', async () => {
+        await agent.get('/v2/status').set('Authorization', `Bearer ${teamMemberToken}`).expect(200)
+      })
+    })
+
+    describe('Unauthenticated', () => {
+      test('anonymous user cannot get api status', async () => {
+        await agent.get('/v2/status').expect(401)
       })
     })
   })
