@@ -1,12 +1,15 @@
-import { CoreV1Api, KubernetesObjectApi, PatchStrategy, V1Service } from '@kubernetes/client-node'
+import { CoreV1Api, CustomObjectsApi, KubernetesObjectApi, PatchStrategy, V1Service } from '@kubernetes/client-node'
 import {
   getApiStatusFromConfigMap,
   getCloudttyActiveTime,
   getLogTime,
+  getServiceStatus,
   mergeCanaryServices,
+  parseHTTPRouteStatus,
   setApiStatusInConfigMap,
   toK8sService,
 } from './k8s-operations'
+import { AplServiceResponse } from './otomi-models'
 
 // Mock the KubeConfig
 jest.mock('@kubernetes/client-node', () => {
@@ -21,6 +24,9 @@ jest.mock('@kubernetes/client-node', () => {
         }
         if (apiClientType === actual.KubernetesObjectApi) {
           return new actual.KubernetesObjectApi()
+        }
+        if (apiClientType === actual.CustomObjectsApi) {
+          return new actual.CustomObjectsApi()
         }
         return {}
       }),
@@ -229,5 +235,181 @@ describe('setApiStatusInConfigMap', () => {
       true,
       PatchStrategy.ServerSideApply,
     )
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const makeServiceResponse = (name: string, teamName: string, overrides: Record<string, any> = {}): AplServiceResponse =>
+  ({
+    kind: 'AplTeamService',
+    metadata: { name, labels: { 'apl.io/teamId': teamName } },
+    spec: {},
+    ...overrides,
+  }) as unknown as AplServiceResponse
+
+const makeHTTPRoute = (
+  conditions: { type: string; status: string }[],
+  options: { parentGatewayName?: string; visibility?: string } = {},
+) => ({
+  metadata: {
+    labels: {
+      'networking.knative.dev/visibility': options.visibility ?? '',
+    },
+  },
+  spec: {
+    parentRefs: [{ name: options.parentGatewayName ?? 'platform' }],
+  },
+  status: {
+    parents: [
+      {
+        conditions,
+        controllerName: 'istio.io/gateway-controller',
+        parentRef: {
+          group: 'gateway.networking.k8s.io',
+          kind: 'Gateway',
+          name: options.parentGatewayName ?? 'platform',
+        },
+      },
+    ],
+  },
+})
+
+// ---------------------------------------------------------------------------
+// parseHTTPRouteStatus
+// ---------------------------------------------------------------------------
+
+describe('parseHTTPRouteStatus', () => {
+  test('returns true when Accepted and ResolvedRefs are both True', () => {
+    const route = makeHTTPRoute([
+      { type: 'Accepted', status: 'True' },
+      { type: 'ResolvedRefs', status: 'True' },
+    ])
+    expect(parseHTTPRouteStatus(route)).toBe(true)
+  })
+
+  test('returns false when Accepted is False', () => {
+    const route = makeHTTPRoute([
+      { type: 'Accepted', status: 'False' },
+      { type: 'ResolvedRefs', status: 'True' },
+    ])
+    expect(parseHTTPRouteStatus(route)).toBe(false)
+  })
+
+  test('returns false when ResolvedRefs is False', () => {
+    const route = makeHTTPRoute([
+      { type: 'Accepted', status: 'True' },
+      { type: 'ResolvedRefs', status: 'False' },
+    ])
+    expect(parseHTTPRouteStatus(route)).toBe(false)
+  })
+
+  test('returns false when conditions are empty', () => {
+    expect(parseHTTPRouteStatus(makeHTTPRoute([]))).toBe(false)
+  })
+
+  test('returns false when parents array is missing', () => {
+    expect(parseHTTPRouteStatus({ status: {} })).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getServiceStatus
+// ---------------------------------------------------------------------------
+
+describe('getServiceStatus', () => {
+  afterEach(() => {
+    jest.clearAllMocks()
+  })
+
+  const mockList = (items: any[]) =>
+    jest.spyOn(CustomObjectsApi.prototype, 'listNamespacedCustomObject').mockResolvedValue({ items } as any)
+
+  test('returns NotFound when no HTTPRoutes exist', async () => {
+    mockList([])
+    const result = await getServiceStatus(makeServiceResponse('web', 'alpha'))
+    expect(result).toBe('NotFound')
+  })
+
+  test('returns NotFound when only local HTTPRoutes exist', async () => {
+    mockList([
+      makeHTTPRoute(
+        [
+          { type: 'Accepted', status: 'True' },
+          { type: 'ResolvedRefs', status: 'True' },
+        ],
+        { parentGatewayName: 'knative-local-gateway', visibility: 'cluster-local' },
+      ),
+    ])
+    const result = await getServiceStatus(makeServiceResponse('web', 'alpha'))
+    expect(result).toBe('NotFound')
+  })
+
+  test('returns Unknown when multiple HTTPRoutes are found', async () => {
+    mockList([makeHTTPRoute([]), makeHTTPRoute([])])
+    const result = await getServiceStatus(makeServiceResponse('web', 'alpha'))
+    expect(result).toBe('Unknown')
+  })
+
+  test('returns Succeeded when single HTTPRoute is accepted', async () => {
+    mockList([
+      makeHTTPRoute([
+        { type: 'Accepted', status: 'True' },
+        { type: 'ResolvedRefs', status: 'True' },
+      ]),
+    ])
+    const result = await getServiceStatus(makeServiceResponse('web', 'alpha'))
+    expect(result).toBe('Succeeded')
+  })
+
+  test('returns Succeeded when local and public routes exist and public is accepted', async () => {
+    mockList([
+      makeHTTPRoute(
+        [
+          { type: 'Accepted', status: 'True' },
+          { type: 'ResolvedRefs', status: 'True' },
+        ],
+        { parentGatewayName: 'knative-local-gateway', visibility: 'cluster-local' },
+      ),
+      makeHTTPRoute([
+        { type: 'Accepted', status: 'True' },
+        { type: 'ResolvedRefs', status: 'True' },
+      ]),
+    ])
+    const result = await getServiceStatus(makeServiceResponse('web', 'alpha'))
+    expect(result).toBe('Succeeded')
+  })
+
+  test('returns Unknown when single HTTPRoute is not accepted', async () => {
+    mockList([
+      makeHTTPRoute([
+        { type: 'Accepted', status: 'False' },
+        { type: 'ResolvedRefs', status: 'True' },
+      ]),
+    ])
+    const result = await getServiceStatus(makeServiceResponse('web', 'alpha'))
+    expect(result).toBe('Unknown')
+  })
+
+  test('queries with the correct label selector and namespace', async () => {
+    const spy = mockList([])
+    await getServiceStatus(makeServiceResponse('my-app', 'dev'))
+    expect(spy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        group: 'gateway.networking.k8s.io',
+        version: 'v1',
+        namespace: 'team-dev',
+        plural: 'httproutes',
+        labelSelector: 'otomi.io/app=my-app',
+      }),
+    )
+  })
+
+  test('returns NotFound when the k8s API call throws', async () => {
+    jest.spyOn(CustomObjectsApi.prototype, 'listNamespacedCustomObject').mockRejectedValue(new Error('network error'))
+    const result = await getServiceStatus(makeServiceResponse('web', 'alpha'))
+    expect(result).toBe('NotFound')
   })
 })
