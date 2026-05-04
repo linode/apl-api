@@ -2,9 +2,20 @@
 
 **Generated:** 2026-05-04
 
+## TABLE OF CONTENTS
+
+| File | Focus |
+|------|-------|
+| [`AGENTS.md`](AGENTS.md) | Root: architecture, conventions, commands |
+| [`src/api/AGENTS.md`](src/api/AGENTS.md) | Versioned route handlers (v1/v2/alpha), handler signatures |
+| [`src/middleware/AGENTS.md`](src/middleware/AGENTS.md) | Auth chain: JWT → groups → CASL → session → errors |
+| [`src/openapi/AGENTS.md`](src/openapi/AGENTS.md) | OpenAPI YAML specs, ACL definitions, schema conventions |
+| [`src/ai/AGENTS.md`](src/ai/AGENTS.md) | AI CRD handlers (models, agents, knowledge bases) |
+| [`src/utils/AGENTS.md`](src/utils/AGENTS.md) | Domain utilities: workloads, secrets, repos, YAML |
+
 ## OVERVIEW
 
-Akamai App Platform API — Express/TypeScript REST API managing Kubernetes teams, workloads, and services. Uses **Git as database** (YAML files in a values repo). OpenAPI-first: specs define endpoints, authorization, and generate types.
+App Platform API — Express/TypeScript REST API managing Kubernetes teams, workloads, and services. Uses **Git as database** (YAML files in a values repo). OpenAPI-first: specs define endpoints, authorization, and generate types.
 
 ## STRUCTURE
 
@@ -42,20 +53,20 @@ apl-api/
 
 ## WHERE TO LOOK
 
-| Task | Location | Notes |
-|------|----------|-------|
-| Add new endpoint | `src/openapi/*.yaml` → `src/api/{version}/` | Define spec FIRST, then handler |
-| Add authorization | OpenAPI spec `x-acl` + `x-aclSchema` | ACLs live in YAML, not code |
-| Understand CRUD flow | `src/otomi-stack.ts` | All resource operations route here |
-| Add middleware | `src/middleware/` → register in `src/app.ts` | Export from `middleware/index.ts` |
-| Modify data models | `src/openapi/*.yaml` → `npm run build:models` | Generates `generated-schema.ts` |
-| Secret handling | `src/fileStore/` + `ARCHITECTURE.md` | Two-pass loading: YAML first, then secrets merged |
-| K8s operations | `src/k8s-operations.ts` | Pod status, logs, builds, sealed secrets |
-| Auth flow | `src/middleware/jwt.ts` → `src/middleware/authz.ts` | JWT → group extraction → CASL check |
-| AI features | `src/ai/` | Kubernetes CRD CRUD — bypasses OtomiStack |
-| Environment config | `src/validators.ts` + `.env.sample` | All env vars validated via envalid |
-| Workload/chart utils | `src/utils/workloadUtils.ts` | Git URL validation, Helm chart fetching |
-| Sealed secrets | `src/utils/sealedSecretUtils.ts` | Encryption, manifest creation |
+| Task                 | Location                                            | Notes                                             |
+| -------------------- | --------------------------------------------------- | ------------------------------------------------- |
+| Add new endpoint     | `src/openapi/*.yaml` → `src/api/{version}/`         | Define spec FIRST, then handler                   |
+| Add authorization    | OpenAPI spec `x-acl` + `x-aclSchema`                | ACLs live in YAML, not code                       |
+| Understand CRUD flow | `src/otomi-stack.ts`                                | All resource operations route here                |
+| Add middleware       | `src/middleware/` → register in `src/app.ts`        | Export from `middleware/index.ts`                 |
+| Modify data models   | `src/openapi/*.yaml` → `npm run build:models`       | Generates `generated-schema.ts`                   |
+| Secret handling      | `src/fileStore/` + `ARCHITECTURE.md`                | Two-pass loading: YAML first, then secrets merged |
+| K8s operations       | `src/k8s-operations.ts`                             | Pod status, logs, builds, sealed secrets          |
+| Auth flow            | `src/middleware/jwt.ts` → `src/middleware/authz.ts` | JWT → group extraction → CASL check               |
+| AI features          | `src/ai/`                                           | Kubernetes CRD CRUD — bypasses OtomiStack         |
+| Environment config   | `src/validators.ts` + `.env.sample`                 | All env vars validated via envalid                |
+| Workload/chart utils | `src/utils/workloadUtils.ts`                        | Git URL validation, Helm chart fetching           |
+| Sealed secrets       | `src/utils/sealedSecretUtils.ts`                    | Encryption, manifest creation                     |
 
 ## CONVENTIONS
 
