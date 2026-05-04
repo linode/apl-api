@@ -1129,6 +1129,19 @@ describe('API V2 authz tests', () => {
       test('platform admin can migrate git', async () => {
         await agent.put('/v2/git').send(gitBody).set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
       })
+
+      test('returns 403 when push access probe fails with permission denied', async () => {
+        jest.spyOn(otomiStack.git, 'testRemoteConnection').mockResolvedValue(true)
+        jest.spyOn(otomiStack.git, 'probePushAccess').mockRejectedValue(new Error('permission denied'))
+
+        await agent.put('/v2/git').send(gitBody).set('Authorization', `Bearer ${platformAdminToken}`).expect(403)
+      })
+
+      test('returns 404 when remote connectivity check indicates repository not found', async () => {
+        jest.spyOn(otomiStack.git, 'testRemoteConnection').mockRejectedValue(new Error('repository not found'))
+
+        await agent.put('/v2/git').send(gitBody).set('Authorization', `Bearer ${platformAdminToken}`).expect(404)
+      })
     })
 
     describe('Team Admin', () => {
