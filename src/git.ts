@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from 'axios'
+import { randomUUID } from 'crypto'
 import Debug from 'debug'
 import diff from 'deep-diff'
 import { rmSync } from 'fs'
@@ -343,6 +344,24 @@ export class Git {
       await this.git.remote(['add', 'migration-remote', authUrl!])
       // Push HEAD so the worktree's session branch commit is included, not the stale local main
       await this.git.push('migration-remote', `HEAD:refs/heads/${branch}`)
+    } finally {
+      try {
+        await this.git.remote(['remove', 'migration-remote'])
+      } catch (e) {
+        debug(`Could not remove migration-remote: ${getSanitizedErrorMessage(e)}`)
+      }
+    }
+  }
+
+  async probePushAccess(url: string, password: string, user?: string): Promise<void> {
+    const authUrl = password ? getUrlAuth(url, user, password) : url
+    const probeBranch = `apl-migration-probe-${randomUUID()}`
+    const probeRef = `refs/heads/${probeBranch}`
+
+    try {
+      await this.git.remote(['add', 'migration-remote', authUrl!])
+      await this.git.push('migration-remote', `HEAD:${probeRef}`)
+      await this.git.push('migration-remote', `:${probeRef}`)
     } finally {
       try {
         await this.git.remote(['remove', 'migration-remote'])

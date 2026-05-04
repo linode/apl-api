@@ -120,3 +120,39 @@ describe('Git.pushToNewRemote', () => {
     expect(mockRemote).toHaveBeenCalledWith(['remove', 'migration-remote'])
   })
 })
+
+describe('Git.probePushAccess', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('creates and deletes temporary probe branch on migration-remote', async () => {
+    mockRemote.mockResolvedValue('')
+    mockPush.mockResolvedValue({})
+    const repo = makeRepo()
+
+    await repo.probePushAccess('https://example.com/repo.git', 'p', 'u')
+
+    expect(mockRemote).toHaveBeenCalledWith(
+      expect.arrayContaining(['add', 'migration-remote', expect.stringContaining('u')]),
+    )
+    expect(mockPush).toHaveBeenNthCalledWith(
+      1,
+      'migration-remote',
+      expect.stringMatching(/^HEAD:refs\/heads\/apl-migration-probe-/),
+    )
+    expect(mockPush).toHaveBeenNthCalledWith(
+      2,
+      'migration-remote',
+      expect.stringMatching(/^:refs\/heads\/apl-migration-probe-/),
+    )
+    expect(mockRemote).toHaveBeenCalledWith(['remove', 'migration-remote'])
+  })
+
+  it('removes migration-remote in finally even when probe push fails', async () => {
+    mockRemote.mockResolvedValue('')
+    mockPush.mockRejectedValue(new Error('permission denied'))
+    const repo = makeRepo()
+
+    await expect(repo.probePushAccess('https://example.com/repo.git', 'p', 'u')).rejects.toThrow('permission denied')
+    expect(mockRemote).toHaveBeenCalledWith(['remove', 'migration-remote'])
+  })
+})

@@ -2,8 +2,35 @@ import Debug from 'debug'
 import { Response } from 'express'
 import { lockApi } from 'src/middleware'
 import { OpenApiRequestExt } from 'src/otomi-models'
+import { getSanitizedErrorMessage } from 'src/utils'
 
 const debug = Debug('otomi:api:v2:git')
+
+type ErrorResponse = {
+  code: number
+  message: string
+}
+
+function classifyGitRemoteError(error: unknown, defaults: ErrorResponse): ErrorResponse {
+  const message = getSanitizedErrorMessage(error).toLowerCase()
+
+  if (message.includes('not found') || message.includes('repository does not exist')) {
+    return { code: 404, message: defaults.message }
+  }
+
+  if (
+    message.includes('permission denied') ||
+    message.includes('access denied') ||
+    message.includes('authentication failed') ||
+    message.includes('auth failed') ||
+    message.includes('write access to repository not granted') ||
+    message.includes('403')
+  ) {
+    return { code: 403, message: 'Insufficient permissions to push to new git remote' }
+  }
+
+  return defaults
+}
 
 /**
  * PUT /v2/git
@@ -28,16 +55,25 @@ export const migrateGit = async (req: OpenApiRequestExt, res: Response): Promise
   let remoteHasContent: boolean
   try {
     remoteHasContent = await req.otomi.git.testRemoteConnection(repoUrl, password, branch, username)
-  } catch (e: any) {
-    if (e.message.includes('not found')) {
-      const error = { message: `Cannot connect to new git remote`, statusCode: 404 }
-      res.json(error)
-      return
-    } else {
-      const error = { message: `Error connecting to new git remote`, statusCode: 400 }
-      res.json(error)
-      return
-    }
+  } catch (e: unknown) {
+    const error = classifyGitRemoteError(e, {
+      code: 400,
+      message: 'Error connecting to new git remote',
+    })
+    res.status(error.code).json({ error: error.message })
+    return
+  }
+
+  // Validate push permission by creating and deleting a temporary branch on the new remote
+  try {
+    await req.otomi.git.probePushAccess(repoUrl, password, username)
+  } catch (e: unknown) {
+    const error = classifyGitRemoteError(e, {
+      code: 400,
+      message: 'Error validating push access to new git remote',
+    })
+    res.status(error.code).json({ error: error.message })
+    return
   }
 
   // Write config + commit locally → push to new remote (if empty) → push to current remote
