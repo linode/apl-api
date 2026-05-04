@@ -1,0 +1,42 @@
+AplCatalogSpec:
+  type: object
+  additionalProperties: false
+  properties:
+    name:
+      $ref: 'definitions.yaml#/idName'
+    repositoryUrl:
+      $ref: 'definitions.yaml#/repoUrl'
+    branch:
+      type: string
+      default: main
+    chartsPath:
+      type: string
+      description: Optional subdirectory path where charts are located (e.g., 'charts' or 'helm-charts')
+    enabled:
+      type: boolean
+      default: true
+  required:
+    - name
+    - repositoryUrl
+    - branch
+
+AplCatalogChartSpec:
+  type: array
+  items:
+    type: object
+    properties:
+      name:
+        type: string
+      version:
+        type: string
+      chart:
+        type: object
+      chartsPath:
+        type: string
+      branch:
+        type: string
+      repositoryUrl:
+        type: string
+  required:
+    - name
+    - version

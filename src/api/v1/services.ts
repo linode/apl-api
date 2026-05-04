@@ -8,8 +8,8 @@ const debug = Debug('otomi:api:v1:services')
  * GET /v1/services
  * Get all services running on the cluster
  */
-export const getAllServices = (req: OpenApiRequestExt, res: Response): void => {
+export const getAllServices = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   debug('getAllServices')
-  const v = req.otomi.getAllServices()
+  const v = await req.otomi.getAllServices()
   res.json(v)
 }

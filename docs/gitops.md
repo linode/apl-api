@@ -116,7 +116,7 @@ sequenceDiagram
 
 ## Version two
 
-The locking mechanism is removed by removing the master session controller concept. The session repo controller pulls and pushes from/to Gitea instead of master repo. The Session Controller is also renamed to `Git handler` to not confuse it with user session.
+The locking mechanism is removed by removing the master session controller concept. The session repo controller pulls and pushes from/to Git instead of master repo. The Session Controller is also renamed to `Git handler` to not confuse it with user session.
 
 **Sequence diagram for the accepted request**
 The following diagram presents GitOps without locking mechanism. It is worth noting that is performs eight operations less comparing to its predecessor.

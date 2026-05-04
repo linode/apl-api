@@ -1,8 +1,8 @@
-name: 'postman'
+name: "postman"
 on:
   pull_request:
     branches:
-      - '*'
+      - "*"
   workflow_dispatch:
 jobs:
   postman:
@@ -57,7 +57,11 @@ jobs:
           npm install
           npm run compile
           NODE_PATH="/usr/local/lib/node_modules" npm run server > $GITHUB_WORKSPACE/core.log 2>&1 &
+      - name: Sync values schema from apl-core
+        run: cp apl-core/values-schema.yaml src/values-schema.yaml
       - name: Start api
+        env:
+          APL_CORE_PATH: apl-core
         run: |
           npm install
           cp .env.sample .env
@@ -81,7 +85,7 @@ jobs:
           postman collection run 44183872-1d1f2dba-6c47-4764-a847-a6bca216ecea -e 43715313-d380e919-5142-44e6-b52c-02f8b04da8fa -i 44183872-16af2563-f99c-41c6-81c5-6d68d8aaef42
       - name: Upload logs
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: server-logs
           path: |

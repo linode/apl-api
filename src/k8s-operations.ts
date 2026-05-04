@@ -2,63 +2,21 @@ import {
   CoreV1Api,
   CustomObjectsApi,
   KubeConfig,
-  KubernetesObject,
   KubernetesObjectApi,
-  RbacAuthorizationV1Api,
+  PatchStrategy,
+  V1Service,
   VersionApi,
 } from '@kubernetes/client-node'
 import Debug from 'debug'
-import * as fs from 'fs'
-import * as yaml from 'js-yaml'
-import { promisify } from 'util'
-import { AplBuildResponse, AplSecretResponse, AplServiceResponse, AplWorkloadResponse } from './otomi-models'
+import {
+  AplBuildResponse,
+  AplServiceResponse,
+  AplWorkloadResponse,
+  K8sService,
+  SealedSecretManifestResponse,
+} from './otomi-models'
 
 const debug = Debug('otomi:api:k8sOperations')
-
-/**
- * Replicate the functionality of `kubectl apply`.  That is, create the resources defined in the `specFile` if they do
- * not exist, patch them if they do exist.
- *
- * @param specPath File system path to a YAML Kubernetes spec.
- * @return Array of resources created
- */
-export async function apply(specPath: string): Promise<KubernetesObject[]> {
-  const kc = new KubeConfig()
-  kc.loadFromDefault()
-  const client = KubernetesObjectApi.makeApiClient(kc) as any
-  const fsReadFileP = promisify(fs.readFile)
-  const specString = await fsReadFileP(specPath, 'utf8')
-  const specs: any = yaml.loadAll(specString)
-  const validSpecs = specs.filter((s) => s && s.kind && s.metadata)
-  const created: KubernetesObject[] = []
-  for (const spec of validSpecs) {
-    // this is to convince the old version of TypeScript that metadata exists even though we already filtered specs
-    // without metadata out
-    spec.metadata = spec.metadata || {}
-    spec.metadata.annotations = spec.metadata.annotations || {}
-    delete spec.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration']
-    spec.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration'] = JSON.stringify(spec)
-    try {
-      // try to get the resource, if it does not exist an error will be thrown and we will end up in the catch
-      // block.
-      await client.read(spec)
-      // we got the resource, so it exists, so patch it
-      //
-      // Note that this could fail if the spec refers to a custom resource. For custom resources you may need
-      // to specify a different patch merge strategy in the content-type header.
-      //
-      // See: https://github.com/kubernetes/kubernetes/issues/97423
-      const response = await client.patch(spec)
-      created.push(response.body)
-    } catch (e) {
-      // we did not get the resource, so it does not exist, so create it
-      const response = await client.create(spec)
-      created.push(response.body)
-    }
-  }
-  debug(`Cloudtty is created!`)
-  return created
-}
 
 export async function watchPodUntilRunning(namespace: string, podName: string) {
   let isRunning = false
@@ -101,65 +59,11 @@ export async function checkPodExists(namespace: string, podName: string): Promis
   }
 }
 
-export async function k8sdelete({
-  sub,
-  isPlatformAdmin,
-  userTeams,
-}: {
-  sub: string
-  isPlatformAdmin: boolean
-  userTeams: string[]
-}): Promise<void> {
-  const kc = new KubeConfig()
-  kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(CoreV1Api)
-  const customObjectsApi = kc.makeApiClient(CustomObjectsApi)
-  const rbacAuthorizationV1Api = kc.makeApiClient(RbacAuthorizationV1Api)
-  const resourceName = sub
-  const namespace = 'team-admin'
-  try {
-    const apiVersion = 'v1beta1'
-    const apiGroupAuthz = 'security.istio.io'
-    const apiGroupVS = 'networking.istio.io'
-    const pluralAuth = 'authorizationpolicies'
-    const pluralVS = 'virtualservices'
-
-    await customObjectsApi.deleteNamespacedCustomObject({
-      group: apiGroupAuthz,
-      version: apiVersion,
-      namespace,
-      plural: pluralAuth,
-      name: `tty-${resourceName}`,
-    })
-
-    await k8sApi.deleteNamespacedServiceAccount({ name: `tty-${resourceName}`, namespace })
-    await k8sApi.deleteNamespacedPod({ name: `tty-${resourceName}`, namespace })
-    if (!isPlatformAdmin) {
-      for (const team of userTeams!) {
-        await rbacAuthorizationV1Api.deleteNamespacedRoleBinding({
-          name: `tty-${team}-${resourceName}-rolebinding`,
-          namespace: team,
-        })
-      }
-    } else {
-      await rbacAuthorizationV1Api.deleteClusterRoleBinding({ name: 'tty-admin-clusterrolebinding' })
-    }
-    await k8sApi.deleteNamespacedService({ name: `tty-${resourceName}`, namespace })
-
-    await customObjectsApi.deleteNamespacedCustomObject({
-      group: apiGroupVS,
-      version: apiVersion,
-      namespace,
-      plural: pluralVS,
-      name: `tty-${resourceName}`,
-    })
-  } catch (error) {
-    debug(`Failed to delete resources for ${resourceName} in namespace ${namespace}.`)
-  }
-}
+let cachedKubernetesVersion: string | undefined
 
 export async function getKubernetesVersion() {
   if (process.env.NODE_ENV === 'development') return 'x.x.x'
+  if (cachedKubernetesVersion) return cachedKubernetesVersion
 
   const kc = new KubeConfig()
   kc.loadFromDefault()
@@ -169,7 +73,8 @@ export async function getKubernetesVersion() {
   try {
     const response = await k8sApi.getCode()
     console.log('Kubernetes Server Version:', response.gitVersion)
-    return response.gitVersion
+    cachedKubernetesVersion = response.gitVersion
+    return cachedKubernetesVersion
   } catch (error) {
     debug(`Failed to get Kubernetes version.`)
   }
@@ -255,6 +160,7 @@ export async function getWorkloadStatus(workload: AplWorkloadResponse): Promise<
 
 async function listNamespacedCustomObject(
   group: string,
+  version: string,
   namespace: string,
   plural: string,
   labelSelector: string | undefined,
@@ -265,7 +171,7 @@ async function listNamespacedCustomObject(
   try {
     const res: any = await k8sApi.listNamespacedCustomObject({
       group,
-      version: 'v1beta1',
+      version,
       namespace,
       plural,
       labelSelector,
@@ -282,6 +188,7 @@ export async function getBuildStatus(build: AplBuildResponse): Promise<string> {
   const labelSelector = `tekton.dev/pipeline=${build.spec.mode?.type}-build-${name}`
   const resPipelineruns = await listNamespacedCustomObject(
     'tekton.dev',
+    'v1beta1',
     `team-${teamName}`,
     'pipelineruns',
     labelSelector,
@@ -308,6 +215,7 @@ export async function getBuildStatus(build: AplBuildResponse): Promise<string> {
     } else {
       const resEventlisteners = await listNamespacedCustomObject(
         'triggers.tekton.dev',
+        'v1beta1',
         `team-${teamName}`,
         'eventlisteners',
         labelSelector,
@@ -331,54 +239,57 @@ export async function getBuildStatus(build: AplBuildResponse): Promise<string> {
   }
 }
 
-async function getNamespacedCustomObject(namespace: string, name: string) {
-  const kc = new KubeConfig()
-  kc.loadFromDefault()
-  const k8sApi = kc.makeApiClient(CustomObjectsApi)
-  try {
-    const res: any = await k8sApi.getNamespacedCustomObject({
-      group: 'networking.istio.io',
-      version: 'v1beta1',
-      namespace,
-      plural: 'gateways',
-      name,
-    })
-    const { hosts } = res.spec.servers[0]
-    return hosts
-  } catch (error) {
-    return 'NotFound'
-  }
+export function parseHTTPRouteStatus(httpRoute: any): boolean {
+  const parents: any[] = Array.isArray(httpRoute?.status?.parents) ? httpRoute.status.parents : []
+
+  const isAccepted = parents.some(
+    (parent: any) =>
+      Array.isArray(parent?.conditions) &&
+      parent.conditions.some((c: any) => c.type === 'Accepted' && c.status === 'True') &&
+      parent.conditions.some((c: any) => c.type === 'ResolvedRefs' && c.status === 'True'),
+  )
+  return isAccepted
 }
 
-async function checkHostStatus(namespace: string, name: string, host: string) {
-  const hosts = await getNamespacedCustomObject(namespace, name)
-  return hosts.includes(host) ? 'Succeeded' : 'Unknown'
+function isPublicHTTPRoute(httpRoute: any): boolean {
+  const visibility = httpRoute?.metadata?.labels?.['networking.knative.dev/visibility']
+  if (visibility === 'cluster-local') return false
+
+  const parentRefs: any[] = Array.isArray(httpRoute?.spec?.parentRefs) ? httpRoute.spec.parentRefs : []
+  const hasLocalGateway = parentRefs.some((parentRef) => parentRef?.name === 'knative-local-gateway')
+  return !hasLocalGateway
 }
 
-export async function getServiceStatus(service: AplServiceResponse, domainSuffix: string): Promise<string> {
-  const isKsvc = service.spec.ksvc?.predeployed
+export async function getServiceStatus(service: AplServiceResponse): Promise<'Succeeded' | 'Unknown' | 'NotFound'> {
   const { name, labels } = service.metadata
   const teamName = labels['apl.io/teamId']
   const namespace = `team-${teamName}`
-  const host = `team-${teamName}/${name}-${teamName}.${domainSuffix}`
 
-  if (isKsvc) {
-    const res = await listNamespacedCustomObject('networking.istio.io', namespace, 'virtualservices', undefined)
-    const virtualservices = res?.items?.map((item) => item.metadata.name) || []
-    if (virtualservices.includes(`${name}-ingress`)) {
-      return 'Succeeded'
-    } else {
-      return 'NotFound'
-    }
+  const res = await listNamespacedCustomObject(
+    'gateway.networking.k8s.io',
+    'v1',
+    namespace,
+    'httproutes',
+    `otomi.io/app=${name}`,
+  )
+
+  const httpRoutes = Array.isArray(res?.items) ? res.items : []
+  const publicHttpRoutes = httpRoutes.filter((httpRoute) => isPublicHTTPRoute(httpRoute))
+
+  if (publicHttpRoutes.length === 0) {
+    debug(`No public HTTPRoutes found for service ${name} in namespace ${namespace}.`)
+    return 'NotFound'
+  } else if (publicHttpRoutes.length > 1) {
+    debug(
+      `Multiple public HTTPRoutes found for service ${name} in namespace ${namespace}. This may indicate an issue with the service configuration.`,
+    )
+    return 'Unknown'
   }
 
-  const tlstermStatus = await checkHostStatus(namespace, `team-${teamName}-public-tlsterm`, host)
-  if (tlstermStatus === 'Succeeded') return 'Succeeded'
-
-  const tlspassStatus = await checkHostStatus(namespace, `team-${teamName}-public-tlspass`, host)
-  return tlspassStatus
+  const [httpRoute] = publicHttpRoutes
+  const isAccepted = parseHTTPRouteStatus(httpRoute)
+  return isAccepted ? 'Succeeded' : 'Unknown'
 }
-
 export async function getSecretValues(name: string, namespace: string): Promise<Record<string, string> | undefined> {
   const kc = new KubeConfig()
   kc.loadFromDefault()
@@ -433,10 +344,10 @@ export async function getSealedSecretSyncedStatus(name: string, namespace: strin
   }
 }
 
-export async function getSealedSecretStatus(sealedsecret: AplSecretResponse): Promise<string> {
+export async function getSealedSecretStatus(sealedsecret: SealedSecretManifestResponse): Promise<string> {
   const { name, labels } = sealedsecret.metadata
   const teamName = labels['apl.io/teamId']
-  const namespace = sealedsecret.spec.namespace ?? `team-${teamName}`
+  const namespace = sealedsecret.spec.template?.metadata?.namespace ?? `team-${teamName}`
   const value = await getSecretValues(name, namespace)
   const syncedStatus = await getSealedSecretSyncedStatus(name, namespace)
 
@@ -526,4 +437,171 @@ export async function getTeamSecretsFromK8s(namespace: string) {
   } catch (error) {
     debug(`Failed to get team secrets from k8s for ${namespace}.`)
   }
+}
+
+export interface UserSecretData {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  initialPassword: string
+  isPlatformAdmin: boolean
+  isTeamAdmin: boolean
+  teams: string[]
+}
+
+function decodeUserSecret(name: string, data: Record<string, string>): UserSecretData {
+  const decoded: Record<string, string> = {}
+  Object.entries(data || {}).forEach(([key, value]) => {
+    decoded[key] = Buffer.from(value, 'base64').toString('utf-8')
+  })
+  return {
+    id: name,
+    email: decoded.email || '',
+    firstName: decoded.firstName || '',
+    lastName: decoded.lastName || '',
+    initialPassword: decoded.initialPassword || '',
+    isPlatformAdmin: decoded.isPlatformAdmin === 'true',
+    isTeamAdmin: decoded.isTeamAdmin === 'true',
+    teams: decoded.teams ? JSON.parse(decoded.teams) : [],
+  }
+}
+
+/**
+ * List all user secrets from the apl-users namespace and return decoded user data.
+ */
+export async function listUserSecretsFromK8s(namespace = 'apl-users'): Promise<UserSecretData[]> {
+  const kc = new KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(CoreV1Api)
+  try {
+    const res: any = await k8sApi.listNamespacedSecret({ namespace })
+    const users: UserSecretData[] = []
+    for (const item of res.items || []) {
+      // Skip service account tokens and other non-user secrets
+      if (item.type !== 'kubernetes.io/opaque') continue
+      if (!item.data?.email) continue
+      users.push(decodeUserSecret(item.metadata.name, item.data))
+    }
+    return users
+  } catch (error) {
+    debug(`Failed to list user secrets from k8s for ${namespace}.`)
+    return []
+  }
+}
+
+/**
+ * Read a single user's K8s secret from the apl-users namespace.
+ */
+export async function getUserSecretFromK8s(uuid: string, namespace = 'apl-users'): Promise<UserSecretData | undefined> {
+  const kc = new KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(CoreV1Api)
+  try {
+    const res = await k8sApi.readNamespacedSecret({ name: uuid, namespace })
+    if (!res.data) return undefined
+    return decodeUserSecret(uuid, res.data)
+  } catch (error) {
+    debug(`Failed to get user secret ${uuid} from k8s for ${namespace}.`)
+    return undefined
+  }
+}
+
+let _k8sReachable: boolean | null = null
+
+export async function isK8sReachable(): Promise<boolean> {
+  if (_k8sReachable !== null) return _k8sReachable
+  try {
+    const kc = new KubeConfig()
+    kc.loadFromDefault()
+    const versionApi = kc.makeApiClient(VersionApi)
+    await versionApi.getCode()
+    _k8sReachable = true
+  } catch {
+    _k8sReachable = false
+  }
+  return _k8sReachable
+}
+
+export function toK8sService(item: V1Service): K8sService | null {
+  const knativeServiceTypeLabel = 'networking.internal.knative.dev/serviceType'
+  const knativeServiceLabel = 'serving.knative.dev/service'
+
+  const labels = item.metadata?.labels ?? {}
+
+  // Filter out knative private services
+  if (labels[knativeServiceTypeLabel] === 'Private') return null
+  // Filter out services that are knative service revision
+  if (item.spec?.type === 'ClusterIP' && labels[knativeServiceLabel]) return null
+
+  let name = item.metadata?.name ?? 'unknown'
+  let managedByKnative = false
+
+  if (item.spec?.type === 'ExternalName' && labels[knativeServiceLabel]) {
+    name = labels[knativeServiceLabel]
+    managedByKnative = true
+  }
+
+  const ports = item.spec?.ports?.map((p) => p.port) ?? []
+
+  return { name, ports, managedByKnative }
+}
+
+// Canary deployments produce two services: <name>-v1 and <name>-v2.
+// This function consolidates them into a single entry with the base name.
+// It works in two steps:
+//   1. Filter: drop -v2 when a matching -v1 exists (keeping only one representative)
+//   2. Map: rename the remaining -v1 to the base name when a matching -v2 exists
+// Services without a matching counterpart are left unchanged.
+export function mergeCanaryServices(services: K8sService[]): K8sService[] {
+  const nameSet = new Set(services.map((s) => s.name))
+
+  return services
+    .filter((svc) => !svc.name.endsWith('-v2') || !nameSet.has(svc.name.replace(/-v2$/, '-v1')))
+    .map((svc) => {
+      const baseName = svc.name.replace(/-v1$/, '')
+      return nameSet.has(`${baseName}-v2`) ? { ...svc, name: baseName } : svc
+    })
+}
+
+export const APL_API_STATUS_CONFIGMAP = 'apl-api-status'
+
+export interface ApiStatus {
+  locked: boolean
+}
+
+export async function getApiStatusFromConfigMap(namespace: string): Promise<ApiStatus> {
+  const kc = new KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(CoreV1Api)
+  try {
+    const res = await k8sApi.readNamespacedConfigMap({ name: APL_API_STATUS_CONFIGMAP, namespace })
+    return { locked: res.data?.locked === 'true' }
+  } catch (error) {
+    debug(`ConfigMap ${APL_API_STATUS_CONFIGMAP} not found in ${namespace}, defaulting locked=false`)
+    return { locked: false }
+  }
+}
+
+export async function setApiStatusInConfigMap(namespace: string, locked: boolean): Promise<void> {
+  if (process.env.NODE_ENV === 'development') {
+    debug(`Skipping ConfigMap patch in ${process.env.NODE_ENV} environment (locked=${locked})`)
+    return
+  }
+  const kc = new KubeConfig()
+  kc.loadFromDefault()
+  const k8sApi = kc.makeApiClient(KubernetesObjectApi)
+  await k8sApi.patch(
+    {
+      apiVersion: 'v1',
+      kind: 'ConfigMap',
+      metadata: { name: APL_API_STATUS_CONFIGMAP, namespace },
+      data: { locked: locked ? 'true' : 'false' },
+    },
+    undefined,
+    undefined,
+    'apl-api',
+    true,
+    PatchStrategy.ServerSideApply,
+  )
 }

@@ -9,7 +9,7 @@ import { stringify as stringifyYaml } from 'yaml'
 import { z } from 'zod'
 import { APL_KINDS, AplKind, AplObject, AplPlatformObject, AplRecord, AplTeamObject } from '../otomi-models'
 import { loadRawYaml, loadYaml } from '../utils'
-import { getFileMapForKind, getFileMaps, getResourceFilePath } from './file-map'
+import { getFileMapForKind, getFileMaps, getNamespaceResourceFilePath, getResourceFilePath } from './file-map'
 
 const debug = Debug('otomi:file-store')
 
@@ -34,10 +34,6 @@ export async function writeFileToDisk(repoPath: string, relativePath: string, co
   await ensureDir(path.dirname(fullPath))
   const yamlContent = stringifyYaml(content)
   await writeFile(fullPath, yamlContent, 'utf8')
-}
-
-function hasDecryptedFile(filePath: string, fileList: string[]): boolean {
-  return fileList.includes(`${filePath}.dec`)
 }
 
 function shouldSkipValidation(filePath: string): boolean {
@@ -66,15 +62,13 @@ export class FileStore {
       }),
     )
 
-    const filesToLoad = fileMapResults.flatMap((files) =>
-      files.filter((filePath) => !hasDecryptedFile(filePath, files)),
-    )
+    const filesToLoad = fileMapResults.flat()
 
     await Promise.all(
       filesToLoad.map(async (filePath) => {
         try {
           const rawContent = isRawContent(filePath) ? await loadRawYaml(filePath) : await loadYaml(filePath)
-          const relativePath = path.relative(envDir, filePath).replace(/\.dec$/, '')
+          const relativePath = path.relative(envDir, filePath)
 
           // Skip validation for specific file paths
           if (shouldSkipValidation(filePath)) {
@@ -102,24 +96,27 @@ export class FileStore {
       }),
     )
 
-    // PASS 2: Merge secret files into main files
-    for (const [filePath, content] of allFiles.entries()) {
-      if (filePath.includes('/secrets.')) {
-        // This is a secret file - find its main file
-        const mainFilePath = filePath.replace('/secrets.', '/')
-        const mainContent = allFiles.get(mainFilePath)
+    // PASS 2: Merge legacy secret files (secrets.*.yaml) into main files
+    // This provides backward compatibility for installations migrating from SOPS encryption
+    const hasSecretFiles = Array.from(allFiles.keys()).some((fp) => fp.includes('/secrets.'))
+    if (hasSecretFiles) {
+      for (const [filePath, content] of allFiles.entries()) {
+        if (filePath.includes('/secrets.')) {
+          // This is a secret file - find its main file
+          const mainFilePath = filePath.replace('/secrets.', '/')
+          const mainContent = allFiles.get(mainFilePath)
 
-        if (mainContent) {
-          // Normal case: merge secret spec into main spec using DEEP merge
-          mainContent.spec = merge({}, mainContent.spec, content.spec)
-          // Keep the merged main file in allFiles for final storage
-        } else {
-          // Special case (users): no main file exists, secret IS the main
-          // Store at main path (without secrets. prefix)
-          allFiles.set(mainFilePath, content)
+          if (mainContent) {
+            // Normal case: merge secret spec into main spec using DEEP merge
+            mainContent.spec = merge({}, mainContent.spec, content.spec)
+          } else {
+            // Special case (users): no main file exists, secret IS the main
+            // Store at main path (without secrets. prefix)
+            allFiles.set(mainFilePath, content)
+          }
+          // Remove secret file from map (don't store separately)
+          allFiles.delete(filePath)
         }
-        // Remove secret file from map (don't store separately)
-        allFiles.delete(filePath)
       }
     }
 
@@ -167,14 +164,36 @@ export class FileStore {
     return filePath
   }
 
+  deleteTeamResource(kind: AplKind, teamId: string, name: string): string {
+    const filePath = getResourceFilePath(kind, name, teamId)
+    this.store.delete(filePath)
+    return filePath
+  }
+
+  deleteNamespaceResource(kind: AplKind, namespace: string, name: string): string {
+    const filePath = getNamespaceResourceFilePath(kind, name, namespace)
+    this.store.delete(filePath)
+    return filePath
+  }
+
+  getPlatformResource(kind: AplKind, name: string): AplObject | undefined {
+    const filePath = getResourceFilePath(kind, name)
+    return this.store.get(filePath)
+  }
+
+  getNamespaceResource(kind: AplKind, name: string, namespace: string): AplObject | undefined {
+    const filePath = getNamespaceResourceFilePath(kind, name, namespace)
+    return this.store.get(filePath)
+  }
+
   setPlatformResource(aplPlatformObject: AplPlatformObject): string {
     const filePath = getResourceFilePath(aplPlatformObject.kind, aplPlatformObject.metadata.name)
     this.store.set(filePath, aplPlatformObject)
     return filePath
   }
 
-  deleteTeamResource(kind: AplKind, teamId: string, name: string): string {
-    const filePath = getResourceFilePath(kind, name, teamId)
+  deletePlatformResource(kind: AplKind, name: string): string {
+    const filePath = getResourceFilePath(kind, name)
     this.store.delete(filePath)
     return filePath
   }
@@ -224,6 +243,98 @@ export class FileStore {
     }
 
     return result
+  }
+
+  getAllNamespaceResourcesByKind(kind: AplKind): Map<string, AplObject> {
+    const fileMap = getFileMapForKind(kind)
+    if (!fileMap) throw new Error(`Unknown kind: ${kind}`)
+
+    const parts = fileMap.pathTemplate.split('{namespace}')
+    if (parts.length < 2) {
+      throw new Error(`Kind ${kind} is not namespace-scoped (missing {namespace} in pathTemplate)`)
+    }
+
+    // parts[0] => 'env/manifests/namespaces/'
+    const namespacePrefix = parts[0]
+
+    // parts[1] => '/sealedsecrets/{name}.yaml'  -> '/sealedsecrets/'
+    const resourceDir = parts[1].replace('{name}.yaml', '') // keeps trailing slash
+
+    const result = new Map<string, AplObject>()
+
+    for (const filePath of this.store.keys()) {
+      if (!filePath.startsWith(namespacePrefix)) continue
+      if (!filePath.includes(resourceDir)) continue
+      if (!filePath.endsWith('.yaml')) continue
+
+      const content = this.store.get(filePath)
+      if (content) result.set(filePath, content)
+    }
+
+    return result
+  }
+
+  getNamespaceResourcesByKind(kind: AplKind, namespace: string): Map<string, AplObject> {
+    const fileMap = getFileMapForKind(kind)
+    if (!fileMap) throw new Error(`Unknown kind: ${kind}`)
+
+    const parts = fileMap.pathTemplate.split('{namespace}')
+    if (parts.length < 2) {
+      throw new Error(`Kind ${kind} is not namespace-scoped (missing {namespace} in pathTemplate)`)
+    }
+
+    const namespacePrefix = parts[0] // 'env/manifests/namespaces/'
+    const resourceDir = parts[1].replace('{name}.yaml', '') // '/sealedsecrets/'
+
+    const result = new Map<string, AplObject>()
+
+    // Only match this namespace:
+    // env/manifests/namespaces/{namespace}/sealedsecrets/*.yaml
+    const requiredPrefix = `${namespacePrefix}${namespace}${resourceDir}`
+
+    for (const filePath of this.store.keys()) {
+      if (!filePath.startsWith(requiredPrefix)) continue
+      if (!filePath.endsWith('.yaml')) continue
+
+      const content = this.store.get(filePath)
+      if (content) result.set(filePath, content)
+    }
+
+    return result
+  }
+
+  // Return namespaces that contain at least one sealedsecret
+  getNamespacesWithSealedSecrets(): string[] {
+    // Requires a unique AplNamespaceSealedSecret kind because SealedSecret is used for teams, see file-map.ts
+    const sealedSecretKind: AplKind = 'AplNamespaceSealedSecret'
+
+    const fileMap = getFileMapForKind(sealedSecretKind)
+    if (!fileMap) throw new Error(`Unknown kind: ${sealedSecretKind}`)
+
+    const parts = fileMap.pathTemplate.split('{namespace}')
+    if (parts.length < 2) {
+      throw new Error(`Kind ${sealedSecretKind} is not namespace-scoped (missing {namespace} in pathTemplate)`)
+    }
+
+    const namespacePrefix = parts[0]
+    const resourceDir = parts[1].replace('{name}.yaml', '') // keeps trailing slash
+
+    const namespaces = new Set<string>()
+
+    for (const filePath of this.store.keys()) {
+      if (!filePath.startsWith(namespacePrefix)) continue
+      if (!filePath.includes(resourceDir)) continue
+      if (!filePath.endsWith('.yaml')) continue
+
+      const rest = filePath.slice(namespacePrefix.length)
+      const namespace = rest.split('/')[0]
+      if (namespace) namespaces.add(namespace)
+    }
+
+    // apl-users secrets are managed separately via user endpoints, not platform secrets
+    namespaces.delete('apl-users')
+
+    return Array.from(namespaces)
   }
 
   getTeamResourcesByKindAndTeamId(kind: AplKind, teamId: string): Map<string, AplObject> {

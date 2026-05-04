@@ -28,6 +28,7 @@ jest.mock('fs/promises', () => ({
 }))
 jest.mock('fs', () => ({
   existsSync: jest.fn(),
+  lstatSync: jest.fn(),
   mkdirSync: jest.fn(),
   renameSync: jest.fn(),
   rmSync: jest.fn(),
@@ -577,51 +578,44 @@ describe('fetchWorkloadCatalog', () => {
     jest.clearAllMocks()
     process.env = { ...originalEnv, GIT_USER: 'git-user', GIT_PASSWORD: 'git-password' }
     ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+    ;(fs.lstatSync as jest.Mock).mockReturnValue({ isDirectory: () => true })
 
     // Mock directory structure
-    const files = ['.git', 'chart1', 'chart2', 'README.md', 'rbac.yaml']
-    ;(fsPromises.readdir as jest.Mock).mockResolvedValue(files)
+    ;(fsPromises.readdir as jest.Mock).mockResolvedValue(['.git', 'chart1', 'chart2', 'README.md', 'rbac.yaml'])
 
-    // Mock rbac.yaml content
+    // Mock rbac.yaml (read by readRbacConfig via fsExtra.readFile)
     const rbacContent = YAML.stringify({
-      rbac: {
-        chart1: null,
-        chart2: ['team-2'],
-      },
+      rbac: { chart1: null, chart2: ['team-2'] },
       betaCharts: ['chart2'],
     })
     ;(fsExtra.readFile as unknown as jest.Mock).mockImplementation((filePath) => {
       if (filePath.endsWith('rbac.yaml')) return Promise.resolve(rbacContent)
-
-      if (filePath.endsWith('chart1/README.md')) return Promise.resolve('# Chart 1 README')
-
-      if (filePath.endsWith('chart1/values.yaml')) return Promise.resolve('key: value')
-
-      if (filePath.endsWith('chart1/Chart.yaml')) {
-        return Promise.resolve(
-          YAML.stringify({
-            name: 'chart1',
-            version: '1.0.0',
-            description: 'Test Chart 1',
-            icon: 'https://example.com/icon1.png',
-          }),
-        )
-      }
-      if (filePath.endsWith('chart2/README.md')) return Promise.resolve('# Chart 2 README')
-
-      if (filePath.endsWith('chart2/values.yaml')) return Promise.resolve('key: value')
-
-      if (filePath.endsWith('chart2/Chart.yaml')) {
-        return Promise.resolve(
-          YAML.stringify({
-            name: 'chart2',
-            version: '2.0.0',
-            description: 'Test Chart 2',
-            icon: 'https://example.com/icon2.png',
-          }),
-        )
-      }
       return Promise.reject(new Error(`File not found: ${filePath}`))
+    })
+
+    // Default spy covering chart files read via safeReadTextFile
+    jest.spyOn(utils, 'safeReadTextFile').mockImplementation(async (_baseDir, filePath) => {
+      if (filePath.endsWith('chart1/README.md')) return '# Chart 1 README'
+      if (filePath.endsWith('chart1/values.yaml')) return 'key: value'
+      if (filePath.endsWith('chart1/values.schema.json')) return ''
+      if (filePath.endsWith('chart1/Chart.yaml'))
+        return YAML.stringify({
+          name: 'chart1',
+          version: '1.0.0',
+          description: 'Test Chart 1',
+          icon: 'https://example.com/icon1.png',
+        })
+      if (filePath.endsWith('chart2/README.md')) return '# Chart 2 README'
+      if (filePath.endsWith('chart2/values.yaml')) return 'key: value'
+      if (filePath.endsWith('chart2/values.schema.json')) return ''
+      if (filePath.endsWith('chart2/Chart.yaml'))
+        return YAML.stringify({
+          name: 'chart2',
+          version: '2.0.0',
+          description: 'Test Chart 2',
+          icon: 'https://example.com/icon2.png',
+        })
+      throw new Error(`File not found: ${filePath}`)
     })
   })
 
@@ -637,19 +631,14 @@ describe('fetchWorkloadCatalog', () => {
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
 
     jest.spyOn(workloadUtils, 'isInteralGiteaURL').mockReturnValue(true)
-    jest.spyOn(utils, 'safeReadTextFile').mockImplementation(async (_baseDir, filePath) => {
-      if (filePath.includes('chart1')) return '# Chart 1 README'
-      if (filePath.includes('chart2')) return '# Chart 2 README'
-      throw new Error('missing')
-    })
 
-    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'admin', 'example.com')
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', 'example.com', 'admin')
 
     expect(fs.mkdirSync).toHaveBeenCalledWith(helmChartsDir, { recursive: true })
     expect(mockGit.clone).toHaveBeenCalledWith(
       'https://git-user:git-password@gitea.example.com/otomi/charts.git',
       helmChartsDir,
-      ['--branch', 'main', '--single-branch'],
+      ['--branch', 'main', '--single-branch', '--depth', '1'],
     )
     expect(result).toEqual({
       helmCharts: ['chart1', 'chart2'],
@@ -685,12 +674,7 @@ describe('fetchWorkloadCatalog', () => {
     }
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
 
-    jest.spyOn(utils, 'safeReadTextFile').mockImplementation(async (_baseDir, filePath) => {
-      if (filePath.includes('chart1')) return '# Chart 1 README'
-      throw new Error('missing')
-    })
-
-    const result = await fetchWorkloadCatalog(url, helmChartsDir, '1')
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, '1')
 
     // Only chart1 should be accessible to team-1
     expect(result).toEqual({
@@ -711,81 +695,88 @@ describe('fetchWorkloadCatalog', () => {
   })
 
   test('handles non-existent README files', async () => {
-    const mockGit = {
-      clone: jest.fn().mockResolvedValue(undefined),
-    }
+    const mockGit = { clone: jest.fn().mockResolvedValue(undefined) }
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-
-    // Make the README.md file read fail
     ;(fsExtra.readFile as unknown as jest.Mock).mockImplementation((filePath) => {
-      if (filePath.endsWith('chart1/README.md')) return Promise.reject(new Error('File not found'))
-
-      if (filePath.endsWith('chart1/values.yaml')) return Promise.resolve('key: value')
-
-      if (filePath.endsWith('chart1/Chart.yaml')) {
-        return Promise.resolve(
-          YAML.stringify({
-            name: 'chart1',
-            version: '1.0.0',
-            description: 'Test Chart 1',
-            icon: 'https://example.com/icon1.png',
-          }),
-        )
-      }
-      if (filePath.endsWith('rbac.yaml')) {
-        return Promise.resolve(
-          YAML.stringify({
-            rbac: { chart1: null },
-            betaCharts: [],
-          }),
-        )
-      }
+      if (filePath.endsWith('rbac.yaml'))
+        return Promise.resolve(YAML.stringify({ rbac: { chart1: null }, betaCharts: [] }))
       return Promise.reject(new Error(`File not found: ${filePath}`))
     })
 
-    jest.spyOn(utils, 'safeReadTextFile').mockImplementation(async (_baseDir, filePath) => {
-      if (filePath.endsWith('chart1/README.md')) return Promise.reject(new Error('File not found'))
-      throw new Error('missing')
+    const baseImpl = (utils.safeReadTextFile as jest.Mock).getMockImplementation()!
+    ;(utils.safeReadTextFile as jest.Mock).mockImplementation(async (_baseDir, filePath) => {
+      if (filePath.endsWith('chart1/README.md')) throw new Error('File not found')
+      return baseImpl(_baseDir, filePath)
     })
 
-    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'admin')
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, 'admin')
 
     // Should include chart1 with default README message
     expect(result.catalog[0].readme).toBe('There is no `README` for this chart.')
   })
 
   test('handles missing rbac.yaml file', async () => {
-    const mockGit = {
-      clone: jest.fn().mockResolvedValue(undefined),
-    }
+    const mockGit = { clone: jest.fn().mockResolvedValue(undefined) }
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-
-    // Make the rbac.yaml file read fail
+    ;(fsPromises.readdir as jest.Mock).mockResolvedValue(['.git', 'chart1', 'rbac.yaml'])
     ;(fsExtra.readFile as unknown as jest.Mock).mockImplementation((filePath) => {
       if (filePath.endsWith('rbac.yaml')) return Promise.reject(new Error('File not found'))
-
-      if (filePath.endsWith('chart1/README.md')) return Promise.resolve('# Chart 1 README')
-
-      if (filePath.endsWith('chart1/values.yaml')) return Promise.resolve('key: value')
-
-      if (filePath.endsWith('chart1/Chart.yaml')) {
-        return Promise.resolve(
-          YAML.stringify({
-            name: 'chart1',
-            version: '1.0.0',
-            description: 'Test Chart 1',
-            icon: 'https://example.com/icon1.png',
-          }),
-        )
-      }
       return Promise.reject(new Error(`File not found: ${filePath}`))
     })
 
-    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'admin')
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', 'example.com', 'admin')
 
     // Should include charts in the catalog
     expect(result.helmCharts).toEqual(['chart1'])
     expect(result.catalog).toHaveLength(1)
+  })
+
+  test('returns empty results when chartsPath resolves outside helmChartsDir', async () => {
+    const mockGit = {
+      clone: jest.fn().mockResolvedValue(undefined),
+    }
+    ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+    ;(fs.existsSync as jest.Mock).mockReturnValue(true)
+
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, 'admin', '../outside')
+
+    expect(result).toEqual({ helmCharts: [], catalog: [] })
+    expect(fsPromises.readdir).not.toHaveBeenCalled()
+  })
+
+  test('returns empty results when chartsPath points to a file', async () => {
+    const mockGit = {
+      clone: jest.fn().mockResolvedValue(undefined),
+    }
+    ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+    ;(fs.existsSync as jest.Mock).mockReturnValue(true)
+    ;(fs.lstatSync as jest.Mock).mockReturnValue({ isDirectory: () => false })
+
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, 'admin', 'Chart.yaml')
+
+    expect(result).toEqual({ helmCharts: [], catalog: [] })
+    expect(fsPromises.readdir).not.toHaveBeenCalled()
+  })
+
+  test('ignores folders without Chart.yaml', async () => {
+    const mockGit = {
+      clone: jest.fn().mockResolvedValue(undefined),
+    }
+    ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+    ;(fsPromises.readdir as jest.Mock).mockResolvedValue(['chart1', 'chart2'])
+
+    const baseImpl = (utils.safeReadTextFile as jest.Mock).getMockImplementation()!
+    ;(utils.safeReadTextFile as jest.Mock).mockImplementation(async (_baseDir, filePath) => {
+      if (filePath.endsWith('chart2/Chart.yaml') || filePath.endsWith('chart2/chart.yaml')) {
+        throw new Error('Chart manifest not found')
+      }
+      return baseImpl(_baseDir, filePath)
+    })
+
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, 'admin')
+
+    expect(result.helmCharts).toEqual(['chart1'])
+    expect(result.helmCharts).not.toContain('chart2')
   })
 })
 
@@ -820,7 +811,13 @@ describe('chartRepo', () => {
     const repo = new chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
     await repo.clone()
 
-    expect(mockGit.clone).toHaveBeenCalledWith(chartRepoUrl, localPath, ['--branch', 'main', '--single-branch'])
+    expect(mockGit.clone).toHaveBeenCalledWith(chartRepoUrl, localPath, [
+      '--branch',
+      'main',
+      '--single-branch',
+      '--depth',
+      '1',
+    ])
   })
 
   test('cloneSingleChart method performs sparse checkout', async () => {
@@ -994,6 +991,279 @@ describe('getBranchesAndTags', () => {
     expect(result).toEqual({
       branches: [],
       tags: [],
+    })
+  })
+})
+
+// ----------------------------------------------------------------
+// Tests for helper functions used in fetchWorkloadCatalog
+describe('Helper functions integration tests', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    process.env = { ...originalEnv, GIT_USER: 'git-user', GIT_PASSWORD: 'git-password' }
+    ;(fs.lstatSync as jest.Mock).mockReturnValue({ isDirectory: () => true })
+    jest.spyOn(utils, 'safeReadTextFile').mockResolvedValue('# README')
+  })
+
+  afterEach(() => {
+    process.env = originalEnv
+  })
+
+  describe('encodeGitCredentials (tested via fetchWorkloadCatalog)', () => {
+    test('encodes credentials for internal Gitea URLs', async () => {
+      const mockGit = {
+        clone: jest.fn().mockResolvedValue(undefined),
+      }
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+      ;(fsPromises.readdir as jest.Mock).mockResolvedValue([])
+
+      const internalGiteaUrl = 'https://gitea.cluster.local/otomi/charts.git'
+      const helmChartsDir = '/tmp/test'
+
+      // Mock isInteralGiteaURL to return true
+      jest.spyOn(workloadUtils, 'isInteralGiteaURL').mockReturnValue(true)
+
+      try {
+        await fetchWorkloadCatalog(internalGiteaUrl, helmChartsDir, 'main', 'cluster.local')
+      } catch (error) {
+        // Expected to throw because no charts found
+      }
+
+      // Verify that clone was called with encoded credentials
+      expect(mockGit.clone).toHaveBeenCalledWith(
+        'https://git-user:git-password@gitea.cluster.local/otomi/charts.git',
+        helmChartsDir,
+        ['--branch', 'main', '--single-branch', '--depth', '1'],
+      )
+    })
+
+    test('does not encode credentials for non-Gitea URLs', async () => {
+      const mockGit = {
+        clone: jest.fn().mockResolvedValue(undefined),
+      }
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+      ;(fsPromises.readdir as jest.Mock).mockResolvedValue([])
+
+      const githubUrl = 'https://github.com/example/charts.git'
+      const helmChartsDir = '/tmp/test'
+
+      jest.spyOn(workloadUtils, 'isInteralGiteaURL').mockReturnValue(false)
+
+      try {
+        await fetchWorkloadCatalog(githubUrl, helmChartsDir, 'main')
+      } catch (error) {
+        // Expected to throw because no charts found
+      }
+
+      // Verify that clone was called with original URL
+      expect(mockGit.clone).toHaveBeenCalledWith(githubUrl, helmChartsDir, [
+        '--branch',
+        'main',
+        '--single-branch',
+        '--depth',
+        '1',
+      ])
+    })
+  })
+
+  describe('readRbacConfig (tested via fetchWorkloadCatalog)', () => {
+    test('parses rbac.yaml correctly when present', async () => {
+      const mockGit = { clone: jest.fn().mockResolvedValue(undefined) }
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+      ;(fsPromises.readdir as jest.Mock).mockResolvedValue(['chart1', 'rbac.yaml'])
+      ;(fsExtra.readFile as unknown as jest.Mock).mockImplementation((filePath) => {
+        if (filePath.endsWith('rbac.yaml'))
+          return Promise.resolve(YAML.stringify({ rbac: { chart1: ['team-1'] }, betaCharts: ['chart1'] }))
+        return Promise.reject(new Error('File not found'))
+      })
+
+      const result = await fetchWorkloadCatalog('https://example.com/charts.git', '/tmp/test', 'main', undefined, '1')
+
+      // Should include chart1 and it should be marked as beta
+      expect(result.catalog[0].isBeta).toBe(true)
+    })
+
+    test('returns empty rbac when file is missing', async () => {
+      const mockGit = { clone: jest.fn().mockResolvedValue(undefined) }
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+      ;(fsPromises.readdir as jest.Mock).mockResolvedValue(['chart1'])
+      ;(fsExtra.readFile as unknown as jest.Mock).mockImplementation((filePath) => {
+        if (filePath.endsWith('rbac.yaml')) return Promise.reject(new Error('File not found'))
+        return Promise.reject(new Error('File not found'))
+      })
+
+      const result = await fetchWorkloadCatalog('https://example.com/charts.git', '/tmp/test', 'main')
+
+      // Should include chart1 even without rbac.yaml
+      expect(result.helmCharts).toContain('chart1')
+    })
+  })
+
+  describe('isChartAccessible (tested via fetchWorkloadCatalog)', () => {
+    test('allows access when no teamId provided (BYO catalog)', async () => {
+      const mockGit = { clone: jest.fn().mockResolvedValue(undefined) }
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+      ;(fsPromises.readdir as jest.Mock).mockResolvedValue(['restricted-chart'])
+      ;(fsExtra.readFile as unknown as jest.Mock).mockImplementation((filePath) => {
+        if (filePath.endsWith('rbac.yaml'))
+          return Promise.resolve(YAML.stringify({ rbac: { 'restricted-chart': [] }, betaCharts: [] }))
+        return Promise.reject(new Error('File not found'))
+      })
+
+      // No teamId means BYO catalog - should include even restricted charts
+      const result = await fetchWorkloadCatalog('https://example.com/charts.git', '/tmp/test', 'main')
+
+      expect(result.helmCharts).toContain('restricted-chart')
+    })
+
+    test('filters charts based on team RBAC permissions', async () => {
+      const mockGit = { clone: jest.fn().mockResolvedValue(undefined) }
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+      ;(fsPromises.readdir as jest.Mock).mockResolvedValue(['chart1', 'chart2'])
+      ;(fsExtra.readFile as unknown as jest.Mock).mockImplementation((filePath) => {
+        if (filePath.endsWith('rbac.yaml'))
+          return Promise.resolve(YAML.stringify({ rbac: { chart1: ['team-1'], chart2: ['team-2'] }, betaCharts: [] }))
+        return Promise.reject(new Error('File not found'))
+      })
+
+      const result = await fetchWorkloadCatalog('https://example.com/charts.git', '/tmp/test', 'main', undefined, '1')
+
+      // Should only include chart1 for team-1
+      expect(result.helmCharts).toEqual(['chart1'])
+      expect(result.helmCharts).not.toContain('chart2')
+    })
+
+    test('admin team can access all charts', async () => {
+      const mockGit = { clone: jest.fn().mockResolvedValue(undefined) }
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+      ;(fsPromises.readdir as jest.Mock).mockResolvedValue(['restricted-chart'])
+      ;(fsExtra.readFile as unknown as jest.Mock).mockImplementation((filePath) => {
+        if (filePath.endsWith('rbac.yaml'))
+          return Promise.resolve(YAML.stringify({ rbac: { 'restricted-chart': [] }, betaCharts: [] }))
+        return Promise.reject(new Error('File not found'))
+      })
+
+      const result = await fetchWorkloadCatalog(
+        'https://example.com/charts.git',
+        '/tmp/test',
+        'main',
+        undefined,
+        'admin',
+      )
+
+      // Admin should see even restricted charts
+      expect(result.helmCharts).toContain('restricted-chart')
+    })
+  })
+
+  describe('readChartReadme (tested via fetchWorkloadCatalog)', () => {
+    test('returns fallback message when README is missing', async () => {
+      const mockGit = { clone: jest.fn().mockResolvedValue(undefined) }
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+      ;(fsPromises.readdir as jest.Mock).mockResolvedValue(['chart1'])
+      ;(fsExtra.readFile as unknown as jest.Mock).mockImplementation((filePath) => {
+        if (filePath.endsWith('rbac.yaml')) return Promise.reject(new Error('Not found'))
+        return Promise.reject(new Error('File not found'))
+      })
+
+      const baseImpl = (utils.safeReadTextFile as jest.Mock).getMockImplementation()!
+      ;(utils.safeReadTextFile as jest.Mock).mockImplementation(async (_baseDir, filePath) => {
+        if (filePath.endsWith('README.md')) throw new Error('README not found')
+        return baseImpl(_baseDir, filePath)
+      })
+
+      const result = await fetchWorkloadCatalog('https://example.com/charts.git', '/tmp/test', 'main')
+
+      expect(result.catalog[0].readme).toBe('There is no `README` for this chart.')
+    })
+  })
+
+  describe('processChartFolder (tested via fetchWorkloadCatalog)', () => {
+    test('skips charts with missing required files', async () => {
+      const mockGit = { clone: jest.fn().mockResolvedValue(undefined) }
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+      ;(fsPromises.readdir as jest.Mock).mockResolvedValue(['broken-chart', 'valid-chart'])
+      ;(fsExtra.readFile as unknown as jest.Mock).mockImplementation((filePath) => {
+        if (filePath.endsWith('rbac.yaml')) return Promise.reject(new Error('Not found'))
+        return Promise.reject(new Error('File not found'))
+      })
+
+      const baseImpl = (utils.safeReadTextFile as jest.Mock).getMockImplementation()!
+      ;(utils.safeReadTextFile as jest.Mock).mockImplementation(async (_baseDir, filePath) => {
+        if (filePath.includes('broken-chart')) throw new Error('File not found')
+        return baseImpl(_baseDir, filePath)
+      })
+
+      const result = await fetchWorkloadCatalog('https://example.com/charts.git', '/tmp/test', 'main')
+
+      // Should only include valid-chart, broken-chart should be skipped
+      expect(result.helmCharts).toEqual(['valid-chart'])
+      expect(result.catalog).toHaveLength(1)
+    })
+
+    test('handles optional valuesSchema gracefully', async () => {
+      const mockGit = { clone: jest.fn().mockResolvedValue(undefined) }
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+      ;(fsPromises.readdir as jest.Mock).mockResolvedValue(['chart1'])
+      ;(fsExtra.readFile as unknown as jest.Mock).mockImplementation((filePath) => {
+        if (filePath.endsWith('rbac.yaml')) return Promise.reject(new Error('Not found'))
+        return Promise.reject(new Error('File not found'))
+      })
+
+      const baseImpl = (utils.safeReadTextFile as jest.Mock).getMockImplementation()!
+      ;(utils.safeReadTextFile as jest.Mock).mockImplementation(async (_baseDir, filePath) => {
+        if (filePath.endsWith('values.schema.json')) throw new Error('Not found')
+        return baseImpl(_baseDir, filePath)
+      })
+
+      const result = await fetchWorkloadCatalog('https://example.com/charts.git', '/tmp/test', 'main')
+
+      // Should still include chart1 even without valuesSchema
+      expect(result.helmCharts).toContain('chart1')
+      expect(result.catalog[0].valuesSchema).toBe('{}')
+    })
+  })
+
+  describe('getChartFolders (tested via fetchWorkloadCatalog)', () => {
+    test('excludes hidden entries and non-directory files from chart list', async () => {
+      const mockGit = { clone: jest.fn().mockResolvedValue(undefined) }
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+      ;(fsPromises.readdir as jest.Mock).mockResolvedValue([
+        '.git',
+        '.github',
+        '.gitignore',
+        '.vscode',
+        'LICENSE',
+        'README.md',
+        'notes.txt',
+        'chart1',
+        'chart2',
+      ])
+      ;(fs.lstatSync as jest.Mock).mockImplementation((targetPath: string) => {
+        const isDirectory =
+          targetPath.endsWith('/chart1') || targetPath.endsWith('/chart2') || targetPath.endsWith('/.github')
+        return { isDirectory: () => isDirectory }
+      })
+      ;(fsExtra.readFile as unknown as jest.Mock).mockImplementation((filePath) => {
+        if (filePath.endsWith('rbac.yaml')) return Promise.reject(new Error('Not found'))
+        return Promise.reject(new Error('File not found'))
+      })
+
+      const result = await fetchWorkloadCatalog('https://example.com/charts.git', '/tmp/test', 'main')
+
+      // Should only include chart directories, excluding hidden folders and files
+      expect(result.helmCharts).toEqual(['chart1', 'chart2'])
     })
   })
 })

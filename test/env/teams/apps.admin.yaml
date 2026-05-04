@@ -15,7 +15,6 @@ teamConfig:
             knative: {}
             tekton: {}
             loki: {}
-            minio: {}
             prometheus: {}
             rabbitmq: {}
             sealed-secrets: {}

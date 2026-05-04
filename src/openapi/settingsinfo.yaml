@@ -50,10 +50,15 @@ SettingsInfo:
         hasExternalIDP:
           type: boolean
           default: false
-    smtp:
-      properties:
-        smarthost:
-          type: string
+        git:
+          properties:
+            repoUrl:
+              type: string
+              description: The base URL of the Git repository (without credentials).
+              pattern: '^https?://.+'
+            branch:
+              type: string
+              description: The branch to use in the Git repository.
     ingressClassNames:
       description: Ingress class names that are used by the cluster.
       items:

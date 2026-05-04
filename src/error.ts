@@ -63,6 +63,20 @@ export class K8sResourceNotFound extends OtomiError {
     this.code = 404
   }
 }
+
+export class BadRequestError extends OtomiError {
+  public constructor(err?: string) {
+    super(err || 'Bad Request', err)
+    this.code = 400
+  }
+}
+export class ApiLockedError extends OtomiError {
+  public constructor(err?: string) {
+    super('Api is locked. No further changes are accepted.', err)
+    this.code = 503
+  }
+}
+
 export class HttpError extends OtomiError {
   protected static messages: Record<number, string> = {
     400: 'Bad Request',

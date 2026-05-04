@@ -2,6 +2,128 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.18.0](https://github.com/redkubes/otomi-api/compare/v4.17.0...v4.18.0) (2026-04-14)
+
+
+### Features
+
+* add tini to Dockerfile for cleaning up zombie processes ([#969](https://github.com/redkubes/otomi-api/issues/969)) ([5865383](https://github.com/redkubes/otomi-api/commit/58653839b1bf171689e2814cab9fa086cf81cf45))
+* consolidate k8s service fetching ([#966](https://github.com/redkubes/otomi-api/issues/966)) ([11c1e9f](https://github.com/redkubes/otomi-api/commit/11c1e9f8e3c526486ac4cb7f3d81505194288db5))
+* disable ingress-nginx ([#965](https://github.com/redkubes/otomi-api/issues/965)) ([89d7661](https://github.com/redkubes/otomi-api/commit/89d7661b5a5c3650c88748fe71e0b47a1a6b31b1))
+* expose raw swagger.json ([#955](https://github.com/redkubes/otomi-api/issues/955)) ([b1555fa](https://github.com/redkubes/otomi-api/commit/b1555fab9ec37c74f2df796c02b3451968eca512))
+* hide knative when k8s version is below 1.33 ([#970](https://github.com/redkubes/otomi-api/issues/970)) ([190682c](https://github.com/redkubes/otomi-api/commit/190682c0284c7f607a5fb9687553cbca986a46fe))
+* k8s v2 endpoints ([#968](https://github.com/redkubes/otomi-api/issues/968)) ([8391b9f](https://github.com/redkubes/otomi-api/commit/8391b9fecdeeca07d4c4f13b3e355b241d1bd131))
+* make git username optional ([#971](https://github.com/redkubes/otomi-api/issues/971)) ([af8c6ce](https://github.com/redkubes/otomi-api/commit/af8c6cecfab5b8f15919f5dfe3599de8fc909f40))
+* only allow container creation when tekton is enabled ([#960](https://github.com/redkubes/otomi-api/issues/960)) ([b255d95](https://github.com/redkubes/otomi-api/commit/b255d95cc13b2fc479a54db5c924bdea697fcbdd))
+* update manifests for gateway api ([#943](https://github.com/redkubes/otomi-api/issues/943)) ([52f9b6e](https://github.com/redkubes/otomi-api/commit/52f9b6e3ced448b271dffb57476ea26f43605213))
+
+
+### Bug Fixes
+
+* remove smtp from settings ([#956](https://github.com/redkubes/otomi-api/issues/956)) ([0787034](https://github.com/redkubes/otomi-api/commit/07870342f7de07109f05bbaf8bc452bb0a2eaf7a))
+
+
+### Others
+
+* **deps:** bump the npm-dependencies group with 6 updates ([#957](https://github.com/redkubes/otomi-api/issues/957)) ([02f3def](https://github.com/redkubes/otomi-api/commit/02f3def991303d180917f10f97054f8ae67657df))
+* post release v4.17 ([#974](https://github.com/redkubes/otomi-api/issues/974)) ([77621f3](https://github.com/redkubes/otomi-api/commit/77621f3d020c9302c87a3db498e18a9cda495963))
+
+## [4.17.0](https://github.com/redkubes/otomi-api/compare/v4.16.0...v4.17.0) (2026-03-20)
+
+
+### Features
+
+* add enabled param to getAllAplCatalogs ([#922](https://github.com/redkubes/otomi-api/issues/922)) ([96e3b96](https://github.com/redkubes/otomi-api/commit/96e3b96ea8d2e4709b06c44eaa8a4dc65f5da7a0))
+* add permission check for team members to restrict service creation ([#926](https://github.com/redkubes/otomi-api/issues/926)) ([6fc8b75](https://github.com/redkubes/otomi-api/commit/6fc8b75e570167c5b332945a7f923a1a2ea66044))
+* added caching for the BYO Catalog ([#949](https://github.com/redkubes/otomi-api/issues/949)) ([b96f3df](https://github.com/redkubes/otomi-api/commit/b96f3df3960f39e94c2753eb52dde8cfd5db141f))
+* allow subdirectories for catalogs ([#928](https://github.com/redkubes/otomi-api/issues/928)) ([ecceef7](https://github.com/redkubes/otomi-api/commit/ecceef73442d7477d4344fab836406fb39eaf958))
+* sealed secret namespace endpoints ([#925](https://github.com/redkubes/otomi-api/issues/925)) ([fb028d1](https://github.com/redkubes/otomi-api/commit/fb028d1ea949712f62e8d870192d46429ea5a806))
+* sparse checkout for chart ([#942](https://github.com/redkubes/otomi-api/issues/942)) ([6a2aba7](https://github.com/redkubes/otomi-api/commit/6a2aba7855d2e4af702bc7ea00c12b92beead570))
+
+
+### Bug Fixes
+
+* add AplCatalogChartSpec to support status object ([#953](https://github.com/redkubes/otomi-api/issues/953)) ([192eb07](https://github.com/redkubes/otomi-api/commit/192eb07990708b68730bd7260d48a42f9a3e353d))
+* add teamId validation for cloudtty ([#927](https://github.com/redkubes/otomi-api/issues/927)) ([e0ed019](https://github.com/redkubes/otomi-api/commit/e0ed0196c15e5e922c4bac1ba92d7d757aebe26b))
+* concurrent git operations ([#944](https://github.com/redkubes/otomi-api/issues/944)) ([a5a86fc](https://github.com/redkubes/otomi-api/commit/a5a86fc3e1a5b6ae4360f189c99aadbddf7e1700))
+* exclude objstorage regions ([#950](https://github.com/redkubes/otomi-api/issues/950)) ([1f254a8](https://github.com/redkubes/otomi-api/commit/1f254a82ad020b681760d6ec6b718ed843cc5c28))
+* make git password not required ([#951](https://github.com/redkubes/otomi-api/issues/951)) ([b46710e](https://github.com/redkubes/otomi-api/commit/b46710ee51115c28487538c0201456a80bcdee65))
+* platform secret path ([#934](https://github.com/redkubes/otomi-api/issues/934)) ([98584e3](https://github.com/redkubes/otomi-api/commit/98584e3a2c9d5887322674bd4304aed463505a12))
+* remove otomi.git.password from settings endpoint ([#940](https://github.com/redkubes/otomi-api/issues/940)) ([54fdf6c](https://github.com/redkubes/otomi-api/commit/54fdf6cd0ddec399008318420a1bb6651af4c13c))
+* symlink traversal allows reading arbitrary server files via workload catalog ([#933](https://github.com/redkubes/otomi-api/issues/933)) ([08441d1](https://github.com/redkubes/otomi-api/commit/08441d1bf4650055f073b4a7692d52a71cf5e3da))
+* user not allowed to perform create on Service.namespace resource ([#941](https://github.com/redkubes/otomi-api/issues/941)) ([bb03334](https://github.com/redkubes/otomi-api/commit/bb03334e22704bc349e92db7dea3df7128740b69))
+
+
+### Others
+
+* **deps:** bump @types/supertest from 6.0.3 to 7.2.0 ([#938](https://github.com/redkubes/otomi-api/issues/938)) ([0ac372d](https://github.com/redkubes/otomi-api/commit/0ac372de3a9ebcc3a39b801919f5b4311bf95d97))
+* **deps:** bump actions/upload-artifact from 6 to 7 ([#939](https://github.com/redkubes/otomi-api/issues/939)) ([b558a5d](https://github.com/redkubes/otomi-api/commit/b558a5db462a8a6fec0ead5c396dde15a7d6dee4))
+* **deps:** bump the npm-dependencies group across 1 directory with 12 updates ([#948](https://github.com/redkubes/otomi-api/issues/948)) ([eacd5b2](https://github.com/redkubes/otomi-api/commit/eacd5b2a5ed419271c117abbb36a215e7dbf1255))
+* **deps:** bump the npm-dependencies group with 7 updates ([#916](https://github.com/redkubes/otomi-api/issues/916)) ([edad590](https://github.com/redkubes/otomi-api/commit/edad59073acd6de8a1eda9074a1994050af85d12))
+* **deps:** bump the npm-dependencies group with 7 updates ([#923](https://github.com/redkubes/otomi-api/issues/923)) ([99fb03a](https://github.com/redkubes/otomi-api/commit/99fb03abcf37b883b9243f3b88450dd4d7dc0c73))
+* **deps:** bump the npm-dependencies group with 7 updates ([#952](https://github.com/redkubes/otomi-api/issues/952)) ([10ef130](https://github.com/redkubes/otomi-api/commit/10ef130ac642e626c822d354dab14681b9b4ebaf))
+* **deps:** bump the npm-dependencies group with 8 updates ([#935](https://github.com/redkubes/otomi-api/issues/935)) ([1e4d0bf](https://github.com/redkubes/otomi-api/commit/1e4d0bf3441df2671f7c25d8d5660d7234e47b88))
+* **deps:** bump the npm-dependencies group with 8 updates ([#945](https://github.com/redkubes/otomi-api/issues/945)) ([71a5512](https://github.com/redkubes/otomi-api/commit/71a5512123862059ff25f603616674a0061fd836))
+* **deps:** bump the npm-dependencies group with 9 updates ([#929](https://github.com/redkubes/otomi-api/issues/929)) ([7aef155](https://github.com/redkubes/otomi-api/commit/7aef15547615dde4144d9d215acbde3a24e3981b))
+
+## [4.16.0](https://github.com/redkubes/otomi-api/compare/v4.15.0...v4.16.0) (2026-02-13)
+
+
+### Features
+
+* add api auth tests for netpols, kubecfg and dockercfg ([#912](https://github.com/redkubes/otomi-api/issues/912)) ([dbefa52](https://github.com/redkubes/otomi-api/commit/dbefa52c47a938dde52ce8e3c391b27ef6981bd9))
+* byo catalog support ([#919](https://github.com/redkubes/otomi-api/issues/919)) ([1fe6405](https://github.com/redkubes/otomi-api/commit/1fe6405e41855fd2f7d867c29f0eb45b309971f0))
+* make api work with external Git source ([#915](https://github.com/redkubes/otomi-api/issues/915)) ([ca9eed1](https://github.com/redkubes/otomi-api/commit/ca9eed122953d5635f8d5cf3333982c8f219bbf9))
+* remove Minio ([#909](https://github.com/redkubes/otomi-api/issues/909)) ([7ad3d63](https://github.com/redkubes/otomi-api/commit/7ad3d636efeb973faed6ef4574c821bb4d49b050))
+* remove thanos ([#908](https://github.com/redkubes/otomi-api/issues/908)) ([acc18c9](https://github.com/redkubes/otomi-api/commit/acc18c9ff82b1df160bc05585db1d621d3556760))
+* update sealed secret handling to use SealedSecret manifest format ([#907](https://github.com/redkubes/otomi-api/issues/907)) ([8097dc4](https://github.com/redkubes/otomi-api/commit/8097dc45caa23c9b48361d12c272008be684ef85))
+
+
+### Bug Fixes
+
+* default environment variable ([#914](https://github.com/redkubes/otomi-api/issues/914)) ([e8a4dfc](https://github.com/redkubes/otomi-api/commit/e8a4dfca71a6f6a42a06a210378c2aea09a5b469))
+* delete cloudtty 403 error ([#913](https://github.com/redkubes/otomi-api/issues/913)) ([233ba0b](https://github.com/redkubes/otomi-api/commit/233ba0b898843194a78016f583ff2f5cad30e74a))
+* teamApps setting enabled correctly ([#920](https://github.com/redkubes/otomi-api/issues/920)) ([7f454c8](https://github.com/redkubes/otomi-api/commit/7f454c876a6cff4ab756fd6ea65f09db9b71e403))
+
+
+### Others
+
+* **deps:** bump the npm-dependencies group across 1 directory with 18 updates ([#911](https://github.com/redkubes/otomi-api/issues/911)) ([cb0896c](https://github.com/redkubes/otomi-api/commit/cb0896cb206ed9786a397a3793feae204a550c86))
+
+## [4.15.0](https://github.com/redkubes/otomi-api/compare/v4.14.0...v4.15.0) (2026-02-02)
+
+
+### Features
+
+* add optional status field to model and initialize in requests ([#885](https://github.com/redkubes/otomi-api/issues/885)) ([6c14fde](https://github.com/redkubes/otomi-api/commit/6c14fdef11f0d7883eb4a30289d430172313db60))
+* add TRUST_PROXY configuration for client IP detection ([#884](https://github.com/redkubes/otomi-api/issues/884)) ([fefb72b](https://github.com/redkubes/otomi-api/commit/fefb72bcbf65b82cb56160c6e0fad43568feb3cf))
+* remove tempo ([#904](https://github.com/redkubes/otomi-api/issues/904)) ([ba3999c](https://github.com/redkubes/otomi-api/commit/ba3999cf6f7238cedbb8a1869cc9262f79275a2e))
+* set default workload reviwion to main branch instead of HEAD ([#906](https://github.com/redkubes/otomi-api/issues/906)) ([4f72314](https://github.com/redkubes/otomi-api/commit/4f7231435c602c74a404fa40255f80719002ba56))
+
+
+### Bug Fixes
+
+* apps enabled status ([#897](https://github.com/redkubes/otomi-api/issues/897)) ([d280dcf](https://github.com/redkubes/otomi-api/commit/d280dcf4cd645e2d35927f9f6bec932f68819474))
+* authors.md ([#898](https://github.com/redkubes/otomi-api/issues/898)) ([b1f2c79](https://github.com/redkubes/otomi-api/commit/b1f2c79af69fd5cfb55887134451fc718812f474))
+* broken object storage wizard when cluster name is not of type string ([#889](https://github.com/redkubes/otomi-api/issues/889)) ([61d54c3](https://github.com/redkubes/otomi-api/commit/61d54c3fd87c045b58ee54c555fb71a2e9a05051))
+* destructure input data before merge ([#891](https://github.com/redkubes/otomi-api/issues/891)) ([c868b03](https://github.com/redkubes/otomi-api/commit/c868b039eb162128c34479f2e48695acaa8f3199))
+* dev env auth error handling ([#903](https://github.com/redkubes/otomi-api/issues/903)) ([f770ce9](https://github.com/redkubes/otomi-api/commit/f770ce9702bc5ad679f7ea7865ca551724f7e8a3))
+* disabled ai pages for now ([#893](https://github.com/redkubes/otomi-api/issues/893)) ([43d248a](https://github.com/redkubes/otomi-api/commit/43d248a0cc5b9fa5904f835211d42145665fd39a))
+* exclude admin team from filter app secrets ([#890](https://github.com/redkubes/otomi-api/issues/890)) ([109ed4a](https://github.com/redkubes/otomi-api/commit/109ed4a427936f4e7a30b7db44b84b36f766d20d))
+* getApps endpoint and limits data ([#892](https://github.com/redkubes/otomi-api/issues/892)) ([de548da](https://github.com/redkubes/otomi-api/commit/de548da0fd28ac45e6e21f74fe747ab3078b4ebd))
+* missing acl schema ([#888](https://github.com/redkubes/otomi-api/issues/888)) ([8967d63](https://github.com/redkubes/otomi-api/commit/8967d6377ddd2f2ecc4384492875b946bfeffc8c))
+* sealed secret response data ([#896](https://github.com/redkubes/otomi-api/issues/896)) ([8885ae3](https://github.com/redkubes/otomi-api/commit/8885ae36c563b53403724841e3674546aaf8740c))
+* symlink prevention with test ([#895](https://github.com/redkubes/otomi-api/issues/895)) ([cfda1a9](https://github.com/redkubes/otomi-api/commit/cfda1a9f0b4be1f44fe7942eaa34bd20aa7d0a20))
+
+
+### Others
+
+* **deps:** bump express-rate-limit from 7.5.1 to 8.2.1 ([#883](https://github.com/redkubes/otomi-api/issues/883)) ([5ccf09b](https://github.com/redkubes/otomi-api/commit/5ccf09bc440ded35d2689c4537981f9a66f663b5))
+* **deps:** bump globals from 16.5.0 to 17.0.0 ([#901](https://github.com/redkubes/otomi-api/issues/901)) ([7544221](https://github.com/redkubes/otomi-api/commit/754422192c12e58444ba10cc5c4631d9ceec5eeb))
+* **deps:** bump jose from 5.10.0 to 6.1.3 ([#881](https://github.com/redkubes/otomi-api/issues/881)) ([f4fc88d](https://github.com/redkubes/otomi-api/commit/f4fc88def841c6e36b67550554e0df4045711503))
+* **deps:** bump the npm-dependencies group across 1 directory with 15 updates ([#894](https://github.com/redkubes/otomi-api/issues/894)) ([3a18608](https://github.com/redkubes/otomi-api/commit/3a186084315713ed693f1e70c6a843048d0850d6))
+* **deps:** bump the npm-dependencies group with 6 updates ([#899](https://github.com/redkubes/otomi-api/issues/899)) ([2b1e39e](https://github.com/redkubes/otomi-api/commit/2b1e39ebc93082d8ed10a3c28d6df7e48744fead))
+
 ## [4.14.0](https://github.com/redkubes/otomi-api/compare/v4.13.0...v4.14.0) (2025-12-19)
 
 

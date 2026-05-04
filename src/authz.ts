@@ -197,6 +197,15 @@ export default class Authz {
     return iCan
   }
 
+  validatePropertyWithCasl = (action: string, schemaName: string, prop: string, teamId: string): boolean => {
+    const propSubject = `${schemaName}.${prop}`
+    // Only enforce property-level ACL if rules were actually generated for this property.
+    // Properties without x-acl annotations have no rules and inherit the resource-level permission.
+    const hasPropertyRules = this.rbac.rules.some((r) => r.subject === propSubject)
+    if (!hasPropertyRules) return true
+    return this.rbac.can(action, subject(propSubject, { teamId }))
+  }
+
   hasSelfService = (teamId: string, attribute: string): boolean => {
     const deniedAttributes = get(this.user.authz, `${teamId}.deniedAttributes.teamMembers`, []) as Array<string>
     return !deniedAttributes.includes(attribute)

@@ -9,6 +9,18 @@ export const AUTHZ_MOCK_IS_TEAM_ADMIN = bool({
   default: true,
 })
 export const AUTHZ_MOCK_TEAM = str({ desc: 'Comma separated list of teams a user belongs to', default: undefined })
+export const CATALOG_CACHE_REFRESH_INTERVAL_MS = num({
+  desc: 'Interval in milliseconds for refreshing the BYO catalog cache',
+  default: 600000, // 10 minutes
+})
+export const CATALOG_CACHE_PATH = str({
+  desc: 'The file path for the BYO catalog cache',
+  default: '/tmp/otomi/charts-cache',
+})
+export const CATALOG_CACHE_SYNC_MARKER = str({
+  desc: 'The file name for the BYO catalog cache sync marker',
+  default: '.apl-cache-last-sync',
+})
 export const DEFAULT_PLATFORM_ADMIN_EMAIL = str({
   desc: 'The email address for the default platform admin user.',
   devDefault: 'platform-admin@dev.linode-apl.net',
@@ -28,7 +40,7 @@ export const EDITOR_INACTIVITY_TIMEOUT = num({
 })
 export const GIT_BRANCH = str({ desc: 'The git repo branch', default: 'main' })
 export const CHECK_LATEST_COMMIT_INTERVAL = num({
-  desc: 'Interval in minutes for how much time in between each gitea latest commit check',
+  desc: 'Interval in minutes for how much time in between each git latest commit check',
   default: 2,
 })
 export const GIT_EMAIL = str({ desc: 'The git user email', default: 'not@us.ed' })
@@ -59,7 +71,7 @@ export const JWT_AUDIENCE = str({
 })
 export const HELM_CHART_CATALOG = str({
   desc: 'The helm chart catalog',
-  devDefault: 'https://github.com/linode/apl-charts.git',
+  default: 'https://github.com/linode/apl-charts.git',
 })
 export const GIT_PROVIDER_URL_PATTERNS = json({
   desc: 'Regular expressions to match and extract information from URLs of supported git providers (GitHub, GitLab, Bitbucket) for cloning Helm charts.',
@@ -75,13 +87,13 @@ export const TOOLS_HOST = str({ desc: 'The host of the tools server', default: '
 export const PREINSTALLED_EXCLUDED_APPS = json({
   desc: 'Applications that are managed by Linode, so they should be excluded from the apps page',
   default: {
-    apps: ['cert-manager', 'minio', 'external-dns'],
+    apps: ['cert-manager', 'external-dns'],
   },
 })
 export const HIDDEN_APPS = json({
   desc: 'Applications that are hidden from the apps page',
   default: {
-    apps: [''],
+    apps: ['ingress-nginx-platform'],
   },
 })
 export const OBJ_STORAGE_APPS = json({
@@ -89,7 +101,6 @@ export const OBJ_STORAGE_APPS = json({
   default: [
     { appId: 'harbor', required: false },
     { appId: 'loki', required: false },
-    { appId: 'thanos', required: true },
     { appId: 'kubeflow-pipelines', required: true },
   ],
 })
@@ -104,6 +115,14 @@ export const EXPRESS_PAYLOAD_LIMIT = str({
 export const GIT_PUSH_RETRIES = num({
   desc: 'Amount of retries we do to push and pull in the git save function',
   default: 12,
+})
+export const GIT_INIT_MAX_RETRIES = num({
+  desc: 'Maximum number of retries for git initialization before exiting',
+  default: 10,
+})
+export const GIT_INIT_RETRY_INTERVAL_MS = num({
+  desc: 'Interval in milliseconds between git initialization retries',
+  default: 10000,
 })
 export const PIPELINE_NAME = str({
   desc: 'The name of the current pipeline',
@@ -169,6 +188,18 @@ export const TRUST_PROXY = num({
   desc: 'Number of reverse proxies to trust for client IP detection (0 to disable, 1 for Kubernetes Ingress, 2 for LB + Ingress)',
   default: 2,
   devDefault: 0,
+})
+export const OBJECT_STORAGE_UI_EXCLUSIONS = json<string[]>({
+  desc: 'Object Storage regions hidden in the UI',
+  default: ['fr-par-2', 'in-bom-2'],
+})
+export const MIN_KNATIVE_K8S_VERSION = str({
+  desc: 'Minimum Kubernetes version required for Knative support',
+  default: '1.33.0',
+})
+export const API_NAMESPACE = str({
+  desc: 'The Kubernetes namespace where apl-api status resources are stored',
+  default: 'otomi',
 })
 const { env } = process
 export function cleanEnv<T>(validators: { [K in keyof T]: ValidatorSpec<T[K]> }, options: CleanOptions<T> = {}) {

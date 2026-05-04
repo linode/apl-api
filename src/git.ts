@@ -5,7 +5,7 @@ import { rmSync } from 'fs'
 import { copy, ensureDir, pathExists, readFile, writeFile } from 'fs-extra'
 import { unlink } from 'fs/promises'
 import { glob } from 'glob'
-import { isEmpty, merge } from 'lodash'
+import { merge } from 'lodash'
 import { basename, dirname, join } from 'path'
 import simpleGit, { CheckRepoActions, CleanOptions, CommitResult, ResetMode, SimpleGit } from 'simple-git'
 import {
@@ -20,7 +20,7 @@ import {
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { BASEURL } from './constants'
-import { GitPullError, HttpError, ValidationError } from './error'
+import { GitPullError } from './error'
 import { Core } from './otomi-models'
 import { getSanitizedErrorMessage, removeBlankAttributes, sanitizeGitPassword } from './utils'
 
@@ -37,24 +37,21 @@ const env = cleanEnv({
 })
 
 const baseUrl = BASEURL
-const prepareUrl = `${baseUrl}/prepare`
-const initUrl = `${baseUrl}/init`
 const valuesUrl = `${baseUrl}/otomi/values`
 
 const getProtocol = (url): string => (url && url.includes('://') ? url.split('://')[0] : 'http')
 
 const getUrl = (url): string => (!url || url.includes('://') ? url : `${getProtocol(url)}://${url}`)
 
-function getUrlAuth(url, user, password): string | undefined {
+function getUrlAuth(url, user: string | undefined, password): string | undefined {
   if (!url) return
   const protocol = getProtocol(url)
   const [_, bareUrl] = url.split('://')
-  const encodedUser = encodeURIComponent(user as string)
-  const encodedPassword = encodeURIComponent(password as string)
-  return protocol === 'file' ? `${protocol}://${bareUrl}` : `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
+  const credentials = user
+    ? `${encodeURIComponent(user)}:${encodeURIComponent(password)}`
+    : encodeURIComponent(password)
+  return protocol === 'file' ? `${protocol}://${bareUrl}` : `${protocol}://${credentials}@${bareUrl}`
 }
-
-const secretFileRegex = new RegExp(`^(.*/)?secrets.*.yaml(.dec)?$`)
 
 export class Git {
   branch: string
@@ -66,7 +63,6 @@ export class Git {
   path: string
   remote: string
   remoteBranch: string
-  secretFilePostfix = ''
   url: string | undefined
   urlAuth: string | undefined
   user: string
@@ -96,18 +92,6 @@ export class Git {
     return getProtocol(this.url)
   }
 
-  async requestInitValues(): Promise<AxiosResponse | void> {
-    debug(`Tools: requesting "init" on values repo path ${this.path}`)
-    const res = await axios.get(initUrl, { params: { envDir: this.path } })
-    return res
-  }
-
-  async requestPrepareValues(files?: string[]): Promise<AxiosResponse | void> {
-    debug(`Tools: requesting "prepare" on values repo path ${this.path}`)
-    const res = await axios.get(prepareUrl, { params: { envDir: this.path, files } })
-    return res
-  }
-
   async requestValues(params): Promise<AxiosResponse> {
     debug(`Tools: requesting "otomi/values" ${this.path}`)
     const res = await axios.get(valuesUrl, { params: { envDir: this.path, ...params } })
@@ -134,15 +118,7 @@ export class Git {
     await this.git.addRemote(this.remote, this.url!)
   }
 
-  async initSops(): Promise<void> {
-    if (this.secretFilePostfix === '.dec') return
-    this.secretFilePostfix = (await pathExists(join(this.path, '.sops.yaml'))) ? '.dec' : ''
-  }
-
   getSafePath(file: string): string {
-    if (this.secretFilePostfix === '') return file
-    // otherwise we might have to give *.dec variant for secrets
-    if (file.match(secretFileRegex) && !file.endsWith(this.secretFilePostfix)) return `${file}${this.secretFilePostfix}`
     return file
   }
 
@@ -151,17 +127,7 @@ export class Git {
     const exists = await this.fileExists(file)
     if (exists) {
       debug(`Removing file: ${absolutePath}`)
-      // Remove empty secret file due to https://github.com/mozilla/sops/issues/926 issue
       await unlink(absolutePath)
-    }
-    if (file.match(secretFileRegex)) {
-      // also remove the encrypted file as they are operated on in pairs
-      const encFile = `${file}${this.secretFilePostfix}`
-      if (await this.fileExists(encFile)) {
-        const absolutePathEnc = join(this.path, encFile)
-        debug(`Removing enc file: ${absolutePathEnc}`)
-        await unlink(absolutePathEnc)
-      }
     }
   }
 
@@ -185,10 +151,6 @@ export class Git {
   async writeFile(file: string, data: Record<string, unknown>, unsetBlankAttributes = true): Promise<void> {
     let cleanedData = data
     if (unsetBlankAttributes) cleanedData = removeBlankAttributes(data, { emptyArrays: true })
-    if (isEmpty(cleanedData) && file.match(secretFileRegex)) {
-      // remove empty secrets file which sops can't handle
-      return this.removeFile(file)
-    }
     // we also bail when no changes found
     const hasDiff = await this.diffFile(file, data)
     if (!hasDiff) return
@@ -304,8 +266,6 @@ export class Git {
       const summJson = JSON.stringify(summary)
       debug(`Pull summary: ${summJson}`)
       this.commitSha = await this.getCommitSha()
-      if (!skipRequest) await this.requestInitValues()
-      await this.initSops()
     } catch (e) {
       const eMessage = getSanitizedErrorMessage(e)
       debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', eMessage)
@@ -314,18 +274,26 @@ export class Git {
         // Remove local changes so that no conflict can happen
         debug('Removing local changes.')
         await this.git.reset(ResetMode.HARD)
-        debug(`Go to ${this.branch} branch`)
-        await this.git.checkout(this.branch)
-        debug('Removing local changes.')
-        await this.git.reset(ResetMode.HARD)
-        debug('Cleaning local values and directories.')
-        await this.git.clean(CleanOptions.FORCE, ['-d'])
-        debug('Get the latest branch from:', this.remote)
-        await this.git.fetch(this.remote, this.branch)
-        debug('Reconciling divergent branches.')
-        await this.git.merge([`${this.remote}/${this.branch}`, '--strategy-option=theirs'])
-        debug('Trying to remove upstream commits: ', this.remote)
-        await this.git.push([this.remote, this.branch, '--force'])
+        if (this.isRootClone()) {
+          debug(`Go to ${this.branch} branch`)
+          await this.git.checkout(this.branch)
+          debug('Removing local changes.')
+          await this.git.reset(ResetMode.HARD)
+          debug('Cleaning local values and directories.')
+          await this.git.clean(CleanOptions.FORCE, ['-d'])
+          debug('Get the latest branch from:', this.remote)
+          await this.git.fetch(this.remote, this.branch)
+          debug('Reconciling divergent branches.')
+          await this.git.merge([`${this.remote}/${this.branch}`, '--strategy-option=theirs'])
+          debug('Trying to remove upstream commits: ', this.remote)
+          await this.git.push([this.remote, this.branch, '--force'])
+        } else {
+          // Worktree recovery: rebase session branch on top of remote; our changes win conflicts
+          debug('Get the latest branch from:', this.remote)
+          await this.git.fetch(this.remote, this.branch)
+          debug('Rebasing session branch on top of remote.')
+          await this.git.raw(['rebase', `${this.remote}/${this.branch}`, '--strategy-option=ours'])
+        }
       } catch (error) {
         const errorMessage = getSanitizedErrorMessage(error)
         debug('Failed to remove upstream commits: ', errorMessage)
@@ -352,6 +320,36 @@ export class Git {
       debug('Pushed. Summary: ', summary)
     }
     return
+  }
+
+  async testRemoteConnection(url: string, password: string, branch: string, user?: string): Promise<boolean> {
+    const authUrl = password ? getUrlAuth(url, user, password) : url
+    // returns true only if the configured branch exists on the remote
+    const result = await this.git.raw(['ls-remote', authUrl!, `refs/heads/${branch}`])
+    return result.trim().length > 0
+  }
+
+  async pushToNewRemote(url: string, branch: string, password: string, user?: string): Promise<void> {
+    const authUrl = password ? getUrlAuth(url, user, password) : url
+    // Pulls use --depth which can leave the clone shallow. A shallow clone cannot be pushed to a
+    // fresh empty remote because referenced parent objects are missing. Unshallow first to restore
+    // full history; ignore failures when the repo is already complete.
+    try {
+      await this.git.fetch([this.remote, '--unshallow'])
+    } catch {
+      debug('Unshallow fetch skipped (repo is not shallow or fetch failed)')
+    }
+    try {
+      await this.git.remote(['add', 'migration-remote', authUrl!])
+      // Push HEAD so the worktree's session branch commit is included, not the stale local main
+      await this.git.push('migration-remote', `HEAD:refs/heads/${branch}`)
+    } finally {
+      try {
+        await this.git.remote(['remove', 'migration-remote'])
+      } catch (e) {
+        debug(`Could not remove migration-remote: ${getSanitizedErrorMessage(e)}`)
+      }
+    }
   }
 
   async createWorktree(worktreePath: string, branch: string = this.branch): Promise<void> {
@@ -393,30 +391,8 @@ export class Git {
     return this.git.revparse('HEAD')
   }
 
-  async save(editor: string, encryptSecrets = true, files?: string[]): Promise<void> {
-    // prepare values first
+  async pushWithRetry(): Promise<void> {
     try {
-      if (encryptSecrets) {
-        await this.requestPrepareValues(files)
-      } else {
-        debug(`Data does not need to be encrypted`)
-      }
-    } catch (e) {
-      debug(`ERROR: ${JSON.stringify(e)}`)
-      if (e.response) {
-        const { status } = e.response as AxiosResponse
-        if (status === 422) throw new ValidationError()
-        throw HttpError.fromCode(status)
-      }
-      throw new HttpError(500, `${e}`)
-    }
-    // all good? commit
-    await this.commit(editor)
-    try {
-      // we are in a unique developer branch, so we can pull, push, and merge
-      // with the remote root, which might have been modified by another developer
-      // since this is a child branch, we don't need to re-init
-      // retry up to 10 times to pull and push if there are conflicts
       const retries = env.GIT_PUSH_RETRIES
       for (let attempt = 1; attempt <= retries; attempt++) {
         try {
@@ -442,6 +418,13 @@ export class Git {
       throw new GitPullError()
     }
   }
+
+  async save(editor: string): Promise<void> {
+    // we are in a unique developer branch, so we can pull, push, and merge
+    // with the remote root, which might have been modified by another developer
+    await this.commit(editor)
+    await this.pushWithRetry()
+  }
 }
 
 export async function getWorktreeRepo(
@@ -456,7 +439,6 @@ export async function getWorktreeRepo(
   const worktreeRepo = new Git(worktreePath, mainRepo.url, mainRepo.user, mainRepo.email, mainRepo.urlAuth, branch)
 
   await worktreeRepo.addConfig()
-  await worktreeRepo.initSops()
 
   return worktreeRepo
 }

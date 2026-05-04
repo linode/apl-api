@@ -17,8 +17,10 @@ export type Netpol = components['schemas']['Netpol']
 export type AplNetpolRequest = components['schemas']['AplNetpolRequest']
 export type AplNetpolResponse = components['schemas']['AplNetpolResponse']
 export type SealedSecret = components['schemas']['SealedSecret']
-export type AplSecretRequest = components['schemas']['AplSecretRequest']
-export type AplSecretResponse = components['schemas']['AplSecretResponse']
+export type SealedSecretManifest = components['schemas']['SealedSecretManifest']
+export type SealedSecretManifestSpec = components['schemas']['SealedSecretManifestSpec']
+export type SealedSecretManifestRequest = components['schemas']['SealedSecretManifestRequest']
+export type SealedSecretManifestResponse = components['schemas']['SealedSecretManifestResponse']
 export type SealedSecretsKeys = components['schemas']['SealedSecretsKeys']
 export type K8sSecret = components['schemas']['K8sSecret']
 export type Service = components['schemas']['Service']
@@ -60,12 +62,15 @@ export type AplPolicyRequest = components['schemas']['AplPolicyRequest']
 export type AplPolicyResponse = components['schemas']['AplPolicyResponse']
 export type Cloudtty = components['schemas']['Cloudtty']
 export type TeamAuthz = components['schemas']['TeamAuthz']
+export type AplCatalog = components['schemas']['AplCatalog']
+export type AplCatalogRequest = components['schemas']['AplCatalogRequest']
+export type AplCatalogResponse = components['schemas']['AplCatalogResponse']
+export type AplCatalogChartResponse = components['schemas']['AplCatalogChartResponse']
 // Derived setting models
 export type Alerts = Settings['alerts']
 export type Cluster = Settings['cluster']
 export type Dns = Settings['dns']
 export type Ingress = Settings['ingress']
-export type Smtp = Settings['smtp']
 export type Kms = Settings['kms']
 export type Oidc = Settings['oidc']
 export type Otomi = Settings['otomi']
@@ -78,7 +83,7 @@ export type AplRequestObject =
   | AplAgentRequest
   | AplNetpolRequest
   | AplPolicyRequest
-  | AplSecretRequest
+  | SealedSecretManifestRequest
   | AplServiceRequest
   | AplWorkloadRequest
   | AplTeamSettingsRequest
@@ -89,7 +94,7 @@ export type AplResponseObject =
   | AplAgentResponse
   | AplNetpolResponse
   | AplPolicyResponse
-  | AplSecretResponse
+  | SealedSecretManifestResponse
   | AplServiceResponse
   | AplWorkloadResponse
   | AplTeamSettingsResponse
@@ -97,6 +102,8 @@ export const APL_KINDS = [
   'AplApp',
   'AplAlertSet',
   'AplCluster',
+  'AplCatalog',
+  'AplCatalogChart',
   'AplDatabase',
   'AplDns',
   'AplIngress',
@@ -104,18 +111,18 @@ export const APL_KINDS = [
   'AplKms',
   'AplIdentityProvider',
   'AplCapabilitySet',
-  'AplSmtp',
   'AplBackupCollection',
   'AplUser',
   'AplPlatformSettingSet',
   'AkamaiKnowledgeBase',
   'AkamaiAgent',
+  'AplNamespaceSealedSecret',
   'AplTeamCodeRepo',
   'AplTeamBuild',
   'AplTeamPolicy',
   'AplTeamSettingSet',
   'AplTeamNetworkControl',
-  'AplTeamSecret',
+  'SealedSecret',
   'AplTeamService',
   'AplTeamWorkload',
   'AplTeamWorkloadValues',
@@ -296,7 +303,6 @@ export interface Repo {
   oidc: Oidc
   otomi: Otomi
   platformBackups: Record<string, any>
-  smtp: Smtp
   users: User[]
   versions: Versions
   teamConfig: Record<string, TeamConfig>
@@ -311,7 +317,7 @@ export interface TeamConfig {
   agents: AplAgentResponse[]
   netpols: AplNetpolResponse[]
   policies: AplPolicyResponse[]
-  sealedsecrets: AplSecretResponse[]
+  sealedsecrets: SealedSecretManifestResponse[]
   services: AplServiceResponse[]
   settings: AplTeamSettingsResponse
   workloads: AplWorkloadResponse[]

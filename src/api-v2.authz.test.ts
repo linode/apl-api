@@ -14,6 +14,7 @@ import { AplKind } from './otomi-models'
 const platformAdminToken = getToken(['platform-admin'])
 const teamAdminToken = getToken(['team-admin', 'team-team1'])
 const teamMemberToken = getToken(['team-team1'])
+const team2MemberToken = getToken(['team-team2'])
 
 function createTeamResource(kind: AplKind, spec: Record<string, any>) {
   return {
@@ -26,7 +27,7 @@ function createTeamResource(kind: AplKind, spec: Record<string, any>) {
   }
 }
 
-jest.mock('./k8s_operations')
+jest.mock('./k8s-operations')
 jest.mock('./utils/sealedSecretUtils')
 beforeAll(async () => {
   jest.spyOn(console, 'log').mockImplementation(() => {})
@@ -57,21 +58,34 @@ describe('API V2 authz tests', () => {
     otomiStack.doDeployment = jest.fn().mockImplementation(() => Promise.resolve())
     otomiStack.fileStore.set('env/teams/team1/settings.yaml', {
       kind: 'AplTeamSettingSet',
-      spec: {},
       metadata: {
         name: 'team1',
         labels: {
           'apl.io/teamId': 'team1',
         },
       },
+      spec: {
+        selfService: {
+          teamMembers: {
+            createServices: true,
+            editSecurityPolicies: false,
+          },
+        },
+      },
     })
     otomiStack.fileStore.set('env/teams/team2/settings.yaml', {
       kind: 'AplTeamSettingSet',
-      spec: {},
       metadata: {
         name: 'team2',
         labels: {
           'apl.io/teamId': 'team2',
+        },
+      },
+      spec: {
+        selfService: {
+          teamMembers: {
+            createServices: false,
+          },
         },
       },
     })
@@ -142,7 +156,14 @@ describe('API V2 authz tests', () => {
       'deleteCloudtty',
       // Other
       'createTeam',
+      // Git migration
+      'migrateGitSettings',
+      // API status
+      'getApiStatus',
     ]
+
+    // Reset locked state so a prior git migration test does not bleed into subsequent tests
+    otomiStack.locked = false
 
     // Mock all methods with default return values
     v2Methods.forEach((method) => {
@@ -491,10 +512,18 @@ describe('API V2 authz tests', () => {
   })
 
   describe('V2 Sealed Secret Endpoints', () => {
-    const secretData = createTeamResource('AplTeamSecret', {
-      type: 'kubernetes.io/opaque',
-      encryptedData: { key: 'value' },
-    })
+    const secretData = {
+      kind: 'SealedSecret',
+      metadata: {
+        name: 'test-secret',
+      },
+      spec: {
+        encryptedData: { key: 'value' },
+        template: {
+          type: 'kubernetes.io/opaque',
+        },
+      },
+    }
 
     describe('Platform Admin', () => {
       test('platform admin can get all sealed secrets', async () => {
@@ -1085,5 +1114,83 @@ describe('API V2 authz tests', () => {
         await agent.get('/v1/dashboard').query({ teamId: 'team1' }).expect(401)
       })
     })
+  })
+
+  describe('V2 Git Migration Endpoint', () => {
+    const gitBody = {
+      repoUrl: 'https://new.example.com/repo.git',
+      username: 'user',
+      password: 'pass',
+      email: 'admin@example.com',
+      branch: 'main',
+    }
+
+    describe('Platform Admin', () => {
+      test('platform admin can migrate git', async () => {
+        await agent.put('/v2/git').send(gitBody).set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
+      })
+    })
+
+    describe('Team Admin', () => {
+      test('team admin cannot migrate git', async () => {
+        await agent.put('/v2/git').send(gitBody).set('Authorization', `Bearer ${teamAdminToken}`).expect(403)
+      })
+    })
+
+    describe('Team Member', () => {
+      test('team member cannot migrate git', async () => {
+        await agent.put('/v2/git').send(gitBody).set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
+      })
+    })
+
+    describe('Unauthenticated', () => {
+      test('anonymous user cannot migrate git', async () => {
+        await agent.put('/v2/git').send(gitBody).expect(401)
+      })
+    })
+  })
+
+  describe('V2 API Status Endpoint', () => {
+    describe('Platform Admin', () => {
+      test('platform admin can get api status', async () => {
+        await agent.get('/v2/status').set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
+      })
+    })
+
+    describe('Team Admin', () => {
+      test('team admin can get api status', async () => {
+        await agent.get('/v2/status').set('Authorization', `Bearer ${teamAdminToken}`).expect(200)
+      })
+    })
+
+    describe('Team Member', () => {
+      test('team member can get api status', async () => {
+        await agent.get('/v2/status').set('Authorization', `Bearer ${teamMemberToken}`).expect(200)
+      })
+    })
+
+    describe('Unauthenticated', () => {
+      test('anonymous user cannot get api status', async () => {
+        await agent.get('/v2/status').expect(401)
+      })
+    })
+  })
+
+  test('team member cannot create its own services when disabled', async () => {
+    jest.spyOn(otomiStack, 'createService').mockResolvedValue({} as any)
+    await agent
+      .post('/v1/teams/team2/services')
+      .send({
+        name: 'newservice',
+        serviceType: 'ksvcPredeployed',
+        ingress: { type: 'cluster' },
+        networkPolicy: {
+          ingressPrivate: { mode: 'DenyAll' },
+        },
+      })
+      .set('Content-Type', 'application/json')
+      .set('Authorization', `Bearer ${team2MemberToken}`)
+      .expect(403)
+      .expect('Content-Type', /json/)
   })
 })

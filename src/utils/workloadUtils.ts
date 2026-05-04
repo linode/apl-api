@@ -1,19 +1,40 @@
 import axios from 'axios'
 import Debug from 'debug'
-import { existsSync, mkdirSync, renameSync, rmSync } from 'fs'
+import { existsSync, lstatSync, mkdirSync, renameSync, rmSync } from 'fs'
 import { readFile } from 'fs-extra'
 import { readdir, writeFile } from 'fs/promises'
 import path from 'path'
 import simpleGit, { SimpleGit } from 'simple-git'
 import { safeReadTextFile } from 'src/utils'
-import { GIT_PROVIDER_URL_PATTERNS, cleanEnv } from 'src/validators'
+import {
+  CATALOG_CACHE_REFRESH_INTERVAL_MS,
+  CATALOG_CACHE_SYNC_MARKER,
+  cleanEnv,
+  GIT_PROVIDER_URL_PATTERNS,
+} from 'src/validators'
 import YAML from 'yaml'
+import { BadRequestError } from '../error'
 
 const debug = Debug('apl:workloadUtils')
 
 const env = cleanEnv({
+  CATALOG_CACHE_REFRESH_INTERVAL_MS,
+  CATALOG_CACHE_SYNC_MARKER,
   GIT_PROVIDER_URL_PATTERNS,
 })
+
+export async function validateGitUrl(url: string): Promise<void> {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    throw new BadRequestError(`Invalid URL: ${url}`)
+  }
+
+  if (parsed.protocol !== 'https:') {
+    throw new BadRequestError('Only HTTPS URLs are allowed for git repositories')
+  }
+}
 
 export interface NewHelmChartValues {
   gitRepositoryUrl: string
@@ -155,8 +176,7 @@ export function findRevision(branches, tags, refAndPath) {
 }
 
 /**
- * Reads the Chart.yaml file at the given path, updates (or sets) its icon field,
- * and writes the updated content back to disk.
+ * Updates (or sets) icon field,
  *
  * @param chartYamlPath - Path to Chart.yaml (e.g. "/tmp/otomi/charts/uuid/cassandra/Chart.yaml")
  * @param newIcon - The user-selected icon URL.
@@ -178,8 +198,7 @@ export async function updateChartIconInYaml(chartYamlPath: string, newIcon: stri
  * @param sparsePath - The folder where rbac.yaml resides (e.g. "/tmp/otomi/charts/uuid")
  * @param chartKey - The key to add under the "rbac" section (e.g. "quickstart-cassandra")
  * @param allowTeams - Boolean indicating if teams are allowed to use the chart.
- *                     If false, the key is set to [].
- *                     If true, the key is set to null.
+ *
  */
 export async function updateRbacForNewChart(sparsePath: string, chartKey: string, allowTeams: boolean): Promise<void> {
   const rbacFilePath = `${sparsePath}/rbac.yaml`
@@ -196,8 +215,6 @@ export async function updateRbacForNewChart(sparsePath: string, chartKey: string
   // Ensure the "rbac" section exists.
   if (!rbacData.rbac) rbacData.rbac = {}
   // Add the new chart entry if it doesn't exist.
-  // If allowTeams is false, set the value to an empty array ([]),
-  // otherwise (if true) set it to null.
   if (!(chartKey in rbacData.rbac)) rbacData.rbac[chartKey] = allowTeams ? null : []
   // Stringify the updated YAML content and write it back.
   const newContent = YAML.stringify(rbacData)
@@ -219,7 +236,53 @@ export class chartRepo {
     this.git = simpleGit(this.localPath)
   }
   async clone(branch: string = 'main') {
-    await this.git.clone(this.chartRepoUrl, this.localPath, ['--branch', branch, '--single-branch'])
+    await this.git.clone(this.chartRepoUrl, this.localPath, ['--branch', branch, '--single-branch', '--depth', '1'])
+  }
+  async ensureLatest(branch: string = 'main', forceRefresh: boolean = false) {
+    const gitDir = path.join(this.localPath, '.git')
+    const cacheSyncMarkerPath = path.join(this.localPath, env.CATALOG_CACHE_SYNC_MARKER)
+    const canRefreshExistingRepo =
+      typeof this.git.cwd === 'function' &&
+      typeof this.git.fetch === 'function' &&
+      typeof this.git.checkout === 'function' &&
+      typeof this.git.pull === 'function'
+
+    if (!existsSync(gitDir) || !canRefreshExistingRepo) {
+      debug(`Catalog cache miss at ${this.localPath}; cloning branch '${branch}'`)
+      await this.clone(branch)
+      await writeFile(cacheSyncMarkerPath, new Date().toISOString(), 'utf-8')
+      debug(`Catalog cache initialized at ${this.localPath}`)
+      return
+    }
+
+    if (!forceRefresh && existsSync(cacheSyncMarkerPath)) {
+      const cacheAgeMs = Date.now() - lstatSync(cacheSyncMarkerPath).mtimeMs
+      if (cacheAgeMs < env.CATALOG_CACHE_REFRESH_INTERVAL_MS) {
+        debug(
+          `Catalog cache hit at ${this.localPath}; age=${Math.round(cacheAgeMs / 1000)}s, ttl=${Math.round(env.CATALOG_CACHE_REFRESH_INTERVAL_MS / 1000)}s`,
+        )
+        return
+      }
+      debug(
+        `Catalog cache expired at ${this.localPath}; age=${Math.round(cacheAgeMs / 1000)}s, ttl=${Math.round(env.CATALOG_CACHE_REFRESH_INTERVAL_MS / 1000)}s`,
+      )
+    } else if (forceRefresh) {
+      debug(`Catalog cache force-refresh requested at ${this.localPath}`)
+    } else {
+      debug(`Catalog cache marker missing at ${this.localPath}; refreshing`)
+    }
+
+    debug(`Refreshing catalog cache at ${this.localPath} for branch '${branch}'`)
+    await this.git.cwd(this.localPath)
+    await this.git.fetch('origin', branch)
+    try {
+      await this.git.checkout(branch)
+    } catch {
+      await this.git.checkout(['-B', branch, `origin/${branch}`])
+    }
+    await this.git.pull('origin', branch, { '--ff-only': null })
+    await writeFile(cacheSyncMarkerPath, new Date().toISOString(), 'utf-8')
+    debug(`Catalog cache refreshed at ${this.localPath}`)
   }
   async cloneSingleChart(refAndPath: string, finalDestinationPath: string) {
     const remoteResult = await this.git.listRemote([this.chartRepoUrl])
@@ -267,8 +330,6 @@ export class chartRepo {
  * @param chartTargetDirName - The target folder name for the clone (will be the final chart folder, e.g. "nats")
  * @param chartIcon - the icon URL path (e.g https://myimage.com/imageurl)
  * @param allowTeams - Boolean indicating if teams are allowed to use the chart.
- *                     If false, the key is set to [].
- *                     If true, the key is set to null.
  * @param clusterDomainSuffix - domainSuffix set in cluster settings, used to check if URL is an interal Gitea URL
  */
 export async function sparseCloneChart(
@@ -331,72 +392,221 @@ export async function sparseCloneChart(
   return true
 }
 
+/**
+ * Encodes Git credentials into the URL for internal Gitea repositories
+ */
+function encodeGitCredentials(url: string, clusterDomainSuffix?: string): string {
+  if (!isInteralGiteaURL(url, clusterDomainSuffix)) return url
+
+  const [protocol, bareUrl] = url.split('://')
+  const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
+  const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
+  return `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
+}
+
+/**
+ * Reads and parses the rbac.yaml file from a helm charts directory
+ */
+async function readRbacConfig(helmChartsDir: string): Promise<{ rbac: Record<string, any>; betaCharts: string[] }> {
+  try {
+    const fileContent = await readFile(`${helmChartsDir}/rbac.yaml`, 'utf-8')
+    const parsed = YAML.parse(fileContent)
+    return {
+      rbac: parsed?.rbac || {},
+      betaCharts: parsed?.betaCharts || [],
+    }
+  } catch (error) {
+    debug(`Error while parsing rbac.yaml file : ${error.message}`)
+    return { rbac: {}, betaCharts: [] }
+  }
+}
+
+/**
+ * Checks if a chart is accessible to a team based on RBAC rules
+ */
+function isChartAccessible(chartName: string, rbac: Record<string, any>, teamId?: string): boolean {
+  // If no teamId provided, allow access (BYO catalog case)
+  if (!teamId) return true
+
+  // If chart not in rbac config, or rbac allows this team, or team is admin
+  return !rbac[chartName] || rbac[chartName].includes(`team-${teamId}`) || teamId === 'admin'
+}
+
+/**
+ * Reads chart README file with fallback message
+ */
+async function readChartReadme(helmChartsDir: string, folder: string): Promise<string> {
+  try {
+    return await safeReadTextFile(helmChartsDir, `${folder}/README.md`)
+  } catch (error) {
+    debug(`Error while parsing chart README.md file : ${error.message}`)
+    return 'There is no `README` for this chart.'
+  }
+}
+
+/**
+ * Processes a single chart folder and returns catalog item
+ */
+async function processChartFolder(
+  helmChartsDir: string,
+  folder: string,
+  betaCharts: string[],
+): Promise<{
+  name: string
+  values: string
+  valuesSchema: string
+  icon?: string
+  chartVersion?: string
+  chartDescription?: string
+  readme: string
+  isBeta: boolean
+} | null> {
+  const readme = await readChartReadme(helmChartsDir, folder)
+
+  try {
+    const values = await safeReadTextFile(helmChartsDir, `${folder}/values.yaml`)
+
+    let valuesSchema = '{}'
+    try {
+      const schemaContent = await safeReadTextFile(helmChartsDir, `${folder}/values.schema.json`)
+      valuesSchema = schemaContent || '{}'
+    } catch {
+      // values.schema.json is optional
+    }
+
+    const chart = await safeReadTextFile(helmChartsDir, `${folder}/Chart.yaml`)
+    const chartMetadata = YAML.parse(chart)
+
+    return {
+      name: folder,
+      values: values || '{}',
+      valuesSchema,
+      icon: chartMetadata?.icon,
+      chartVersion: chartMetadata?.version,
+      chartDescription: chartMetadata?.description,
+      readme,
+      isBeta: betaCharts.includes(folder),
+    }
+  } catch (error) {
+    debug(`Error while parsing ${folder}/Chart.yaml and ${folder}/values.yaml files : ${error.message}`)
+    return null
+  }
+}
+
+/**
+ * Gets list of chart folders from directory, excluding system files
+ */
+async function getChartFolders(helmChartsDir: string): Promise<string[]> {
+  const files = await readdir(helmChartsDir, 'utf-8')
+  const chartFolders = await Promise.all(
+    files.map(async (fileName) => {
+      try {
+        if (fileName.startsWith('.')) return null
+        const filePath = path.join(helmChartsDir, fileName)
+        if (!lstatSync(filePath).isDirectory()) return null
+
+        try {
+          await safeReadTextFile(helmChartsDir, `${fileName}/Chart.yaml`)
+          return fileName
+        } catch {
+          await safeReadTextFile(helmChartsDir, `${fileName}/chart.yaml`)
+          return fileName
+        }
+      } catch {
+        return null
+      }
+    }),
+  )
+
+  return chartFolders.filter((folder): folder is string => folder !== null)
+}
+
+/**
+ * Fetches workload catalog from a Git repository
+ *
+ * @param url - Git repository URL
+ * @param helmChartsDir - Local directory to clone charts into
+ * @param branch - Git branch to checkout (defaults to 'main')
+ * @param clusterDomainSuffix - Cluster domain suffix for internal Gitea URL detection
+ * @param teamId - Optional team ID for RBAC filtering. If not provided, all charts are returned
+ * @param chartsPath - Optional subdirectory path where charts are located (e.g., 'charts' or 'helm-charts')
+ */
 export async function fetchWorkloadCatalog(
   url: string,
   helmChartsDir: string,
-  teamId: string,
+  branch: string = 'main',
   clusterDomainSuffix?: string,
-): Promise<Promise<any>> {
-  if (!existsSync(helmChartsDir)) mkdirSync(helmChartsDir, { recursive: true })
-  let gitUrl = url
-  if (isInteralGiteaURL(url, clusterDomainSuffix)) {
-    const [protocol, bareUrl] = url.split('://')
-    const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
-    const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
-    gitUrl = `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
-  }
-  const gitRepo = new chartRepo(helmChartsDir, gitUrl)
-  const branch = 'main'
-  await gitRepo.clone(branch)
+  teamId?: string,
+  chartsPath?: string,
+  forceRefresh: boolean = false,
+): Promise<{ helmCharts: string[]; catalog: any[] }> {
+  const resolvedHelmChartsDir = path.resolve(helmChartsDir)
 
-  const files = await readdir(helmChartsDir, 'utf-8')
-  const filesToExclude = ['.git', '.gitignore', '.vscode', 'LICENSE', 'README.md']
-  const folders = files.filter((f) => !filesToExclude.includes(f))
+  // Ensure directory exists
+  if (!existsSync(resolvedHelmChartsDir)) mkdirSync(resolvedHelmChartsDir, { recursive: true })
 
-  let rbac = {}
-  let betaCharts: string[] = []
-  try {
-    const r = await readFile(`${helmChartsDir}/rbac.yaml`, 'utf-8')
-    rbac = YAML.parse(r).rbac
-    if (YAML.parse(r)?.betaCharts) betaCharts = YAML.parse(r).betaCharts
-  } catch (error) {
-    debug(`Error while parsing rbac.yaml file : ${error.message}`)
+  // Clone repository
+  const gitUrl = encodeGitCredentials(url, clusterDomainSuffix)
+  const gitRepo = new chartRepo(resolvedHelmChartsDir, gitUrl)
+  await gitRepo.ensureLatest(branch, forceRefresh)
+
+  // Determine the charts directory path
+  const chartsDir = chartsPath ? path.resolve(resolvedHelmChartsDir, chartsPath) : resolvedHelmChartsDir
+
+  const isWithinHelmChartsDir =
+    chartsDir === resolvedHelmChartsDir || chartsDir.startsWith(`${resolvedHelmChartsDir}${path.sep}`)
+  if (!isWithinHelmChartsDir) {
+    debug(`Charts subdirectory '${chartsPath}' resolves outside '${resolvedHelmChartsDir}'`)
+    return { helmCharts: [], catalog: [] }
   }
+
+  // Check if subdirectory exists
+  if (chartsPath && !existsSync(chartsDir)) {
+    debug(`Charts subdirectory '${chartsPath}' not found at '${url}'`)
+    return { helmCharts: [], catalog: [] }
+  }
+
+  if (chartsPath) {
+    try {
+      if (!lstatSync(chartsDir).isDirectory()) {
+        debug(`Charts path '${chartsPath}' is not a directory at '${url}'`)
+        return { helmCharts: [], catalog: [] }
+      }
+    } catch {
+      debug(`Unable to stat charts subdirectory '${chartsPath}' at '${url}'`)
+      return { helmCharts: [], catalog: [] }
+    }
+  }
+
+  // Get chart folders
+  const folders = await getChartFolders(chartsDir)
+  if (!folders.length) {
+    debug(`No chart folders found in '${chartsDir}' at '${url}'`)
+    return { helmCharts: [], catalog: [] }
+  }
+  // Read RBAC configuration (try chartsDir first, fallback to root)
+  let rbacConfig = await readRbacConfig(chartsDir)
+  if (!rbacConfig.rbac || Object.keys(rbacConfig.rbac).length === 0) {
+    rbacConfig = await readRbacConfig(helmChartsDir)
+  }
+  const { rbac, betaCharts } = rbacConfig
+
+  // Process each chart folder
   const catalog: any[] = []
   const helmCharts: string[] = []
+
   for (const folder of folders) {
-    let readme = ''
-    try {
-      const chartReadme = await safeReadTextFile(helmChartsDir, `${folder}/README.md`)
-      readme = chartReadme
-    } catch (error) {
-      debug(`Error while parsing chart README.md file : ${error.message}`)
-      readme = 'There is no `README` for this chart.'
-    }
-    try {
-      const values = await readFile(`${helmChartsDir}/${folder}/values.yaml`, 'utf-8')
-      // valuesSchema is optional, hence we add a catch at the end to mitigate a loop break out
-      const valuesSchema = await readFile(`${helmChartsDir}/${folder}/values.schema.json`, 'utf-8').catch(() => null)
-      const chart = await readFile(`${helmChartsDir}/${folder}/Chart.yaml`, 'utf-8')
-      const chartMetadata = YAML.parse(chart)
-      if (!rbac[folder] || rbac[folder].includes(`team-${teamId}`) || teamId === 'admin') {
-        const catalogItem = {
-          name: folder,
-          values: values || '{}',
-          valuesSchema: valuesSchema || '{}',
-          icon: chartMetadata?.icon,
-          chartVersion: chartMetadata?.version,
-          chartDescription: chartMetadata?.description,
-          readme,
-          isBeta: betaCharts.includes(folder),
-        }
-        catalog.push(catalogItem)
-        helmCharts.push(folder)
-      }
-    } catch (error) {
-      debug(`Error while parsing ${folder}/Chart.yaml and ${folder}/values.yaml files : ${error.message}`)
+    // Check RBAC access
+    if (!isChartAccessible(folder, rbac, teamId)) continue
+
+    const catalogItem = await processChartFolder(chartsDir, folder, betaCharts)
+    if (catalogItem) {
+      catalog.push(catalogItem)
+      helmCharts.push(folder)
     }
   }
-  if (!catalog.length) throwChartError(`There are no directories at '${url}'`)
+
+  if (!catalog.length) debug(`There are no directories at '${url}'`)
+
   return { helmCharts, catalog }
 }

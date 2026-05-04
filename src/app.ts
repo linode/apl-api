@@ -20,26 +20,24 @@ import {
 } from 'src/middleware'
 import { apiRateLimiter, authRateLimiter } from 'src/middleware/rate-limit'
 import { setMockIdx } from 'src/mocks'
-import { AplResponseObject, OpenAPIDoc, Schema } from 'src/otomi-models'
+import { AplResponseObject, OpenAPIDoc, Schema, SealedSecretManifestResponse } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
-import { extract, getPaths, getValuesSchema } from 'src/utils'
+import { getValuesSchema } from 'src/utils'
 import {
+  CATALOG_CACHE_REFRESH_INTERVAL_MS,
   CHECK_LATEST_COMMIT_INTERVAL,
   cleanEnv,
   EXPRESS_PAYLOAD_LIMIT,
-  GIT_PASSWORD,
   GIT_PUSH_RETRIES,
-  GIT_USER,
   TRUST_PROXY,
 } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
-import giteaCheckLatest from './gitea/connect'
-import { getBuildStatus, getSealedSecretStatus, getServiceStatus, getWorkloadStatus } from './k8s_operations'
+import getLatestRemoteCommitSha from './git/connect'
+import { getBuildStatus, getSealedSecretStatus, getServiceStatus, getWorkloadStatus } from './k8s-operations'
 
 const env = cleanEnv({
+  CATALOG_CACHE_REFRESH_INTERVAL_MS,
   CHECK_LATEST_COMMIT_INTERVAL,
-  GIT_USER,
-  GIT_PASSWORD,
   EXPRESS_PAYLOAD_LIMIT,
   GIT_PUSH_RETRIES,
   TRUST_PROXY,
@@ -50,18 +48,16 @@ debug('NODE_ENV: ', process.env.NODE_ENV)
 
 type OtomiSpec = {
   spec: OpenAPIDoc
-  secretPaths: string[]
   valuesSchema: Record<string, any>
 }
 
-// get the latest commit from Gitea and checks it against the local values
-const checkAgainstGitea = async () => {
-  const encodedToken = Buffer.from(`${env.GIT_USER}:${env.GIT_PASSWORD}`).toString('base64')
+// get the latest commit from Git and checks it against the local values
+const checkAgainstGit = async () => {
   const otomiStack = await getSessionStack()
-  const latestOtomiVersion = await giteaCheckLatest(encodedToken)
+  const latestOtomiVersion = await getLatestRemoteCommitSha()
   // check the local version against the latest online version
   // if the latest online is newer it will be pulled locally
-  if (latestOtomiVersion && latestOtomiVersion.data[0].sha !== otomiStack.git.commitSha) {
+  if (latestOtomiVersion && latestOtomiVersion !== otomiStack.git.commitSha) {
     debug('Local values differentiate from Git repository, retrieving latest values')
     // Remove all .dec files
     await otomiStack.git.git.clean([CleanOptions.FORCE, CleanOptions.IGNORED_ONLY, CleanOptions.RECURSIVE])
@@ -87,9 +83,7 @@ const resourceStatus = async (errorSet) => {
     debug('Values are not loaded yet')
     return
   }
-  const { cluster } = otomiStack.getSettings(['cluster'])
-  const domainSuffix = cluster?.domainSuffix
-  const resources: Record<string, AplResponseObject[]> = {
+  const resources: Record<string, (AplResponseObject | SealedSecretManifestResponse)[]> = {
     workloads: otomiStack.getAllAplWorkloads(),
     builds: otomiStack.getAllAplBuilds(),
     services: otomiStack.getAllAplServices(),
@@ -107,7 +101,7 @@ const resourceStatus = async (errorSet) => {
     const promises = resources[resourceType].map(async (resource) => {
       const { name } = resource.metadata
       try {
-        const res = await statusFunctions[resourceType](resource, domainSuffix)
+        const res = await statusFunctions[resourceType](resource)
         return { [name]: res }
       } catch (error) {
         const errorMessage = `${resourceType}-${name}-${error.message}`
@@ -129,16 +123,10 @@ export const loadSpec = async (): Promise<void> => {
   debug(`Loading api spec from: ${openApiPath}`)
   const spec = (await $parser.parse(openApiPath)) as OpenAPIDoc
   const valuesSchema = await getValuesSchema()
-  const secrets = extract(valuesSchema, (o, i) => i === 'x-secret')
-  const secretPaths = getPaths(secrets)
-  otomiSpec = { spec, secretPaths, valuesSchema }
+  otomiSpec = { spec, valuesSchema }
 }
 export const getSpec = (): OtomiSpec => {
   return otomiSpec
-}
-export function getSecretPaths(): string[] {
-  const { secretPaths } = getSpec()
-  return secretPaths
 }
 export const getAppSchema = (appId: string): Schema => {
   let id: string = appId
@@ -149,6 +137,24 @@ export const getAppSchema = (appId: string): Schema => {
 export const getAppList = (): string[] => {
   const appsSchema = getSpec().spec.components.schemas['AppList']
   return appsSchema.enum as string[]
+}
+
+let isCatalogRefreshRunning = false
+let catalogRefreshInterval: ReturnType<typeof setInterval> | undefined
+
+export const cloneCatalogRepositories = async (): Promise<void> => {
+  if (isCatalogRefreshRunning) {
+    debug('Catalog cache refresh is already running, skipping scheduled run')
+    return
+  }
+
+  isCatalogRefreshRunning = true
+  try {
+    const otomiStack = await getSessionStack()
+    await otomiStack.refreshBYOCatalogCache()
+  } finally {
+    isCatalogRefreshRunning = false
+  }
 }
 
 export async function initApp(inOtomiStack?: OtomiStack) {
@@ -163,7 +169,6 @@ export async function initApp(inOtomiStack?: OtomiStack) {
     app.set('trust proxy', env.TRUST_PROXY)
   }
 
-  const apiRoutesPath = path.resolve(__dirname, 'api')
   await loadSpec()
   const authz = new Authz(otomiSpec.spec)
   app.use(logger('dev'))
@@ -207,7 +212,7 @@ export async function initApp(inOtomiStack?: OtomiStack) {
   if (!env.isTest) {
     const gitCheckVersionInterval = env.CHECK_LATEST_COMMIT_INTERVAL * 60 * 1000
     setInterval(async function () {
-      await checkAgainstGitea()
+      await checkAgainstGit()
     }, gitCheckVersionInterval)
   }
   let server: Server | undefined
@@ -226,14 +231,33 @@ export async function initApp(inOtomiStack?: OtomiStack) {
       .listen(PORT, async () => {
         debug(`Listening on :::${PORT}`)
         lightship?.signalReady()
-        // Clone repo after the application is ready to avoid Pod NotReady phenomenon, and thus infinite Pod crash loopback
-        ;(await getSessionStack()).initGit()
+
+        // Initialize git, warm catalog cache, and then start periodic refresh in one sequenced background task
+        void (async () => {
+          const sessionStack = await getSessionStack()
+          await sessionStack.initGit()
+          void cloneCatalogRepositories()
+
+          if (!catalogRefreshInterval) {
+            catalogRefreshInterval = setInterval(() => {
+              void cloneCatalogRepositories().catch((e) => {
+                debug(e)
+              })
+            }, env.CATALOG_CACHE_REFRESH_INTERVAL_MS)
+          }
+        })().catch((e) => {
+          debug(e)
+        })
       })
       .on('error', (e) => {
         console.error(e)
         lightship?.shutdown()
       })
     lightship?.registerShutdownHandler(() => {
+      if (catalogRefreshInterval) {
+        clearInterval(catalogRefreshInterval)
+        catalogRefreshInterval = undefined
+      }
       ;(server as Server).close()
     })
   }
@@ -274,8 +298,12 @@ export async function initApp(inOtomiStack?: OtomiStack) {
   // Register error middleware
   app.use(errorMiddleware)
 
+  app.get('/api-docs/swagger/swagger.json', (_req, res) => {
+    res.json(otomiSpec.spec)
+  })
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   app.use('/api-docs/swagger', swaggerUi.serve, swaggerUi.setup(otomiSpec.spec))
+
   return app
 }
 

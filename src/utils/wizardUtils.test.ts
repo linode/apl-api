@@ -123,7 +123,7 @@ describe('ObjectStorageClient', () => {
 
     test('should return error when cluster name is undefined', async () => {
       const data = { apiToken: 'some-token', regionId: 'us-east', label: 'my-cluster' }
-      jest.spyOn(otomiStack, 'getSettings').mockReturnValue({
+      jest.spyOn(otomiStack, 'getSettings').mockResolvedValue({
         cluster: { domainSuffix, provider: 'linode' },
       } as any)
       const result: ObjWizard = await otomiStack.createObjWizard(data)
