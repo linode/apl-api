@@ -5,11 +5,6 @@ import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:git')
 
-type ErrorResponse = {
-  code: number
-  message: string
-}
-
 /**
  * PUT /v2/git
  * Migrate the values repository to a new git remote.
