@@ -4,12 +4,12 @@ import { initApp, loadSpec } from 'src/app'
 import getToken from 'src/fixtures/jwt'
 import OtomiStack from 'src/otomi-stack'
 import request from 'supertest'
-import { Git } from './git'
-import { getSessionStack } from './middleware'
-import * as getValuesSchemaModule from './utils'
 import TestAgent from 'supertest/lib/agent'
 import { FileStore } from './fileStore/file-store'
+import { Git } from './git'
+import { getSessionStack } from './middleware'
 import { AplKind } from './otomi-models'
+import * as getValuesSchemaModule from './utils'
 
 const platformAdminToken = getToken(['platform-admin'])
 const teamAdminToken = getToken(['team-admin', 'team-team1'])
@@ -1130,14 +1130,14 @@ describe('API V2 authz tests', () => {
         await agent.put('/v2/git').send(gitBody).set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
       })
 
-      test('returns 403 when push access probe fails with permission denied', async () => {
+      test('returns 200 when push access probe fails with permission denied', async () => {
         jest.spyOn(otomiStack.git, 'testRemoteConnection').mockResolvedValue(true)
         jest.spyOn(otomiStack.git, 'probePushAccess').mockRejectedValue(new Error('permission denied'))
 
         await agent.put('/v2/git').send(gitBody).set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
       })
 
-      test('returns 404 when remote connectivity check indicates repository not found', async () => {
+      test('returns 200 when remote connectivity check indicates repository not found', async () => {
         jest.spyOn(otomiStack.git, 'testRemoteConnection').mockRejectedValue(new Error('repository not found'))
 
         await agent.put('/v2/git').send(gitBody).set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
