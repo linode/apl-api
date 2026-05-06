@@ -4,27 +4,6 @@
 
 YAML specs defining all API endpoints, schemas, ACLs, and documentation links. Single source of truth for the entire API surface.
 
-## STRUCTURE
-
-```
-openapi/
-├── api.yaml          # Main spec: ALL path definitions + component refs (3k lines)
-├── definitions.yaml  # Shared schema fragments (idName, etc.)
-├── error.yaml        # Error response schemas
-├── otomi/            # Otomi-specific sub-specs
-└── *.yaml            # One file per resource schema (service, team, workload, etc.)
-```
-
-## WHERE TO LOOK
-
-| Task | Location | Notes |
-|------|----------|-------|
-| Add endpoint path | `api.yaml` paths section | Must include `operationId` + `x-eov-operation-handler` |
-| Define resource schema | New `{resource}.yaml` + ref from `api.yaml` | One schema file per resource |
-| Set authorization | Schema file `x-acl` block | Per-role CRUD permissions |
-| Field-level ACL | Schema property `x-acl` | Restricts field visibility by role |
-| Shared types | `definitions.yaml` | Reusable schema fragments |
-
 ## CONVENTIONS
 
 - **`operationId`**: Must match exported function name in handler file
