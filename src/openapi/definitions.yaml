@@ -526,7 +526,7 @@ dns:
           required:
             - other
 domain:
-  pattern: ^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))|([a-f0-9:]+:+)+[a-f0-9]+$
+  pattern: ^([a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?\.)*[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?$
   x-message: a valid fully qualified domain name (FQDN)
   type: string
 domainSuffix:
@@ -1118,6 +1118,10 @@ volumes:
         $ref: 'definitions.yaml#/idName'
     type: object
   type: array
+wildcardDomainOrIp:
+  pattern: ^((\*\.)?([a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?\.)*[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?|([a-f0-9:]+:+)+[a-f0-9]+)$
+  description: FQDN, wildcard domain, or IP address
+  type: string
 wordCharacterPattern:
   type: string
   pattern: ^[^\s]+$
