@@ -118,9 +118,20 @@ describe('codeRepoUtils', () => {
       expect(result).toEqual('git@github.com:user/repo.git')
     })
 
-    it('should normalize HTTPS URL', () => {
-      const result = normalizeRepoUrl('https://github.com/user/repo', false, false)
+    it('should normalize protocol-less HTTPS URL', () => {
+      const result = normalizeRepoUrl('github.com/user/repo', false, false)
       expect(result).toEqual('https://github.com/user/repo.git')
+    })
+
+    it.each([
+      'javascript:alert(1)',
+      'data:text/html,<svg/onload=alert(1)>',
+      'vbscript:msgbox(1)',
+      'ftp://github.com/example/repo',
+      'github.com/example',
+      'github.com/example/repo<script>',
+    ])('should reject unsafe repository URL: %s', (repoUrl) => {
+      expect(normalizeRepoUrl(repoUrl, false, false)).toBeNull()
     })
 
     it('should return null for invalid URL', () => {

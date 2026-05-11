@@ -4,12 +4,12 @@ import { initApp, loadSpec } from 'src/app'
 import getToken from 'src/fixtures/jwt'
 import OtomiStack from 'src/otomi-stack'
 import request from 'supertest'
-import { Git } from './git'
-import { getSessionStack } from './middleware'
-import * as getValuesSchemaModule from './utils'
 import TestAgent from 'supertest/lib/agent'
 import { FileStore } from './fileStore/file-store'
+import { Git } from './git'
+import { getSessionStack } from './middleware'
 import { AplKind } from './otomi-models'
+import * as getValuesSchemaModule from './utils'
 
 const platformAdminToken = getToken(['platform-admin'])
 const teamAdminToken = getToken(['team-admin', 'team-team1'])
