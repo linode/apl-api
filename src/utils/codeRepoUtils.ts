@@ -44,57 +44,47 @@ export async function getGiteaRepoUrls(adminUsername, adminPassword, orgName, do
   }
 }
 
-const ALLOWED_REPO_HOSTS = ['github.com', 'gitlab.com']
-
-const SAFE_REPO_PATH_REGEX = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/
+const SAFE_HOST_REGEX = /^[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
+const SAFE_REPO_PATH_REGEX = /^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)+$/
 
 export function normalizeRepoUrl(inputUrl: string, isPrivate: boolean, isSSH: boolean): string | null {
   try {
     const cleanUrl = inputUrl.trim().replace(/\/$/, '')
 
     let hostname: string
-    let owner: string
-    let repoName: string
+    let repoPath: string
 
     if (cleanUrl.startsWith('git@')) {
       const match = cleanUrl
         .replace(/\.git$/, '')
-        .match(/^git@(github\.com|gitlab\.com):([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)$/)
+        .match(/^git@([A-Za-z0-9.-]+\.[A-Za-z]{2,}):([A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)+)$/)
 
       if (!match) return null
 
       hostname = match[1]
-      owner = match[2]
-      repoName = match[3]
+      repoPath = match[2]
     } else {
       const urlToParse = /^[a-z][a-z0-9+.-]*:/i.test(cleanUrl) ? cleanUrl : `https://${cleanUrl}`
 
       const parsed = new URL(urlToParse)
 
       if (parsed.protocol !== 'https:') return null
+      if (!SAFE_HOST_REGEX.test(parsed.hostname)) return null
+
+      repoPath = parsed.pathname.replace(/\.git$/, '').replace(/^\/|\/$/g, '')
+
+      if (!SAFE_REPO_PATH_REGEX.test(repoPath)) return null
 
       hostname = parsed.hostname
-      if (!ALLOWED_REPO_HOSTS.includes(hostname)) return null
-
-      const parts = parsed.pathname
-        .replace(/\.git$/, '')
-        .split('/')
-        .filter(Boolean)
-      if (parts.length !== 2) return null
-
-      owner = parts[0]
-      repoName = parts[1]
-
-      if (!SAFE_REPO_PATH_REGEX.test(`${owner}/${repoName}`)) return null
     }
 
-    const repoWithGitSuffix = `${repoName}.git`
+    const repoWithGitSuffix = `${repoPath}.git`
 
     if (isPrivate && isSSH) {
-      return `git@${hostname}:${owner}/${repoWithGitSuffix}`
+      return `git@${hostname}:${repoWithGitSuffix}`
     }
 
-    return `https://${hostname}/${owner}/${repoWithGitSuffix}`
+    return `https://${hostname}/${repoWithGitSuffix}`
   } catch {
     return null
   }
