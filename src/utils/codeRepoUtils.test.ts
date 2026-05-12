@@ -118,9 +118,43 @@ describe('codeRepoUtils', () => {
       expect(result).toEqual('git@github.com:user/repo.git')
     })
 
-    it('should normalize HTTPS URL', () => {
-      const result = normalizeRepoUrl('https://github.com/user/repo', false, false)
+    it('should normalize protocol-less HTTPS URL', () => {
+      const result = normalizeRepoUrl('github.com/user/repo', false, false)
       expect(result).toEqual('https://github.com/user/repo.git')
+    })
+
+    it.each([
+      'javascript:alert(1)',
+      'data:text/html,<svg/onload=alert(1)>',
+      'vbscript:msgbox(1)',
+      'ftp://github.com/example/repo',
+      'github.com/example',
+      'github.com/example/repo<script>',
+    ])('should reject unsafe repository URL: %s', (repoUrl) => {
+      expect(normalizeRepoUrl(repoUrl, false, false)).toBeNull()
+    })
+
+    it.each([
+      ['https://github.com/example/repo', 'https://github.com/example/repo.git'],
+      ['github.com/example/repo', 'https://github.com/example/repo.git'],
+      ['git@github.com:example/repo.git', 'https://github.com/example/repo.git'],
+      [
+        'https://gitlab.example.com/platform/backend/my-repo',
+        'https://gitlab.example.com/platform/backend/my-repo.git',
+      ],
+      ['gitlab.example.com/platform/backend/my-repo', 'https://gitlab.example.com/platform/backend/my-repo.git'],
+      [
+        'git@gitlab.example.com:platform/backend/my-repo.git',
+        'https://gitlab.example.com/platform/backend/my-repo.git',
+      ],
+    ])('should normalize valid repository URL: %s', (input, expected) => {
+      expect(normalizeRepoUrl(input, false, false)).toEqual(expected)
+    })
+
+    it('should preserve SSH format for private SSH repositories', () => {
+      const result = normalizeRepoUrl('git@gitlab.example.com:platform/backend/my-repo.git', true, true)
+
+      expect(result).toEqual('git@gitlab.example.com:platform/backend/my-repo.git')
     })
 
     it('should return null for invalid URL', () => {
