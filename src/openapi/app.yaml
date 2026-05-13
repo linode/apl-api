@@ -12,7 +12,6 @@ AppList:
     - gitea
     - grafana
     - harbor
-    - ingress-nginx
     - istio
     - keycloak
     - knative
