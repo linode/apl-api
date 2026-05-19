@@ -2331,34 +2331,6 @@ paths:
               schema:
                 type: object
 
-  '/v1/helmChartContent':
-    get:
-      operationId: getHelmChartContent
-      x-eov-operation-handler: v1/helmChartContent
-      x-aclSchema: Workload
-      parameters:
-        - name: url
-          in: query
-          description: URL of the helm chart
-          schema:
-            type: string
-      responses:
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '200':
-          description: Successfully obtained helm chart content
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  values:
-                    type: object
-                  error:
-                    type: string
-
   '/v1/teams/{teamId}/workloads':
     parameters:
       - $ref: '#/components/parameters/teamParams'

@@ -163,7 +163,7 @@ import {
   userSecretDataToUser,
 } from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
-import { fetchChartYaml, fetchWorkloadCatalog, isInteralGiteaURL, validateGitUrl } from './utils/workloadUtils'
+import { fetchWorkloadCatalog, isInteralGiteaURL, validateGitUrl } from './utils/workloadUtils'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -2002,10 +2002,6 @@ export default class OtomiStack {
       debug(`Error fetching workload chart '${chartName}': ${error.message}`)
       return toPlatformObject('AplCatalogChart', chartName, []) as unknown as AplCatalogChartResponse
     }
-  }
-
-  async getHelmChartContent(url: string): Promise<any> {
-    return await fetchChartYaml(url)
   }
 
   getTeamWorkloads(teamId: string): Workload[] {
