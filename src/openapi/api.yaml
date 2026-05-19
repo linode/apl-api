@@ -2805,10 +2805,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/TestRepoConnect'
 
-  /v1/internalRepoUrls:
+  /v2/internalRepoUrls:
     get:
       operationId: getInternalRepoUrls
-      x-eov-operation-handler: v1/internalRepoUrls
+      x-eov-operation-handler: v2/internalRepoUrls
       x-aclSchema: InternalRepoUrls
       parameters:
         - name: teamId

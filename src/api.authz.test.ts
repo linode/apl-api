@@ -784,7 +784,7 @@ describe('API authz tests', () => {
     test('team member can get internal repository urls', async () => {
       jest.spyOn(otomiStack, 'getInternalRepoUrls').mockResolvedValue([])
       await agent
-        .get(`/v1/internalRepoUrls`)
+        .get(`/v2/internalRepoUrls`)
         .query({ teamId })
         .set('Authorization', `Bearer ${teamMemberToken}`)
         .expect(200)
