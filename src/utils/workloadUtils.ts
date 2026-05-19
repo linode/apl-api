@@ -35,13 +35,6 @@ export async function validateGitUrl(url: string): Promise<void> {
   }
 }
 
-export interface NewHelmChartValues {
-  gitRepositoryUrl: string
-  chartTargetDirName: string
-  chartIcon?: string
-  allowTeams: boolean
-}
-
 export function isGiteaURL(url: string) {
   let hostname = ''
   if (url) {
