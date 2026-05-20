@@ -9,7 +9,6 @@ teamConfig:
             gitea: {}
             grafana: {}
             harbor: {}
-            ingress-nginx: {}
             istio: {}
             keycloak: {}
             knative: {}
