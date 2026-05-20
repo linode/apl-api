@@ -271,12 +271,7 @@ export default class OtomiStack {
   }
 
   async getAppList() {
-    let apps = getAppList()
-    apps = apps.filter((item) => item !== 'ingress-nginx')
-    const { ingress } = await this.getSettings()
-    const allClasses = ['platform'].concat(ingress?.classes?.map((obj) => obj.className as string) || [])
-    const ingressApps = allClasses.map((name) => `ingress-nginx-${name}`)
-    return apps.concat(ingressApps)
+    return getAppList()
   }
 
   async getValues(query): Promise<Record<string, any>> {
@@ -600,62 +595,8 @@ export default class OtomiStack {
     }
   }
 
-  async loadIngressApps(id: string): Promise<void> {
-    try {
-      debug(`Loading ingress apps for ${id}`)
-      const content = await this.git.loadConfig('env/apps/ingress-nginx.yaml', 'env/apps/secrets.ingress-nginx.yaml')
-      const values = content?.apps?.['ingress-nginx'] ?? {}
-
-      const filePath = getResourceFilePath('AplApp', id)
-      const aplApp = toPlatformObject('AplApp', id, { enabled: true, rawValues: {}, ...values })
-      this.fileStore.set(filePath, aplApp)
-
-      debug(`Ingress app loaded for ${id}`)
-    } catch (error) {
-      debug(`Failed to load ingress apps for ${id}:`)
-    }
-  }
-
-  async removeIngressApps(id: string): Promise<void> {
-    try {
-      debug(`Removing ingress apps for ${id}`)
-      const filePath = `env/apps/${id}.yaml`
-      const secretsPath = `env/apps/secrets.${id}.yaml`
-
-      this.fileStore.delete(filePath)
-      await this.git.removeFile(filePath)
-      await this.git.removeFile(secretsPath)
-      debug(`Ingress app removed for ${id}`)
-    } catch (error) {
-      debug(`Failed to remove ingress app for ${id}:`)
-    }
-  }
-
-  async editIngressApps(settings: Settings, data: Settings, settingId: string): Promise<void> {
-    if (settingId !== 'ingress') return
-    const initClasses = settings[settingId]?.classes || []
-    const initClassNames = initClasses.map((obj) => obj.className)
-    const dataClasses = data[settingId]?.classes || []
-    const dataClassNames = dataClasses.map((obj) => obj.className)
-    // Ingress app addition
-    for (const ingressClass of dataClasses) {
-      if (!initClassNames.includes(ingressClass.className)) {
-        const id = `ingress-nginx-${ingressClass.className}`
-        await this.loadIngressApps(id)
-      }
-    }
-    // Ingress app deletion
-    for (const ingressClass of initClasses) {
-      if (!dataClassNames.includes(ingressClass.className)) {
-        const id = `ingress-nginx-${ingressClass.className}`
-        await this.removeIngressApps(id)
-      }
-    }
-  }
-
   async editSettings(data: Settings, settingId: string): Promise<Settings> {
     const settings = await this.getSettings()
-    await this.editIngressApps(settings, data, settingId)
     const updatedSettingsData: any = { ...data }
     if (settingId === 'otomi') {
       // convert otomi.nodeSelector to object
