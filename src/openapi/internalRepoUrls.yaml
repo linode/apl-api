@@ -7,8 +7,5 @@ InternalRepoUrls:
     teamMember:
       - read
   type: array
-  properties:
-    teamId:
-      $ref: 'definitions.yaml#/idName'
   items:
     type: string
