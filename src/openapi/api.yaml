@@ -14,37 +14,6 @@ externalDocs:
 
 # -------------------------------------------- Paths
 paths:
-  /v1/otomi/values:
-    get:
-      operationId: getValues
-      x-eov-operation-handler: v1/otomi/values
-      description: Get otomi values
-      x-aclSchema: OtomiCliValues
-      parameters:
-        - name: filesOnly
-          in: query
-          description: IDs of settings to return
-          schema:
-            type: string
-            enum: ['true', 'false']
-        - name: excludeSecrets
-          in: query
-          schema:
-            type: string
-            enum: ['true', 'false']
-        - name: withWorkloadValues
-          in: query
-          schema:
-            type: string
-            enum: ['true', 'false']
-      responses:
-        '200':
-          description: Successfully obtained otomi values
-          content:
-            application/yaml:
-              schema:
-                $ref: '#/components/schemas/OtomiCliValues'
-
   /v1/teams:
     get:
       operationId: getTeams
@@ -3595,8 +3564,6 @@ components:
       $ref: 'error.yaml#/OpenApiValidationError'
     OtomiStackError:
       $ref: 'error.yaml#/OtomiStackError'
-    OtomiCliValues:
-      $ref: 'otomi/cli.yaml#/OtomiCliValues'
     Policy:
       $ref: 'policies.yaml#/Policy'
     Policies:
