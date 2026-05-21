@@ -3,6 +3,7 @@ import axios from 'axios'
 import * as fs from 'fs'
 import * as fsExtra from 'fs-extra'
 import * as fsPromises from 'fs/promises'
+import path from 'path'
 import simpleGit from 'simple-git'
 import YAML from 'yaml'
 import * as utils from '../utils'
@@ -451,6 +452,89 @@ describe('fetchWorkloadCatalog', () => {
 
     expect(result.helmCharts).toEqual(['chart1'])
     expect(result.helmCharts).not.toContain('chart2')
+  })
+})
+
+// ----------------------------------------------------------------
+// Tests for chartRepo class
+describe('chartRepo', () => {
+  const localPath = '/tmp/repo'
+  const chartRepoUrl = 'https://github.com/example/repo.git'
+  const gitUser = 'test-user'
+  const gitEmail = 'test@example.com'
+
+  let mockGit
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockGit = {
+      clone: jest.fn().mockResolvedValue(undefined),
+      cwd: jest.fn().mockResolvedValue(undefined),
+      raw: jest.fn().mockResolvedValue(undefined),
+      checkout: jest.fn().mockResolvedValue(undefined),
+      addConfig: jest.fn().mockResolvedValue(undefined),
+      add: jest.fn().mockResolvedValue(undefined),
+      commit: jest.fn().mockResolvedValue(undefined),
+      pull: jest.fn().mockResolvedValue(undefined),
+      push: jest.fn().mockResolvedValue(undefined),
+      listRemote: jest.fn().mockResolvedValue(''),
+    }
+    ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+  })
+
+  test('clone method clones the repository', async () => {
+    const repo = new workloadUtils.chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
+    await repo.clone()
+
+    expect(mockGit.clone).toHaveBeenCalledWith(chartRepoUrl, localPath, [
+      '--branch',
+      'main',
+      '--single-branch',
+      '--depth',
+      '1',
+    ])
+  })
+
+  test('cloneSingleChart method performs sparse checkout', async () => {
+    const repo = new workloadUtils.chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
+    const refAndPath = 'main/charts/my-chart'
+    const finalDestinationPath = '/tmp/final/my-chart'
+
+    // Mock getBranchesAndTags to return 'main' as a branch
+    mockGit.listRemote.mockResolvedValue(
+      '1234567890abcdef1234567890abcdef12345678\trefs/heads/main\n' +
+        'abcdef1234567890abcdef1234567890abcdef12\trefs/tags/v1.0.0',
+    )
+
+    await repo.cloneSingleChart(refAndPath, finalDestinationPath)
+
+    expect(mockGit.listRemote).toHaveBeenCalledWith([chartRepoUrl])
+    expect(mockGit.clone).toHaveBeenCalledWith(chartRepoUrl, localPath, ['--filter=blob:none', '--no-checkout'])
+    expect(mockGit.cwd).toHaveBeenCalledWith(localPath)
+    expect(mockGit.raw).toHaveBeenCalledWith(['sparse-checkout', 'init', '--cone'])
+    expect(mockGit.raw).toHaveBeenCalledWith(['sparse-checkout', 'set', 'charts/my-chart'])
+    expect(mockGit.checkout).toHaveBeenCalledWith('main')
+    expect(fs.renameSync).toHaveBeenCalledWith(path.join(localPath, 'charts/my-chart'), finalDestinationPath)
+  })
+
+  test('addConfig method sets git config', async () => {
+    const repo = new workloadUtils.chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
+    await repo.addConfig()
+
+    expect(mockGit.addConfig).toHaveBeenCalledWith('user.name', gitUser)
+    expect(mockGit.addConfig).toHaveBeenCalledWith('user.email', gitEmail)
+  })
+
+  test('commitAndPush method commits and pushes changes', async () => {
+    const repo = new workloadUtils.chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
+    const chartName = 'my-chart'
+
+    await repo.commitAndPush(chartName)
+
+    expect(mockGit.add).toHaveBeenCalledWith('.')
+    expect(mockGit.commit).toHaveBeenCalledWith(`Add ${chartName} helm chart`)
+    expect(mockGit.pull).toHaveBeenCalledWith('origin', 'refs/heads/main', { '--rebase': null })
+    expect(mockGit.push).toHaveBeenCalledWith('origin', 'refs/heads/main')
   })
 })
 

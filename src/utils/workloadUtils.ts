@@ -1,9 +1,10 @@
 import axios from 'axios'
 import Debug from 'debug'
-import { existsSync, lstatSync, mkdirSync } from 'fs'
+import { existsSync, lstatSync, mkdirSync, renameSync } from 'fs'
 import { readFile } from 'fs-extra'
-import { readdir } from 'fs/promises'
+import { readdir, writeFile } from 'fs/promises'
 import path from 'path'
+import simpleGit, { SimpleGit } from 'simple-git'
 import { safeReadTextFile } from 'src/utils'
 import {
   CATALOG_CACHE_REFRESH_INTERVAL_MS,
@@ -277,6 +278,114 @@ async function getChartFolders(helmChartsDir: string): Promise<string[]> {
   return chartFolders.filter((folder): folder is string => folder !== null)
 }
 
+export class chartRepo {
+  localPath: string
+  chartRepoUrl: string
+  gitUser?: string
+  gitEmail?: string
+  git: SimpleGit
+  constructor(localPath: string, chartRepoUrl: string, gitUser?: string, gitEmail?: string) {
+    this.localPath = localPath
+    this.chartRepoUrl = chartRepoUrl
+    this.gitUser = gitUser
+    this.gitEmail = gitEmail
+    this.git = simpleGit(this.localPath)
+  }
+  async clone(branch: string = 'main') {
+    await this.git.clone(this.chartRepoUrl, this.localPath, ['--branch', branch, '--single-branch', '--depth', '1'])
+  }
+  async ensureLatest(branch: string = 'main', forceRefresh: boolean = false) {
+    const gitDir = path.join(this.localPath, '.git')
+    const cacheSyncMarkerPath = path.join(this.localPath, env.CATALOG_CACHE_SYNC_MARKER)
+    const canRefreshExistingRepo =
+      typeof this.git.cwd === 'function' &&
+      typeof this.git.fetch === 'function' &&
+      typeof this.git.checkout === 'function' &&
+      typeof this.git.pull === 'function'
+
+    if (!existsSync(gitDir) || !canRefreshExistingRepo) {
+      debug(`Catalog cache miss at ${this.localPath}; cloning branch '${branch}'`)
+      await this.clone(branch)
+      await writeFile(cacheSyncMarkerPath, new Date().toISOString(), 'utf-8')
+      debug(`Catalog cache initialized at ${this.localPath}`)
+      return
+    }
+
+    if (!forceRefresh && existsSync(cacheSyncMarkerPath)) {
+      const cacheAgeMs = Date.now() - lstatSync(cacheSyncMarkerPath).mtimeMs
+      if (cacheAgeMs < env.CATALOG_CACHE_REFRESH_INTERVAL_MS) {
+        debug(
+          `Catalog cache hit at ${this.localPath}; age=${Math.round(cacheAgeMs / 1000)}s, ttl=${Math.round(env.CATALOG_CACHE_REFRESH_INTERVAL_MS / 1000)}s`,
+        )
+        return
+      }
+      debug(
+        `Catalog cache expired at ${this.localPath}; age=${Math.round(cacheAgeMs / 1000)}s, ttl=${Math.round(env.CATALOG_CACHE_REFRESH_INTERVAL_MS / 1000)}s`,
+      )
+    } else if (forceRefresh) {
+      debug(`Catalog cache force-refresh requested at ${this.localPath}`)
+    } else {
+      debug(`Catalog cache marker missing at ${this.localPath}; refreshing`)
+    }
+
+    debug(`Refreshing catalog cache at ${this.localPath} for branch '${branch}'`)
+    await this.git.cwd(this.localPath)
+    await this.git.fetch('origin', branch)
+    try {
+      await this.git.checkout(branch)
+    } catch {
+      await this.git.checkout(['-B', branch, `origin/${branch}`])
+    }
+    await this.git.pull('origin', branch, { '--ff-only': null })
+    await writeFile(cacheSyncMarkerPath, new Date().toISOString(), 'utf-8')
+    debug(`Catalog cache refreshed at ${this.localPath}`)
+  }
+  async cloneSingleChart(refAndPath: string, finalDestinationPath: string) {
+    const remoteResult = await this.git.listRemote([this.chartRepoUrl])
+    const { branches, tags } = getBranchesAndTags(remoteResult)
+    const finalRevision = findRevision(branches, tags, refAndPath) as string
+    const finalFilePath = refAndPath.slice(finalRevision?.length + 1)
+
+    debug(`Cloning repository: ${this.chartRepoUrl} into ${this.localPath}`)
+    await this.git.clone(this.chartRepoUrl, this.localPath, ['--filter=blob:none', '--no-checkout'])
+
+    debug(`Initializing sparse checkout in cone mode at ${this.localPath}`)
+    await this.git.cwd(this.localPath)
+    await this.git.raw(['sparse-checkout', 'init', '--cone'])
+
+    debug(`Setting sparse checkout path to ${finalFilePath}`)
+    await this.git.raw(['sparse-checkout', 'set', finalFilePath])
+
+    debug(`Checking out the desired revision (branch or commit): ${finalRevision}`)
+    await this.git.checkout(finalRevision)
+
+    // Move files from "temporaryCloneDir/chartPath/*" to "finalDestinationPath/"
+    renameSync(path.join(this.localPath, finalFilePath), finalDestinationPath)
+  }
+  async addConfig() {
+    await this.git.addConfig('user.name', this.gitUser!)
+    await this.git.addConfig('user.email', this.gitEmail!)
+  }
+  async commitAndPush(chartName: string) {
+    await this.git.add('.')
+    await this.git.commit(`Add ${chartName} helm chart`)
+    await this.git.pull('origin', 'refs/heads/main', { '--rebase': null })
+    await this.git.push('origin', 'refs/heads/main')
+  }
+}
+
+/**
+ * Encodes Git credentials into the URL for internal Gitea repositories
+ */
+function encodeGitCredentials(url: string, clusterDomainSuffix?: string): string {
+  if (!isInteralGiteaURL(url, clusterDomainSuffix)) return url
+
+  const [protocol, bareUrl] = url.split('://')
+  const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
+  const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
+  return `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
+}
+
 /**
  * Fetches workload catalog from a Git repository
  *
@@ -300,6 +409,11 @@ export async function fetchWorkloadCatalog(
 
   // Ensure directory exists
   if (!existsSync(resolvedHelmChartsDir)) mkdirSync(resolvedHelmChartsDir, { recursive: true })
+
+  // Clone repository
+  const gitUrl = encodeGitCredentials(url, clusterDomainSuffix)
+  const gitRepo = new chartRepo(resolvedHelmChartsDir, gitUrl)
+  await gitRepo.ensureLatest(branch, forceRefresh)
 
   // Determine the charts directory path
   const chartsDir = chartsPath ? path.resolve(resolvedHelmChartsDir, chartsPath) : resolvedHelmChartsDir
