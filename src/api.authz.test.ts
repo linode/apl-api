@@ -781,13 +781,22 @@ describe('API authz tests', () => {
         .expect(200)
     })
 
-    test('team member can get internal repository urls', async () => {
+    test('team member can get own internal repository urls', async () => {
       jest.spyOn(otomiStack, 'getInternalRepoUrls').mockResolvedValue([])
+
       await agent
-        .get(`/v2/internalRepoUrls`)
-        .query({ teamId })
+        .get(`/v2/teams/${teamId}/internalRepoUrls`)
         .set('Authorization', `Bearer ${teamMemberToken}`)
         .expect(200)
+    })
+
+    test('team member cannot get other internal repository urls', async () => {
+      jest.spyOn(otomiStack, 'getInternalRepoUrls').mockResolvedValue([])
+
+      await agent
+        .get(`/v2/teams/${otherTeamId}/internalRepoUrls`)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(403)
     })
   })
 
