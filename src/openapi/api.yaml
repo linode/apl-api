@@ -2777,17 +2777,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/TestRepoConnect'
 
-  /v1/internalRepoUrls:
+  '/v2/teams/{teamId}/internalRepoUrls':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getInternalRepoUrls
-      x-eov-operation-handler: v1/internalRepoUrls
+      x-eov-operation-handler: v2/teams/{teamId}/internalRepoUrls
+      description: Get internal repository URLs for a team
       x-aclSchema: InternalRepoUrls
-      parameters:
-        - name: teamId
-          in: query
-          description: ID of the team
-          schema:
-            type: string
       responses:
         '400':
           $ref: '#/components/responses/BadRequest'
