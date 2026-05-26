@@ -187,7 +187,7 @@ export const OBJECT_STORAGE_UI_EXCLUSIONS = json<string[]>({
 })
 export const MIN_KNATIVE_K8S_VERSION = str({
   desc: 'Minimum Kubernetes version required for Knative support',
-  default: '1.33.0',
+  default: '1.31.0',
 })
 const { env } = process
 export function cleanEnv<T>(validators: { [K in keyof T]: ValidatorSpec<T[K]> }, options: CleanOptions<T> = {}) {
