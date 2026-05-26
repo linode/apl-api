@@ -1,4 +1,4 @@
-import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
@@ -163,14 +163,7 @@ import {
   userSecretDataToUser,
 } from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
-import {
-  fetchChartYaml,
-  fetchWorkloadCatalog,
-  isInteralGiteaURL,
-  NewHelmChartValues,
-  sparseCloneChart,
-  validateGitUrl,
-} from './utils/workloadUtils'
+import { fetchWorkloadCatalog, isInteralGiteaURL, validateGitUrl } from './utils/workloadUtils'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -1949,41 +1942,6 @@ export default class OtomiStack {
     } catch (error) {
       debug(`Error fetching workload chart '${chartName}': ${error.message}`)
       return toPlatformObject('AplCatalogChart', chartName, []) as unknown as AplCatalogChartResponse
-    }
-  }
-
-  async getHelmChartContent(url: string): Promise<any> {
-    return await fetchChartYaml(url)
-  }
-
-  async createWorkloadCatalog(body: NewHelmChartValues): Promise<boolean> {
-    const { gitRepositoryUrl, chartTargetDirName, chartIcon, allowTeams } = body
-
-    const uuid = uuidv4()
-    const localHelmChartsDir = `/tmp/otomi/charts/${uuid}`
-    const helmChartCatalogUrl = env.HELM_CHART_CATALOG
-    const { user, email } = this.git
-    const { cluster } = await this.getSettings(['cluster'])
-
-    try {
-      await sparseCloneChart(
-        gitRepositoryUrl,
-        localHelmChartsDir,
-        helmChartCatalogUrl,
-        user,
-        email,
-        chartTargetDirName,
-        chartIcon,
-        allowTeams,
-        cluster?.domainSuffix,
-      )
-      return true
-    } catch (error) {
-      debug('Error adding new Helm chart to catalog')
-      return false
-    } finally {
-      // Clean up: if the temporary directory exists, remove it.
-      if (existsSync(localHelmChartsDir)) rmSync(localHelmChartsDir, { recursive: true, force: true })
     }
   }
 
