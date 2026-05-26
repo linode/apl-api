@@ -2300,58 +2300,6 @@ paths:
               schema:
                 type: object
 
-  '/v1/helmChartContent':
-    get:
-      operationId: getHelmChartContent
-      x-eov-operation-handler: v1/helmChartContent
-      x-aclSchema: Workload
-      parameters:
-        - name: url
-          in: query
-          description: URL of the helm chart
-          schema:
-            type: string
-      responses:
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '200':
-          description: Successfully obtained helm chart content
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  values:
-                    type: object
-                  error:
-                    type: string
-  '/v1/createWorkloadCatalog':
-    post:
-      operationId: createWorkloadCatalog
-      x-eov-operation-handler: v1/createWorkloadCatalog
-      x-aclSchema: Workload
-      description: Create workload catalog from a repository
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-        description: Workload catalog object that contains updated values
-        required: true
-      responses:
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '200':
-          description: Successfully updated a team workload catalog
-          content:
-            application/json:
-              schema:
-                type: object
-
   '/v1/teams/{teamId}/workloads':
     parameters:
       - $ref: '#/components/parameters/teamParams'
