@@ -194,7 +194,7 @@ export const OBJECT_STORAGE_UI_EXCLUSIONS = json<string[]>({
 })
 export const MIN_KNATIVE_K8S_VERSION = str({
   desc: 'Minimum Kubernetes version required for Knative support',
-  default: '1.33.0',
+  default: '1.31.0',
 })
 export const API_NAMESPACE = str({
   desc: 'The Kubernetes namespace where apl-api status resources are stored',
