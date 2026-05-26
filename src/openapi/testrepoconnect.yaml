@@ -1,8 +1,6 @@
 TestRepoConnect:
   x-acl:
     platformAdmin: [read-any]
-    teamAdmin: [read-any]
-    teamMember: [read-any]
   properties:
     url:
       $ref: 'definitions.yaml#/url'
