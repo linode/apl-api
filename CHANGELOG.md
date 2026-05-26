@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.18.3](https://github.com/redkubes/otomi-api/compare/v4.18.2...v4.18.3) (2026-05-26)
+
+
+### Others
+
+* lower miminum knative k8s version ([#1000](https://github.com/redkubes/otomi-api/issues/1000)) ([1613ba5](https://github.com/redkubes/otomi-api/commit/1613ba508f3cfc0f1f5b111eb1646f9f10880233))
+
 ### [4.18.2](https://github.com/redkubes/otomi-api/compare/v4.18.1...v4.18.2) (2026-04-30)
 
 
