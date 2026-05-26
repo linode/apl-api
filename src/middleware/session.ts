@@ -9,8 +9,8 @@ import { OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack, rootPath } from 'src/otomi-stack'
 import { API_NAMESPACE, cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validators'
 import { v4 as uuidv4 } from 'uuid'
-import { getSanitizedErrorMessage } from '../utils'
 import { setApiStatusInConfigMap } from '../k8s-operations'
+import { getSanitizedErrorMessage } from '../utils'
 
 const debug = Debug('otomi:session')
 const env = cleanEnv({
@@ -121,7 +121,7 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
 
     if (['post', 'put', 'delete'].includes(req.method.toLowerCase())) {
       // in the workloadCatalog endpoint(s), don't need to create a session
-      if (req.path === '/v1/workloadCatalog' || req.path === '/v1/createWorkloadCatalog') return next()
+      if (req.path === '/v1/workloadCatalog') return next()
 
       // Block all write operations when the API is locked (git migration completed)
       if (readOnlyStack?.locked) throw new ApiLockedError()
