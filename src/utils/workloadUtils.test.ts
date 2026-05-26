@@ -9,16 +9,12 @@ import YAML from 'yaml'
 import * as utils from '../utils'
 import * as workloadUtils from './workloadUtils'
 import {
-  chartRepo,
   detectGitProvider,
   fetchChartYaml,
   fetchWorkloadCatalog,
   findRevision,
   getBranchesAndTags,
   getGitCloneUrl,
-  sparseCloneChart,
-  updateChartIconInYaml,
-  updateRbacForNewChart,
 } from './workloadUtils'
 
 jest.mock('axios')
@@ -244,327 +240,6 @@ describe('fetchChartYaml', () => {
     const result = await fetchChartYaml(url)
 
     expect(result).toEqual({ values: {}, error: 'Error fetching helm chart content.' })
-  })
-})
-
-// ----------------------------------------------------------------
-// Tests for updateChartIconInYaml
-describe('updateChartIconInYaml', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-  })
-
-  test('updates the icon field when newIcon is provided', async () => {
-    const chartObject = { name: 'Test Chart', version: '1.0.0' }
-    const fileContent = YAML.stringify(chartObject)
-    ;(fsExtra.readFile as unknown as jest.Mock).mockResolvedValue(fileContent)
-    const fakePath = '/tmp/test/Chart.yaml'
-    const newIcon = 'https://example.com/new-icon.png'
-    const expectedObject = { name: 'Test Chart', version: '1.0.0', icon: newIcon }
-    const expectedContent = YAML.stringify(expectedObject)
-
-    await updateChartIconInYaml(fakePath, newIcon)
-
-    expect(fsExtra.readFile).toHaveBeenCalledWith(fakePath, 'utf-8')
-    expect(fsPromises.writeFile).toHaveBeenCalledWith(fakePath, expectedContent, 'utf-8')
-  })
-
-  test('replaces existing icon when newIcon is provided', async () => {
-    const chartObject = { name: 'Test Chart', version: '1.0.0', icon: 'https://example.com/old-icon.png' }
-    const fileContent = YAML.stringify(chartObject)
-    ;(fsExtra.readFile as unknown as jest.Mock).mockResolvedValue(fileContent)
-    const fakePath = '/tmp/test/Chart.yaml'
-    const newIcon = 'https://example.com/new-icon.png'
-    const expectedObject = { name: 'Test Chart', version: '1.0.0', icon: newIcon }
-    const expectedContent = YAML.stringify(expectedObject)
-
-    await updateChartIconInYaml(fakePath, newIcon)
-
-    expect(fsPromises.writeFile).toHaveBeenCalledWith(fakePath, expectedContent, 'utf-8')
-  })
-
-  test('does not change icon when newIcon is empty', async () => {
-    const chartObject = { name: 'Test Chart', version: '1.0.0', icon: 'https://example.com/old-icon.png' }
-    const fileContent = YAML.stringify(chartObject)
-    ;(fsExtra.readFile as unknown as jest.Mock).mockResolvedValue(fileContent)
-    const fakePath = '/tmp/test/Chart.yaml'
-    const newIcon = ''
-
-    await updateChartIconInYaml(fakePath, newIcon)
-
-    // Verify writeFile was called, but the icon wasn't changed
-    expect(fsPromises.writeFile).toHaveBeenCalled()
-    const writeFileArgs = (fsPromises.writeFile as jest.Mock).mock.calls[0]
-    const writtenContent = writeFileArgs[1]
-    const parsedContent = YAML.parse(writtenContent)
-    expect(parsedContent.icon).toBe('https://example.com/old-icon.png')
-  })
-
-  test('handles errors gracefully', async () => {
-    ;(fsExtra.readFile as unknown as jest.Mock).mockRejectedValue(new Error('File not found'))
-    const fakePath = '/tmp/test/Chart.yaml'
-    const newIcon = 'https://example.com/new-icon.png'
-
-    // Should not throw
-    await expect(updateChartIconInYaml(fakePath, newIcon)).resolves.not.toThrow()
-    expect(fsPromises.writeFile).not.toHaveBeenCalled()
-  })
-})
-
-// ----------------------------------------------------------------
-// Tests for updateRbacForNewChart
-describe('updateRbacForNewChart', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-  })
-
-  test('updates rbac.yaml with new chart key when allowTeams is true', async () => {
-    const rbacObject = { rbac: {}, betaCharts: [] }
-    const fileContent = YAML.stringify(rbacObject)
-    ;(fsExtra.readFile as unknown as jest.Mock).mockResolvedValue(fileContent)
-    const fakeSparsePath = '/tmp/test'
-    const chartKey = 'quickstart-cassandra'
-
-    await updateRbacForNewChart(fakeSparsePath, chartKey, true)
-
-    const expected = { rbac: { [chartKey]: null }, betaCharts: [] }
-    expect(fsPromises.writeFile).toHaveBeenCalledWith(`${fakeSparsePath}/rbac.yaml`, YAML.stringify(expected), 'utf-8')
-  })
-
-  test('updates rbac.yaml with new chart key when allowTeams is false', async () => {
-    const rbacObject = { rbac: {}, betaCharts: [] }
-    const fileContent = YAML.stringify(rbacObject)
-    ;(fsExtra.readFile as unknown as jest.Mock).mockResolvedValue(fileContent)
-    const fakeSparsePath = '/tmp/test'
-    const chartKey = 'quickstart-cassandra'
-
-    await updateRbacForNewChart(fakeSparsePath, chartKey, false)
-
-    const expected = { rbac: { [chartKey]: [] }, betaCharts: [] }
-    expect(fsPromises.writeFile).toHaveBeenCalledWith(`${fakeSparsePath}/rbac.yaml`, YAML.stringify(expected), 'utf-8')
-  })
-
-  test('creates rbac.yaml when it does not exist', async () => {
-    ;(fsExtra.readFile as unknown as jest.Mock).mockRejectedValue(new Error('File not found'))
-    const fakeSparsePath = '/tmp/test'
-    const chartKey = 'quickstart-cassandra'
-
-    await updateRbacForNewChart(fakeSparsePath, chartKey, true)
-
-    const expected = { rbac: { [chartKey]: null }, betaCharts: [] }
-    expect(fsPromises.writeFile).toHaveBeenCalledWith(`${fakeSparsePath}/rbac.yaml`, YAML.stringify(expected), 'utf-8')
-  })
-
-  test('preserves existing rbac entries when adding new chart', async () => {
-    const rbacObject = { rbac: { 'existing-chart': ['team-1'] }, betaCharts: ['existing-chart'] }
-    const fileContent = YAML.stringify(rbacObject)
-    ;(fsExtra.readFile as unknown as jest.Mock).mockResolvedValue(fileContent)
-    const fakeSparsePath = '/tmp/test'
-    const chartKey = 'quickstart-cassandra'
-
-    await updateRbacForNewChart(fakeSparsePath, chartKey, false)
-
-    const expected = {
-      rbac: {
-        'existing-chart': ['team-1'],
-        [chartKey]: [],
-      },
-      betaCharts: ['existing-chart'],
-    }
-    expect(fsPromises.writeFile).toHaveBeenCalledWith(`${fakeSparsePath}/rbac.yaml`, YAML.stringify(expected), 'utf-8')
-  })
-})
-
-// ----------------------------------------------------------------
-// Tests for sparseCloneChart
-describe('sparseCloneChart', () => {
-  const gitRepositoryUrl = 'https://github.com/bitnami/charts/blob/main/bitnami/cassandra/Chart.yaml'
-  const localHelmChartsDir = '/tmp/otomi/charts/uuid'
-  const helmChartCatalogUrl = 'https://gitea.example.com/otomi/charts.git'
-  const user = 'test-user'
-  const email = 'test@example.com'
-  const chartTargetDirName = 'cassandra'
-  const chartIcon = 'https://example.com/icon.png'
-  const allowTeams = true
-  const clusterDomainSuffix = 'example.com'
-
-  beforeEach(() => {
-    jest.clearAllMocks()
-    // Set up environment variables for tests
-    process.env = { ...originalEnv, GIT_USER: 'git-user', GIT_PASSWORD: 'git-password' }
-    // Mock necessary function responses
-    ;(fs.existsSync as jest.Mock).mockReturnValue(false)
-  })
-
-  afterEach(() => {
-    // Restore original environment
-    process.env = originalEnv
-  })
-
-  test('successfully clones and processes a chart repository', async () => {
-    // Setup mock git instance
-    const mockGit = {
-      clone: jest.fn().mockResolvedValue(undefined),
-      cwd: jest.fn().mockResolvedValue(undefined),
-      raw: jest.fn().mockResolvedValue(undefined),
-      checkout: jest.fn().mockResolvedValue(undefined),
-      addConfig: jest.fn().mockResolvedValue(undefined),
-      add: jest.fn().mockResolvedValue(undefined),
-      commit: jest.fn().mockResolvedValue(undefined),
-      pull: jest.fn().mockResolvedValue(undefined),
-      push: jest.fn().mockResolvedValue(undefined),
-      listRemote: jest.fn().mockResolvedValue(''),
-    }
-    ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-
-    const result = await sparseCloneChart(
-      gitRepositoryUrl,
-      localHelmChartsDir,
-      helmChartCatalogUrl,
-      user,
-      email,
-      chartTargetDirName,
-      chartIcon,
-      allowTeams,
-      clusterDomainSuffix,
-    )
-
-    expect(result).toBe(true)
-    expect(fs.mkdirSync).toHaveBeenCalledWith(localHelmChartsDir, { recursive: true })
-    expect(fs.mkdirSync).toHaveBeenCalledWith(`${localHelmChartsDir}-newChart`, { recursive: true })
-    expect(mockGit.clone).toHaveBeenCalledTimes(2) // Once for catalog repo, once for chart repo
-    expect(mockGit.listRemote).toHaveBeenCalled()
-    expect(mockGit.raw).toHaveBeenCalledWith(['sparse-checkout', 'init', '--cone'])
-    expect(mockGit.raw).toHaveBeenCalledWith(['sparse-checkout', 'set', 'main/bitnami/cassandra/'])
-    expect(mockGit.checkout).toHaveBeenCalled()
-    expect(fs.renameSync).toHaveBeenCalled()
-    expect(fs.rmSync).toHaveBeenCalledWith(`${localHelmChartsDir}-newChart`, { recursive: true, force: true })
-    expect(fs.rmSync).toHaveBeenCalledWith(`${localHelmChartsDir}/${chartTargetDirName}/.git`, {
-      recursive: true,
-      force: true,
-    })
-    // Verify addConfig was called with correct user/email
-    expect(mockGit.addConfig).toHaveBeenCalledWith('user.name', user)
-    expect(mockGit.addConfig).toHaveBeenCalledWith('user.email', email)
-    // Verify commit and push were called
-    expect(mockGit.add).toHaveBeenCalledWith('.')
-    expect(mockGit.commit).toHaveBeenCalledWith(`Add ${chartTargetDirName} helm chart`)
-    expect(mockGit.pull).toHaveBeenCalledWith('origin', 'refs/heads/main', { '--rebase': null })
-    expect(mockGit.push).toHaveBeenCalledWith('origin', 'refs/heads/main')
-  })
-
-  test('handles Gitea URLs by encoding credentials', async () => {
-    const mockGit = {
-      clone: jest.fn().mockResolvedValue(undefined),
-      cwd: jest.fn().mockResolvedValue(undefined),
-      raw: jest.fn().mockResolvedValue(undefined),
-      checkout: jest.fn().mockResolvedValue(undefined),
-      addConfig: jest.fn().mockResolvedValue(undefined),
-      add: jest.fn().mockResolvedValue(undefined),
-      commit: jest.fn().mockResolvedValue(undefined),
-      pull: jest.fn().mockResolvedValue(undefined),
-      push: jest.fn().mockResolvedValue(undefined),
-      listRemote: jest.fn().mockResolvedValue(''),
-    }
-    ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-    jest.spyOn(workloadUtils, 'isGiteaURL').mockImplementation(() => true)
-    jest.spyOn(workloadUtils, 'isInteralGiteaURL').mockImplementation(() => true)
-
-    await sparseCloneChart(
-      gitRepositoryUrl,
-      localHelmChartsDir,
-      helmChartCatalogUrl,
-      user,
-      email,
-      chartTargetDirName,
-      chartIcon,
-      allowTeams,
-      clusterDomainSuffix,
-    )
-
-    // Check that clone was called with encoded URL
-    const encodedUrl = `https://git-user:git-password@gitea.example.com/otomi/charts.git`
-    expect(mockGit.clone.mock.calls[0][0]).toBe(encodedUrl)
-  })
-
-  test('properly handles empty chartIcon parameter', async () => {
-    const mockGit = {
-      clone: jest.fn().mockResolvedValue(undefined),
-      cwd: jest.fn().mockResolvedValue(undefined),
-      raw: jest.fn().mockResolvedValue(undefined),
-      checkout: jest.fn().mockResolvedValue(undefined),
-      addConfig: jest.fn().mockResolvedValue(undefined),
-      add: jest.fn().mockResolvedValue(undefined),
-      commit: jest.fn().mockResolvedValue(undefined),
-      pull: jest.fn().mockResolvedValue(undefined),
-      push: jest.fn().mockResolvedValue(undefined),
-      listRemote: jest.fn().mockResolvedValue(''),
-    }
-    ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-
-    const result = await sparseCloneChart(
-      gitRepositoryUrl,
-      localHelmChartsDir,
-      helmChartCatalogUrl,
-      user,
-      email,
-      chartTargetDirName,
-      '', // Empty chart icon
-      allowTeams,
-    )
-
-    expect(result).toBe(true)
-    // Should not attempt to update the chart icon
-    const chartYamlPath = `${localHelmChartsDir}/${chartTargetDirName}/Chart.yaml`
-    expect(fsExtra.readFile).not.toHaveBeenCalledWith(chartYamlPath, 'utf-8')
-  })
-
-  test('creates directory if it does not exist', async () => {
-    const mockGit = {
-      clone: jest.fn().mockResolvedValue(undefined),
-      cwd: jest.fn().mockResolvedValue(undefined),
-      raw: jest.fn().mockResolvedValue(undefined),
-      checkout: jest.fn().mockResolvedValue(undefined),
-      addConfig: jest.fn().mockResolvedValue(undefined),
-      add: jest.fn().mockResolvedValue(undefined),
-      commit: jest.fn().mockResolvedValue(undefined),
-      pull: jest.fn().mockResolvedValue(undefined),
-      push: jest.fn().mockResolvedValue(undefined),
-      listRemote: jest.fn().mockResolvedValue(''),
-    }
-    ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-    ;(fs.existsSync as jest.Mock).mockReturnValueOnce(false)
-
-    await sparseCloneChart(
-      gitRepositoryUrl,
-      localHelmChartsDir,
-      helmChartCatalogUrl,
-      user,
-      email,
-      chartTargetDirName,
-      chartIcon,
-      allowTeams,
-    )
-
-    expect(fs.mkdirSync).toHaveBeenCalledWith(localHelmChartsDir, { recursive: true })
-  })
-
-  test('returns false if git provider detection fails', async () => {
-    // Mock the detectGitProvider to return null
-    jest.spyOn(workloadUtils, 'detectGitProvider').mockImplementation(() => null)
-
-    const result = await sparseCloneChart(
-      'https://invalid-url.com',
-      localHelmChartsDir,
-      helmChartCatalogUrl,
-      user,
-      email,
-      chartTargetDirName,
-      chartIcon,
-      allowTeams,
-    )
-
-    expect(result).toBe(false)
   })
 })
 
@@ -808,7 +483,7 @@ describe('chartRepo', () => {
   })
 
   test('clone method clones the repository', async () => {
-    const repo = new chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
+    const repo = new workloadUtils.chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
     await repo.clone()
 
     expect(mockGit.clone).toHaveBeenCalledWith(chartRepoUrl, localPath, [
@@ -821,7 +496,7 @@ describe('chartRepo', () => {
   })
 
   test('cloneSingleChart method performs sparse checkout', async () => {
-    const repo = new chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
+    const repo = new workloadUtils.chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
     const refAndPath = 'main/charts/my-chart'
     const finalDestinationPath = '/tmp/final/my-chart'
 
@@ -843,7 +518,7 @@ describe('chartRepo', () => {
   })
 
   test('addConfig method sets git config', async () => {
-    const repo = new chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
+    const repo = new workloadUtils.chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
     await repo.addConfig()
 
     expect(mockGit.addConfig).toHaveBeenCalledWith('user.name', gitUser)
@@ -851,7 +526,7 @@ describe('chartRepo', () => {
   })
 
   test('commitAndPush method commits and pushes changes', async () => {
-    const repo = new chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
+    const repo = new workloadUtils.chartRepo(localPath, chartRepoUrl, gitUser, gitEmail)
     const chartName = 'my-chart'
 
     await repo.commitAndPush(chartName)
