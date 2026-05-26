@@ -772,22 +772,46 @@ describe('API authz tests', () => {
         .expect('Content-Type', /json/)
     })
 
-    test('team member can test code repository url', async () => {
-      jest.spyOn(otomiStack, 'getTestRepoConnect').mockResolvedValue({})
+    test('team member can test own code repository url', async () => {
+      jest.spyOn(otomiStack, 'getTestRepoConnect').mockResolvedValue({ status: 'success' })
+
       await agent
-        .get(`/v1/testRepoConnect`)
-        .query({ url: data.repositoryUrl })
+        .get(`/v2/teams/${teamId}/coderepos/testRepoConnect`)
+        .query({
+          url: data.repositoryUrl,
+        })
         .set('Authorization', `Bearer ${teamMemberToken}`)
         .expect(200)
     })
 
-    test('team member can get internal repository urls', async () => {
-      jest.spyOn(otomiStack, 'getInternalRepoUrls').mockResolvedValue([])
+    test('team member cannot test other team code repository url', async () => {
+      jest.spyOn(otomiStack, 'getTestRepoConnect').mockResolvedValue({ status: 'success' })
+
       await agent
-        .get(`/v1/internalRepoUrls`)
-        .query({ teamId })
+        .get(`/v2/teams/${otherTeamId}/coderepos/testRepoConnect`)
+        .query({
+          url: data.repositoryUrl,
+        })
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(403)
+    })
+
+    test('team member can get own internal repository urls', async () => {
+      jest.spyOn(otomiStack, 'getInternalRepoUrls').mockResolvedValue([])
+
+      await agent
+        .get(`/v2/teams/${teamId}/internalRepoUrls`)
         .set('Authorization', `Bearer ${teamMemberToken}`)
         .expect(200)
+    })
+
+    test('team member cannot get other internal repository urls', async () => {
+      jest.spyOn(otomiStack, 'getInternalRepoUrls').mockResolvedValue([])
+
+      await agent
+        .get(`/v2/teams/${otherTeamId}/internalRepoUrls`)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(403)
     })
   })
 
