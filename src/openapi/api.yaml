@@ -2748,23 +2748,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/SettingsInfo'
 
-  /v1/repoBranches:
+  /v2/teams/{teamId}/coderepos/{codeRepositoryName}/branches:
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/codeRepoParams'
     get:
       operationId: getRepoBranches
-      x-eov-operation-handler: v1/repoBranches
+      x-eov-operation-handler: v2/teams/{teamId}/coderepos/{codeRepositoryName}/branches
       description: Get repo branches from the git providers.
-      x-aclSchema: RepoBranches
-      parameters:
-        - name: codeRepoName
-          in: query
-          description: Name of the code repository
-          schema:
-            type: string
-        - name: teamId
-          in: query
-          description: Id of the team
-          schema:
-            type: string
+      x-aclSchema: CodeRepo
       responses:
         '200':
           description: The request is successful.
@@ -2774,6 +2766,12 @@ paths:
                 type: array
                 items:
                   type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /v1/testRepoConnect:
     get:

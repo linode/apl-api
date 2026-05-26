@@ -1,4 +1,4 @@
-import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
@@ -1472,13 +1472,16 @@ export default class OtomiStack {
 
   async getRepoBranches(codeRepoName: string, teamId: string): Promise<string[]> {
     if (!codeRepoName) return ['HEAD']
-    const coderepo = this.getCodeRepo(teamId, codeRepoName)
-    const { repositoryUrl, secret: secretName } = coderepo
+
+    const coderepo = this.getAplCodeRepo(teamId, codeRepoName)
+    const { repositoryUrl, secret: secretName } = coderepo.spec
+
     const { cluster } = await this.getSettings(['cluster'])
+
     try {
-      let sshPrivateKey = '',
-        username = '',
-        accessToken = ''
+      let sshPrivateKey = ''
+      let username = ''
+      let accessToken = ''
 
       if (secretName) {
         const secret = await getSecretValues(secretName, `team-${teamId}`)
@@ -1496,7 +1499,9 @@ export default class OtomiStack {
 
       if (!repoUrl) return ['HEAD']
 
-      if (isPrivate) return await getPrivateRepoBranches(repoUrl, sshPrivateKey, username, accessToken)
+      if (isPrivate) {
+        return await getPrivateRepoBranches(repoUrl, sshPrivateKey, username, accessToken)
+      }
 
       return await getPublicRepoBranches(repoUrl)
     } catch (error) {
