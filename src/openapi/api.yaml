@@ -2665,23 +2665,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/SettingsInfo'
 
-  /v1/repoBranches:
+  /v2/teams/{teamId}/coderepos/{codeRepositoryName}/branches:
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+      - $ref: '#/components/parameters/codeRepoParams'
     get:
       operationId: getRepoBranches
-      x-eov-operation-handler: v1/repoBranches
+      x-eov-operation-handler: v2/teams/{teamId}/coderepos/{codeRepositoryName}/branches
       description: Get repo branches from the git providers.
-      x-aclSchema: RepoBranches
-      parameters:
-        - name: codeRepoName
-          in: query
-          description: Name of the code repository
-          schema:
-            type: string
-        - name: teamId
-          in: query
-          description: Id of the team
-          schema:
-            type: string
+      x-aclSchema: CodeRepo
       responses:
         '200':
           description: The request is successful.
@@ -2691,27 +2683,57 @@ paths:
                 type: array
                 items:
                   type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
-  /v1/testRepoConnect:
+  /v2/testRepoConnectPlatform:
     get:
-      operationId: testRepoConnect
-      x-eov-operation-handler: v1/testRepoConnect
-      description: Get test repo connect information from the git providers.
+      operationId: getTestRepoConnectPlatform
+      x-eov-operation-handler: v2/testRepoConnectPlatform
+      description: Test repository connection as platform admin
       x-aclSchema: TestRepoConnect
       parameters:
         - name: url
           in: query
-          description: URL of the repository
-          schema:
-            type: string
-        - name: teamId
-          in: query
-          description: Id of the team
+          required: true
           schema:
             type: string
         - name: secret
           in: query
-          description: Name of the secret for private repositories
+          schema:
+            type: string
+      responses:
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '200':
+          description: The request is successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestRepoConnect'
+
+  /v2/teams/{teamId}/coderepos/testRepoConnect:
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTestRepoConnect
+      x-eov-operation-handler: v2/teams/{teamId}/coderepos/testRepoConnect
+      description: Test repository connection
+      x-aclSchema: CodeRepo
+      parameters:
+        - name: url
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: secretName
+          in: query
           schema:
             type: string
       responses:
@@ -2722,17 +2744,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/TestRepoConnect'
 
-  /v1/internalRepoUrls:
+  '/v2/teams/{teamId}/internalRepoUrls':
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
     get:
       operationId: getInternalRepoUrls
-      x-eov-operation-handler: v1/internalRepoUrls
+      x-eov-operation-handler: v2/teams/{teamId}/internalRepoUrls
+      description: Get internal repository URLs for a team
       x-aclSchema: InternalRepoUrls
-      parameters:
-        - name: teamId
-          in: query
-          description: ID of the team
-          schema:
-            type: string
       responses:
         '400':
           $ref: '#/components/responses/BadRequest'
