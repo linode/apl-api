@@ -2723,26 +2723,50 @@ paths:
                 items:
                   type: string
 
-  /v1/testRepoConnect:
+  /v2/testRepoConnectPlatform:
     get:
-      operationId: testRepoConnect
-      x-eov-operation-handler: v1/testRepoConnect
-      description: Get test repo connect information from the git providers.
+      operationId: getTestRepoConnectPlatform
+      x-eov-operation-handler: v2/testRepoConnectPlatform
+      description: Test repository connection as platform admin
       x-aclSchema: TestRepoConnect
       parameters:
         - name: url
           in: query
-          description: URL of the repository
-          schema:
-            type: string
-        - name: teamId
-          in: query
-          description: Id of the team
+          required: true
           schema:
             type: string
         - name: secret
           in: query
-          description: Name of the secret for private repositories
+          schema:
+            type: string
+      responses:
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '200':
+          description: The request is successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestRepoConnect'
+
+  /v2/teams/{teamId}/coderepos/testRepoConnect:
+    parameters:
+      - $ref: '#/components/parameters/teamParams'
+    get:
+      operationId: getTestRepoConnect
+      x-eov-operation-handler: v2/teams/{teamId}/coderepos/testRepoConnect
+      description: Test repository connection
+      x-aclSchema: CodeRepo
+      parameters:
+        - name: url
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: secretName
+          in: query
           schema:
             type: string
       responses:
