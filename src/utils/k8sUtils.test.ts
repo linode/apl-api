@@ -23,15 +23,15 @@ describe('isK8sVersionAtLeast', () => {
 })
 
 describe('isKnativeSupported', () => {
-  it('returns true for Kubernetes 1.33', () => {
-    expect(isKnativeSupported('v1.33.0')).toBe(true)
+  it('returns true for Kubernetes 1.31', () => {
+    expect(isKnativeSupported('v1.31.0')).toBe(true)
   })
 
-  it('returns true for Kubernetes above 1.33', () => {
+  it('returns true for Kubernetes above 1.31', () => {
     expect(isKnativeSupported('v1.35.3')).toBe(true)
   })
 
-  it('returns false for Kubernetes below 1.33', () => {
-    expect(isKnativeSupported('v1.32.0')).toBe(false)
+  it('returns false for Kubernetes below 1.31', () => {
+    expect(isKnativeSupported('v1.30.0')).toBe(false)
   })
 })
