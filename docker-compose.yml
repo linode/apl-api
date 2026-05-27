@@ -18,7 +18,6 @@ services:
       - /tmp:/tmp:rw
     working_dir: /app
     environment:
-      TOOLS_HOST: tools
       HOME: /app
     env_file:
       - .env
