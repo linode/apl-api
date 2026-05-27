@@ -1,4 +1,4 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
@@ -2931,19 +2931,7 @@ export default class OtomiStack {
       name: service.metadata.name,
       teamId: service.metadata.labels['apl.io/teamId'],
     }
-    const publicIngressFields = [
-      'certName',
-      'domain',
-      'forwardPath',
-      'hasCert',
-      'paths',
-      'type',
-      'ownHost',
-      'ingressClassName',
-      'headers',
-      'useCname',
-      'cname',
-    ]
+    const publicIngressFields = ['paths', 'type', 'ingressClassName', 'headers', 'useCname', 'cname']
     const inService = omit(serviceSpec, publicIngressFields)
 
     const { cluster, dns } = await this.getSettings(['cluster', 'dns'])
@@ -2973,23 +2961,10 @@ export default class OtomiStack {
     const svcCommon = omit(svc, ['name', 'ingress', 'path'])
     if (svc.ingress?.type === 'public') {
       const { ingress } = svc
-      const domain = ingress.subdomain ? `${ingress.subdomain}.${ingress.domain}` : ingress.domain
       return {
         name,
         ...svcCommon,
-        ...pick(ingress, [
-          'hasCert',
-          'certName',
-          'paths',
-          'forwardPath',
-          'tlsPass',
-          'ingressClassName',
-          'headers',
-          'useCname',
-          'cname',
-        ]),
-        ownHost: ingress.useDefaultHost,
-        domain: ingress.useDefaultHost ? undefined : domain,
+        ...pick(ingress, ['paths', 'tlsPass', 'ingressClassName', 'headers', 'useCname', 'cname']),
       }
     } else {
       return {
