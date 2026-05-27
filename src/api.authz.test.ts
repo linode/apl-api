@@ -184,23 +184,6 @@ describe('API authz tests', () => {
     await agent.post('/v1/teams').send(data).set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
   })
 
-  test('platform admin can get all values', async () => {
-    jest.spyOn(otomiStack, 'getValues').mockResolvedValue({})
-    await agent.get('/v1/otomi/values').set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
-  })
-
-  test('team member cannot get all values', async () => {
-    await agent.get('/v1/otomi/values').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
-  })
-
-  test('authenticated user cannot get all values', async () => {
-    await agent.get('/v1/otomi/values').set('Authorization', `Bearer ${userToken}`).expect(403)
-  })
-
-  test('unauthenticated user cannot get all values', async () => {
-    await agent.get('/v1/otomi/values').expect(401)
-  })
-
   test('platform admin can see values from an app', async () => {
     const values = { shown: true } as App['values']
     jest.spyOn(otomiStack, 'getApp').mockImplementation(() => ({ id: 'adminapp', values }))

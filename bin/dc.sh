@@ -12,9 +12,7 @@ sub_help () {
     echo
     echo "Commands:"
     echo "   help               This help message"
-    echo "   up                 Start standalone docker-compose version of web without dependent services $info"
-    echo "   up-all             Start docker-compose version of web with dependent services $info"
-    echo "   up-deps            Start docker-compose version of only dependent services $info"
+    echo "   up                 Start docker-compose version of web $info"
     echo "   down               Stop and clean docker-compose containers"
 }
 
@@ -23,18 +21,8 @@ sub_up () {
     docker-compose -f docker-compose.yml up ${1}
 }
 
-sub_up-all () {
-    local files='-f docker-compose.yml -f docker-compose-deps.yml'
-
-    docker-compose $files up ${1}
-}
-
-sub_up-deps () {
-    docker-compose -f docker-compose-deps.yml up ${1}
-}
-
 sub_down () {
-    docker-compose -f docker-compose.yml -f docker-compose-deps.yml down --remove-orphans -v
+    docker-compose -f docker-compose.yml down --remove-orphans -v
 }
 
 case $command in
