@@ -1,4 +1,3 @@
-import axios, { AxiosResponse } from 'axios'
 import Debug from 'debug'
 import diff from 'deep-diff'
 import { rmSync } from 'fs'
@@ -16,10 +15,8 @@ import {
   GIT_PUSH_RETRIES,
   GIT_REPO_URL,
   GIT_USER,
-  TOOLS_HOST,
 } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
-import { BASEURL } from './constants'
 import { GitPullError } from './error'
 import { Core } from './otomi-models'
 import { getSanitizedErrorMessage, removeBlankAttributes, sanitizeGitPassword } from './utils'
@@ -33,11 +30,7 @@ const env = cleanEnv({
   GIT_REPO_URL,
   GIT_USER,
   GIT_PUSH_RETRIES,
-  TOOLS_HOST,
 })
-
-const baseUrl = BASEURL
-const valuesUrl = `${baseUrl}/otomi/values`
 
 const getProtocol = (url): string => (url && url.includes('://') ? url.split('://')[0] : 'http')
 
@@ -90,12 +83,6 @@ export class Git {
 
   getProtocol() {
     return getProtocol(this.url)
-  }
-
-  async requestValues(params): Promise<AxiosResponse> {
-    debug(`Tools: requesting "otomi/values" ${this.path}`)
-    const res = await axios.get(valuesUrl, { params: { envDir: this.path, ...params } })
-    return res
   }
 
   async addConfig(): Promise<void> {
