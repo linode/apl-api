@@ -44,39 +44,48 @@ export async function getGiteaRepoUrls(adminUsername, adminPassword, orgName, do
   }
 }
 
+const SAFE_HOST_REGEX = /^[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
+const SAFE_REPO_PATH_REGEX = /^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)+$/
+
 export function normalizeRepoUrl(inputUrl: string, isPrivate: boolean, isSSH: boolean): string | null {
   try {
-    let parsedUrl: URL
-    let owner: string
-    let repoName: string
+    const cleanUrl = inputUrl.trim().replace(/\/$/, '')
 
-    const cleanUrl = inputUrl
-      .trim()
-      .replace(/\.git$/, '')
-      .replace(/\/$/, '')
-    const initMatch = cleanUrl.match(
-      /^(https?:\/\/(github\.com|gitlab\.com)\/([^/]+)\/([^/]+)|git@(github\.com|gitlab\.com):([^/]+)\/([^/]+))/,
-    )
+    let hostname: string
+    let repoPath: string
 
-    if (!initMatch) throw new Error('Invalid repository URL.')
+    if (cleanUrl.startsWith('git@')) {
+      const match = cleanUrl
+        .replace(/\.git$/, '')
+        .match(/^git@([A-Za-z0-9.-]+\.[A-Za-z]{2,}):([A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)+)$/)
 
-    if (inputUrl.startsWith('git@')) {
-      const match = inputUrl.match(/^git@([^:]+):([^/]+)\/(.+?)(\.git)?$/)
-      if (!match) throw new Error('Invalid SSH repository URL.')
-      const [, hostname, extractedOwner, extractedRepo] = match
-      owner = extractedOwner
-      repoName = extractedRepo.endsWith('.git') ? extractedRepo : `${extractedRepo}.git`
-      parsedUrl = new URL(`https://${hostname}/${owner}/${repoName}`)
+      if (!match) return null
+
+      hostname = match[1]
+      repoPath = match[2]
     } else {
-      parsedUrl = new URL(inputUrl)
-      const segments = parsedUrl.pathname.split('/').filter(Boolean)
-      if (segments.length < 2) throw new Error('Invalid repository URL: not enough segments.')
-      owner = segments[0]
-      repoName = segments[1].endsWith('.git') ? segments[1] : `${segments[1]}.git`
+      const urlToParse = /^[a-z][a-z0-9+.-]*:/i.test(cleanUrl) ? cleanUrl : `https://${cleanUrl}`
+
+      const parsed = new URL(urlToParse)
+
+      if (parsed.protocol !== 'https:') return null
+      if (!SAFE_HOST_REGEX.test(parsed.hostname)) return null
+
+      repoPath = parsed.pathname.replace(/\.git$/, '').replace(/^\/|\/$/g, '')
+
+      if (!SAFE_REPO_PATH_REGEX.test(repoPath)) return null
+
+      hostname = parsed.hostname
     }
-    if (isPrivate && isSSH) return `git@${parsedUrl.hostname}:${owner}/${repoName}`
-    else return `https://${parsedUrl.hostname}/${owner}/${repoName}`
-  } catch (error) {
+
+    const repoWithGitSuffix = `${repoPath}.git`
+
+    if (isPrivate && isSSH) {
+      return `git@${hostname}:${repoWithGitSuffix}`
+    }
+
+    return `https://${hostname}/${repoWithGitSuffix}`
+  } catch {
     return null
   }
 }
