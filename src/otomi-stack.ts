@@ -111,7 +111,6 @@ import {
   OBJ_STORAGE_APPS,
   OBJECT_STORAGE_UI_EXCLUSIONS,
   PREINSTALLED_EXCLUDED_APPS,
-  TOOLS_HOST,
   VERSIONS,
 } from 'src/validators'
 import { v4 as uuidv4 } from 'uuid'
@@ -186,7 +185,6 @@ const env = cleanEnv({
   GIT_REPO_URL,
   GIT_USER,
   HELM_CHART_CATALOG,
-  TOOLS_HOST,
   VERSIONS,
   PREINSTALLED_EXCLUDED_APPS,
   HIDDEN_APPS,
@@ -272,10 +270,6 @@ export default class OtomiStack {
 
   async getAppList() {
     return getAppList()
-  }
-
-  async getValues(query): Promise<Record<string, any>> {
-    return (await this.git.requestValues(query)).data
   }
 
   getRepoPath() {
