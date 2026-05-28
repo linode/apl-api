@@ -927,6 +927,166 @@ export default class OtomiStack {
     return settingsResponse
   }
 
+  /**
+   * Create or update platform-managed SealedSecrets in a team namespace.
+   * These replace ExternalSecrets that previously used core-secrets-store to read
+   * platform secrets — preventing teams from stealing other teams' or platform secrets.
+   *
+   * @param teamId - Team identifier (without 'team-' prefix)
+   * @param spec - Current team spec (used to check which features are enabled)
+   * @param teamPassword - Optional plaintext team password (only needed during team creation,
+   *                       before the SealedSecret is applied to K8s)
+   */
+  private async createTeamNamespaceSealedSecrets(
+    teamId: string,
+    spec: AplTeamSettingsRequest['spec'],
+    teamPassword?: string,
+  ): Promise<void> {
+    const teamNs = `team-${teamId}`
+    const grafanaEnabled = spec?.managedMonitoring?.grafana ?? false
+    const alertmanagerEnabled = spec?.managedMonitoring?.alertmanager ?? false
+
+    if (grafanaEnabled) {
+      // team-<id>-grafana-admin: admin credentials for team's Grafana instance
+      let password = teamPassword
+      if (!password) {
+        const teamSecrets = await getSecretValues(`team-${teamId}-settings-secrets`, APL_SECRETS_NAMESPACE)
+        password = teamSecrets?.settings_password
+      }
+      if (password) {
+        const yamlContent = await createPlatformSealedSecretManifest(`${teamNs}-grafana-admin`, teamNs, {
+          'admin-user': teamId,
+          'admin-password': password,
+        })
+        await this.git.writeTextFile(
+          getNamespaceSealedSecretsValuesFilePath(teamNs, `${teamNs}-grafana-admin`),
+          yamlContent,
+        )
+      }
+
+      // grafana-oidc-secret: Keycloak OIDC credentials for Grafana SSO
+      const keycloakSecrets = await getSecretValues('keycloak-secrets', APL_SECRETS_NAMESPACE)
+      const clientSecret = keycloakSecrets?.idp_clientSecret
+      const clientId = (this.getApp('keycloak').values as Record<string, any>)?.idp?.clientID ?? ''
+      if (clientSecret) {
+        const yamlContent = await createPlatformSealedSecretManifest('grafana-oidc-secret', teamNs, {
+          client_id: clientId,
+          client_secret: clientSecret,
+        })
+        await this.git.writeTextFile(
+          getNamespaceSealedSecretsValuesFilePath(teamNs, 'grafana-oidc-secret'),
+          yamlContent,
+        )
+      }
+
+      // grafana-loki-datasource-secret: Loki admin password for Grafana datasource
+      const lokiSecrets = await getSecretValues('loki-secrets', APL_SECRETS_NAMESPACE)
+      const lokiPassword = lokiSecrets?.adminPassword
+      if (lokiPassword) {
+        const yamlContent = await createPlatformSealedSecretManifest('grafana-loki-datasource-secret', teamNs, {
+          password: lokiPassword,
+        })
+        await this.git.writeTextFile(
+          getNamespaceSealedSecretsValuesFilePath(teamNs, 'grafana-loki-datasource-secret'),
+          yamlContent,
+        )
+      }
+    }
+
+    if (alertmanagerEnabled) {
+      // alertmanager-credentials: notification channel credentials for team Alertmanager
+      const { alerts } = await this.getSettings(['alerts'])
+      const receivers = (spec?.alerts?.receivers ?? (alerts as Record<string, any>)?.receivers ?? ['slack']) as string[]
+      const hasReceivers = !receivers.includes('none')
+
+      if (hasReceivers) {
+        const alertData: Record<string, string> = {}
+
+        if (receivers.includes('slack')) {
+          const alertSecrets = await getSecretValues('alerts-secrets', APL_SECRETS_NAMESPACE)
+          if (alertSecrets?.slack_url) alertData.slackUrl = alertSecrets.slack_url
+        }
+        if (receivers.includes('email')) {
+          const smtpSecrets = await getSecretValues('smtp-secrets', APL_SECRETS_NAMESPACE)
+          if (smtpSecrets?.auth_password) alertData.smtpAuthPassword = smtpSecrets.auth_password
+          if (smtpSecrets?.auth_secret) alertData.smtpAuthSecret = smtpSecrets.auth_secret
+        }
+        if (receivers.includes('opsgenie')) {
+          // Legacy receiver — kept for backwards compatibility
+          const alertSecrets = await getSecretValues('alerts-secrets', APL_SECRETS_NAMESPACE)
+          if (alertSecrets?.opsgenie_apiKey) alertData.opsgenieApiKey = alertSecrets.opsgenie_apiKey
+        }
+
+        if (Object.keys(alertData).length > 0) {
+          const yamlContent = await createPlatformSealedSecretManifest('alertmanager-credentials', teamNs, alertData)
+          await this.git.writeTextFile(
+            getNamespaceSealedSecretsValuesFilePath(teamNs, 'alertmanager-credentials'),
+            yamlContent,
+          )
+        }
+      }
+    }
+
+    // otomi-pullsecret-global: docker pull secret for global container registry
+    const { otomi } = await this.getSettings(['otomi'])
+    const pullSecretConfig = (otomi as Record<string, any>)?.globalPullSecret as
+      | { server?: string; username?: string; email?: string }
+      | undefined
+    if (pullSecretConfig) {
+      const otomiSecrets = await getSecretValues('otomi-secrets', APL_SECRETS_NAMESPACE)
+      const pullSecretPassword = otomiSecrets?.globalPullSecret_password
+      if (pullSecretPassword) {
+        const server = pullSecretConfig.server ?? 'docker.io'
+        const username = pullSecretConfig.username ?? ''
+        const email = pullSecretConfig.email ?? 'not@val.id'
+        const dockerConfig = JSON.stringify({ auths: { [server]: { username, password: pullSecretPassword, email } } })
+        const yamlContent = await createPlatformSealedSecretManifest(
+          'otomi-pullsecret-global',
+          teamNs,
+          { '.dockerconfigjson': dockerConfig },
+          'kubernetes.io/dockerconfigjson',
+        )
+        await this.git.writeTextFile(
+          getNamespaceSealedSecretsValuesFilePath(teamNs, 'otomi-pullsecret-global'),
+          yamlContent,
+        )
+      }
+    }
+  }
+
+  /**
+   * Remove platform-managed SealedSecret files from a team namespace for disabled features.
+   * Called during editAplTeam to clean up secrets that are no longer needed.
+   * Uses removeFile which is a no-op if the file doesn't exist.
+   */
+  private async cleanupTeamNamespaceSealedSecrets(teamId: string, spec: AplTeamSettingsRequest['spec']): Promise<void> {
+    const teamNs = `team-${teamId}`
+    const grafanaEnabled = spec?.managedMonitoring?.grafana ?? false
+    const alertmanagerEnabled = spec?.managedMonitoring?.alertmanager ?? false
+
+    if (!grafanaEnabled) {
+      for (const secretName of [`${teamNs}-grafana-admin`, 'grafana-oidc-secret', 'grafana-loki-datasource-secret']) {
+        const filePath = getNamespaceSealedSecretsValuesFilePath(teamNs, secretName)
+        this.fileStore.delete(filePath)
+        await this.git.removeFile(filePath)
+      }
+    }
+
+    if (!alertmanagerEnabled) {
+      const filePath = getNamespaceSealedSecretsValuesFilePath(teamNs, 'alertmanager-credentials')
+      this.fileStore.delete(filePath)
+      await this.git.removeFile(filePath)
+    }
+
+    const { otomi } = await this.getSettings(['otomi'])
+    const hasPullSecret = !!(otomi as Record<string, any>)?.globalPullSecret
+    if (!hasPullSecret) {
+      const filePath = getNamespaceSealedSecretsValuesFilePath(teamNs, 'otomi-pullsecret-global')
+      this.fileStore.delete(filePath)
+      await this.git.removeFile(filePath)
+    }
+  }
+
   async createTeam(data: Team): Promise<Team> {
     const newTeam = await this.createAplTeam(getAplObjectFromV1('AplTeamSettingSet', data) as AplTeamSettingsRequest)
     return getV1ObjectFromApl(newTeam) as Team
@@ -951,9 +1111,11 @@ export default class OtomiStack {
     }
 
     // Encrypt password into a SealedSecret manifest
+    // Key is 'settings_password' to match apl-core's buildSecretToNamespaceMap convention:
+    // teamConfig.<id>.settings.password → group prefix 'teamConfig.<id>' → relative path 'settings.password' → key 'settings_password'
     const sealedSecretName = `team-${teamName}-settings-secrets`
     const sealedSecretYaml = await createPlatformSealedSecretManifest(sealedSecretName, APL_SECRETS_NAMESPACE, {
-      password,
+      settings_password: password,
     })
     const sealedSecretPath = getNamespaceSealedSecretsValuesFilePath(APL_SECRETS_NAMESPACE, sealedSecretName)
     await this.git.writeTextFile(sealedSecretPath, sealedSecretYaml)
@@ -964,6 +1126,11 @@ export default class OtomiStack {
 
     const teamObject = toTeamObject(teamName, data)
     const team = await this.saveTeam(teamObject)
+
+    // Create platform-managed SealedSecrets in the team namespace.
+    // Pass the plaintext password so it can be used before the apl-secrets SealedSecret is applied.
+    await this.createTeamNamespaceSealedSecrets(teamName, data.spec, password)
+
     await this.doDeployment(team)
     return team.content as AplTeamSettingsResponse
   }
@@ -985,12 +1152,30 @@ export default class OtomiStack {
 
     const teamObject = buildTeamObject(currentTeam, updatedSpec)
     const team = await this.saveTeam(teamObject)
+
+    // Sync platform-managed SealedSecrets for the updated team spec:
+    // - Create/update secrets for enabled features
+    // - Remove secrets for disabled features
+    await this.createTeamNamespaceSealedSecrets(name, updatedSpec as AplTeamSettingsRequest['spec'])
+    await this.cleanupTeamNamespaceSealedSecrets(name, updatedSpec as AplTeamSettingsRequest['spec'])
+
     await this.doDeployment(team)
     return team.content as AplTeamSettingsResponse
   }
 
   async deleteTeam(id: string): Promise<void> {
     const filePaths = await this.deleteTeamObjects(id)
+
+    // Also remove platform-managed SealedSecrets from env/manifests/namespaces/team-<id>/
+    const teamNsSealedSecretsPrefix = `env/manifests/namespaces/team-${id}/sealedsecrets/`
+    for (const key of this.fileStore.keys()) {
+      if (key.startsWith(teamNsSealedSecretsPrefix)) {
+        this.fileStore.delete(key)
+        filePaths.push(key)
+      }
+    }
+    await this.git.removeDir(`env/manifests/namespaces/team-${id}`)
+
     await this.doDeleteDeployment(filePaths)
   }
 
