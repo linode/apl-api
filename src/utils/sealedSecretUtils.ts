@@ -159,8 +159,8 @@ export function sealedSecretToUserData(manifest: SealedSecretManifestResponse): 
 }
 
 /**
- * Creates a SealedSecret manifest for a platform-level or team-namespace secret.
- * Encrypts each data field with the Sealed Secrets public key bound to the given namespace.
+ * Creates a SealedSecret manifest for a platform-level secret (not team-scoped).
+ * Used for secrets in apl-secrets, apl-users, and other platform namespaces.
  */
 export async function createPlatformSealedSecretManifest(
   name: string,
