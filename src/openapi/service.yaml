@@ -26,6 +26,9 @@ Service:
       $ref: 'definitions.yaml#/idName'
       example: some-service
       x-formtype: SelectWidget
+    namespace:
+      $ref: 'definitions.yaml#/idName'
+      description: A Kubernetes namespace.
     port:
       type: integer
       minimum: 1
@@ -188,6 +191,9 @@ IngressPublic:
 AplServiceSpec:
   type: object
   properties:
+    namespace:
+      $ref: 'definitions.yaml#/idName'
+      description: A Kubernetes namespace.
     port:
       type: integer
       minimum: 1
