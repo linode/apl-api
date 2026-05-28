@@ -681,7 +681,7 @@ describe('API authz tests', () => {
     const data = {
       name: 'demo',
       gitService: 'github' as 'gitea' | 'github' | 'gitlab',
-      repositoryUrl: 'https://github.com/buildpacks/samples',
+      repositoryUrl: 'github.com/buildpacks/samples',
       private: true,
       secret: 'demo',
     }
