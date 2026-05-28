@@ -945,8 +945,6 @@ export default class OtomiStack {
     }
 
     // Encrypt password into a SealedSecret manifest
-    // Key is 'settings_password' to match apl-core's buildSecretToNamespaceMap convention:
-    // teamConfig.<id>.settings.password → group prefix 'teamConfig.<id>' → relative path 'settings.password' → key 'settings_password'
     const sealedSecretName = `team-${teamName}-settings-secrets`
     const sealedSecretYaml = await createPlatformSealedSecretManifest(sealedSecretName, APL_SECRETS_NAMESPACE, {
       settings_password: password,
@@ -960,7 +958,6 @@ export default class OtomiStack {
 
     const teamObject = toTeamObject(teamName, data)
     const team = await this.saveTeam(teamObject)
-
     await this.doDeployment(team)
     return team.content as AplTeamSettingsResponse
   }
@@ -982,7 +979,6 @@ export default class OtomiStack {
 
     const teamObject = buildTeamObject(currentTeam, updatedSpec)
     const team = await this.saveTeam(teamObject)
-
     await this.doDeployment(team)
     return team.content as AplTeamSettingsResponse
   }

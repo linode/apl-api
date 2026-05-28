@@ -161,17 +161,11 @@ export function sealedSecretToUserData(manifest: SealedSecretManifestResponse): 
 /**
  * Creates a SealedSecret manifest for a platform-level or team-namespace secret.
  * Encrypts each data field with the Sealed Secrets public key bound to the given namespace.
- *
- * @param name - Name of the SealedSecret (and resulting K8s Secret)
- * @param namespace - Target namespace the secret will be decrypted in
- * @param data - Key/value pairs to encrypt
- * @param secretType - Optional Kubernetes secret type (defaults to 'kubernetes.io/opaque')
  */
 export async function createPlatformSealedSecretManifest(
   name: string,
   namespace: string,
   data: Record<string, string>,
-  secretType = 'kubernetes.io/opaque',
 ): Promise<string> {
   const pem = await getSealedSecretsPEM()
 
@@ -200,7 +194,7 @@ export async function createPlatformSealedSecretManifest(
       template: {
         immutable: false,
         metadata: { name, namespace },
-        type: secretType,
+        type: 'kubernetes.io/opaque',
       },
     },
   }
