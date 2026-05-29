@@ -73,7 +73,7 @@ npm run build:spec   # Build OpenAPI specification
 
 ### Operational Docs
 
-- [ConfigMaps and Secrets used by APL API](docs/configmaps-and-secrets.md)
+- [Docs](docs/)
 
 ## Authentication & Authorization
 
