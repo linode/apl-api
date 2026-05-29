@@ -8,10 +8,11 @@ ARG CI=true
 RUN mkdir /app
 WORKDIR /app
 
-COPY . .* ./
-
+# Install dependencies before copying the source code to take advantage of Docker layer caching
+COPY package*.json ./
 RUN npm ci
 
+COPY . .* ./
 RUN npm run build
 RUN npm run lint
 RUN npm run test
