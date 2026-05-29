@@ -229,16 +229,6 @@ AplServiceSpec:
       title: Ingress Class Name
       $ref: 'definitions.yaml#/idName'
       default: 'platform'
-    ownHost:
-      description: Use the team domain so that the URL reveals the owner.
-      title: Use default host
-      type: boolean
-      default: true
-    domain:
-      $ref: 'definitions.yaml#/domain'
-      description: A managed DNS zone
-      title: DNS Zone
-      type: string
     useCname:
       title: Use CNAME
       description: Define a CNAME for the service.
@@ -258,21 +248,6 @@ AplServiceSpec:
       type: array
       items:
         $ref: 'definitions.yaml#/path'
-    forwardPath:
-      description: Forward the URL path into the service (don't rewrite to /).
-      title: Forward path
-      type: boolean
-      default: false
-    hasCert:
-      description: Select when a certificate exists and should not be generated.
-      title: Already has a certificate
-      type: boolean
-      default: false
-    certName:
-      description: The name of a TLS secret known to exist in the Team namespace.
-      example: example-com
-      title: Secret name
-      type: string
     headers:
       additionalProperties: false
       type: object
