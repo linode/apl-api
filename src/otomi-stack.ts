@@ -984,17 +984,6 @@ export default class OtomiStack {
 
   async deleteTeam(id: string): Promise<void> {
     const filePaths = await this.deleteTeamObjects(id)
-
-    // Also remove platform-managed SealedSecrets from env/manifests/namespaces/team-<id>/
-    const teamNsSealedSecretsPrefix = `env/manifests/namespaces/team-${id}/sealedsecrets/`
-    for (const key of this.fileStore.keys()) {
-      if (key.startsWith(teamNsSealedSecretsPrefix)) {
-        this.fileStore.delete(key)
-        filePaths.push(key)
-      }
-    }
-    await this.git.removeDir(`env/manifests/namespaces/team-${id}`)
-
     await this.doDeleteDeployment(filePaths)
   }
 
