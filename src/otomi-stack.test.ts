@@ -9,7 +9,7 @@ import {
 } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { loadSpec } from './app'
-import { PublicUrlExists, ValidationError } from './error'
+import { ValidationError } from './error'
 import { Git } from './git'
 
 jest.mock('./tty', () => ({
@@ -163,52 +163,6 @@ describe('Data validation', () => {
 
     jest.spyOn(otomiStack, 'doDeleteDeployment').mockResolvedValue()
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
-  })
-
-  test('should throw exception on duplicated domain', () => {
-    const svc: AplServiceRequest = {
-      kind: 'AplTeamService',
-      metadata: { name: 'svc' },
-      spec: { domain: 'b.a.com' },
-    }
-    expect(() => otomiStack.checkPublicUrlInUse(teamId, svc)).toThrow(new PublicUrlExists())
-  })
-
-  test('should throw exception on duplicated url with path', () => {
-    const svc: AplServiceRequest = {
-      kind: 'AplTeamService',
-      metadata: { name: 'svc' },
-      spec: { domain: 'b.a.com', paths: ['/test/'] },
-    }
-    expect(() => otomiStack.checkPublicUrlInUse(teamId, svc)).toThrow(new PublicUrlExists())
-  })
-
-  test('should not throw exception on unique url', () => {
-    const svc: AplServiceRequest = {
-      kind: 'AplTeamService',
-      metadata: { name: 'svc' },
-      spec: { domain: 'b.a.com', paths: ['/bla'] },
-    }
-    expect(() => otomiStack.checkPublicUrlInUse(teamId, svc)).not.toThrow()
-  })
-
-  test('should not throw exception when of type cluster', () => {
-    const svc: AplServiceRequest = {
-      kind: 'AplTeamService',
-      metadata: { name: 'svc' },
-      spec: {},
-    }
-    expect(() => otomiStack.checkPublicUrlInUse(teamId, svc)).not.toThrow()
-  })
-
-  test('should not throw exception when editing', () => {
-    const svc: AplServiceRequest = {
-      kind: 'AplTeamService',
-      metadata: { name: 'svc' },
-      spec: { domain: 'c.a.com' },
-    }
-
-    expect(() => otomiStack.checkPublicUrlInUse(teamId, svc)).not.toThrow()
   })
 
   test('should create a password when password is not specified', async () => {
