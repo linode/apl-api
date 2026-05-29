@@ -1,11 +1,11 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
 import { existsSync, rmSync } from 'fs'
 import { readFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
-import { cloneDeep, filter, isEmpty, map, merge, omit, pick, set, unset } from 'lodash'
+import { cloneDeep, isEmpty, map, merge, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema } from 'src/app'
 import { APL_SECRETS_NAMESPACE, APL_USERS_NAMESPACE, PLATFORM_SECRETS_NAME } from 'src/constants'
 import {
@@ -15,7 +15,6 @@ import {
   HttpError,
   NotExistError,
   OtomiError,
-  PublicUrlExists,
   ValidationError,
 } from 'src/error'
 import { getSettingsFileMaps } from 'src/fileStore/file-map'
@@ -2157,27 +2156,6 @@ export default class OtomiStack {
     await this.doDeleteDeployment([filePath])
   }
 
-  checkPublicUrlInUse(teamId: string, service: AplServiceRequest): void {
-    // skip when editing or when svc is of type "cluster" as it has no url
-    const newSvc = service.spec
-    const services = this.getTeamAplServices(teamId)
-
-    const servicesFiltered = filter(services, (svc) => {
-      const { domain, paths } = svc.spec
-
-      // no paths for existing or new service? then just check base url
-      if (!newSvc.paths?.length && !paths?.length) return domain === newSvc.domain
-      // one has paths but other doesn't? no problem
-      if ((newSvc.paths?.length && !paths?.length) || (!newSvc.paths?.length && paths?.length)) return false
-      // both have paths, so check full
-      return paths?.some((p) => {
-        const existingUrl = `${domain}${p}`
-        const newUrls: string[] = newSvc.paths?.map((_p: string) => `${domain}${_p}`) || []
-        return newUrls.includes(existingUrl)
-      })
-    })
-    if (servicesFiltered.length > 0) throw new PublicUrlExists()
-  }
   async doDeployments(aplRecords: AplRecord[]): Promise<void> {
     const rootStack = await getSessionStack()
 
@@ -2931,25 +2909,12 @@ export default class OtomiStack {
       name: service.metadata.name,
       teamId: service.metadata.labels['apl.io/teamId'],
     }
-    const publicIngressFields = [
-      'certName',
-      'domain',
-      'forwardPath',
-      'hasCert',
-      'paths',
-      'type',
-      'ownHost',
-      'ingressClassName',
-      'headers',
-      'useCname',
-      'cname',
-    ]
+    const publicIngressFields = ['paths', 'type', 'ingressClassName', 'headers', 'useCname', 'cname']
     const inService = omit(serviceSpec, publicIngressFields)
 
     const { cluster, dns } = await this.getSettings(['cluster', 'dns'])
     const managedByKnative = service.spec.ksvc?.predeployed ? true : false
     const url = getServiceUrl({
-      domain: serviceSpec.domain,
       name: service.metadata.name,
       teamId: service.metadata.labels['apl.io/teamId'],
       cluster,
@@ -2961,9 +2926,7 @@ export default class OtomiStack {
       ...inService,
       ingress: {
         ...pick(serviceSpec, publicIngressFields),
-        domain: url.domain,
         subdomain: url.subdomain,
-        useDefaultHost: !serviceSpec.domain && serviceSpec.ownHost,
       },
     })
   }
@@ -2973,23 +2936,10 @@ export default class OtomiStack {
     const svcCommon = omit(svc, ['name', 'ingress', 'path'])
     if (svc.ingress?.type === 'public') {
       const { ingress } = svc
-      const domain = ingress.subdomain ? `${ingress.subdomain}.${ingress.domain}` : ingress.domain
       return {
         name,
         ...svcCommon,
-        ...pick(ingress, [
-          'hasCert',
-          'certName',
-          'paths',
-          'forwardPath',
-          'tlsPass',
-          'ingressClassName',
-          'headers',
-          'useCname',
-          'cname',
-        ]),
-        ownHost: ingress.useDefaultHost,
-        domain: ingress.useDefaultHost ? undefined : domain,
+        ...pick(ingress, ['paths', 'tlsPass', 'ingressClassName', 'headers', 'useCname', 'cname']),
       }
     } else {
       return {
