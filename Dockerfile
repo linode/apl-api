@@ -10,7 +10,7 @@ WORKDIR /app
 
 # Install dependencies before copying the source code to take advantage of Docker layer caching
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 COPY . .* ./
 RUN npm run build

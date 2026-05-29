@@ -71,6 +71,10 @@ npm run build:spec   # Build OpenAPI specification
 | `src/openapi/`       | OpenAPI specifications              |
 | `src/middleware/`    | JWT, session, authz middleware      |
 
+### Operational Docs
+
+- [ConfigMaps and Secrets used by APL API](docs/configmaps-and-secrets.md)
+
 ## Authentication & Authorization
 
 ### Authentication
