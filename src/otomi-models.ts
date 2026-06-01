@@ -22,7 +22,6 @@ export type SealedSecretManifestSpec = components['schemas']['SealedSecretManife
 export type SealedSecretManifestRequest = components['schemas']['SealedSecretManifestRequest']
 export type SealedSecretManifestResponse = components['schemas']['SealedSecretManifestResponse']
 export type SealedSecretsKeys = components['schemas']['SealedSecretsKeys']
-export type K8sSecret = components['schemas']['K8sSecret']
 export type Service = components['schemas']['Service']
 export type ServiceSpec = components['schemas']['AplService']['spec'] & {
   id?: string

@@ -9,7 +9,7 @@ import { HttpError } from './error'
 import { FileStore } from './fileStore/file-store'
 import { Git } from './git'
 import { getSessionStack } from './middleware'
-import { App, SealedSecret } from './otomi-models'
+import { App } from './otomi-models'
 import * as getValuesSchemaModule from './utils'
 
 const platformAdminToken = getToken(['platform-admin'])
@@ -416,121 +416,6 @@ describe('API authz tests', () => {
     const data = { name: 'team1', password: 'test' }
     jest.spyOn(otomiStack, 'createTeam').mockRejectedValue(new HttpError(409))
     await agent.post('/v1/teams').send(data).set('Authorization', `Bearer ${platformAdminToken}`).expect(409)
-  })
-
-  test('team member can create its own sealedsecret', async () => {
-    jest.spyOn(otomiStack, 'createSealedSecret').mockResolvedValue({} as SealedSecret)
-
-    const data = {
-      name: 'demo',
-      encryptedData: { foo: 'encrypted-text-BAR' },
-      type: 'kubernetes.io/opaque',
-    }
-    await agent
-      .post(`/v1/teams/${teamId}/sealedsecrets`)
-      .send(data)
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
-  })
-
-  test('team member can read its own sealedsecret', async () => {
-    jest.spyOn(otomiStack, 'getSealedSecret').mockResolvedValue({} as SealedSecret)
-
-    await agent
-      .get(`/v1/teams/${teamId}/sealedsecrets/my-uuid`)
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
-  })
-
-  test('team member can update its own sealedsecret', async () => {
-    jest.spyOn(otomiStack, 'editSealedSecret').mockResolvedValue({} as SealedSecret)
-
-    const data = {
-      name: 'demo',
-      encryptedData: { foo: 'encrypted-text-BAZ' },
-      type: 'kubernetes.io/opaque',
-    }
-    await agent
-      .put(`/v1/teams/${teamId}/sealedsecrets/my-uuid`)
-      .send(data)
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
-  })
-
-  test('team member can delete its own sealedsecret', async () => {
-    jest.spyOn(otomiStack, 'deleteSealedSecret').mockResolvedValue()
-
-    await agent
-      .delete(`/v1/teams/${teamId}/sealedsecrets/my-uuid`)
-      .set('Content-Type', 'application/json')
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-  })
-
-  test('team member cannot create others sealedsecret', async () => {
-    const data = {
-      name: 'demo',
-      encryptedData: { foo: 'encrypted-text-BAR' },
-      type: 'kubernetes.io/opaque',
-    }
-    await agent
-      .post(`/v1/teams/${otherTeamId}/sealedsecrets`)
-      .send(data)
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(403)
-  })
-
-  test('team member cannot read others sealedsecret', async () => {
-    await agent
-      .get(`/v1/teams/${otherTeamId}/sealedsecrets/my-uuid`)
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(403)
-  })
-
-  test('team member cannot update others sealedsecret', async () => {
-    const data = {
-      name: 'demo',
-      encryptedData: { foo: 'encrypted-text-BAZ' },
-      type: 'kubernetes.io/opaque',
-    }
-    await agent
-      .put(`/v1/teams/${otherTeamId}/sealedsecrets/my-uuid`)
-      .send(data)
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(403)
-  })
-
-  test('team member cannot delete others sealedsecret', async () => {
-    await agent
-      .delete(`/v1/teams/${otherTeamId}/sealedsecrets/my-uuid`)
-      .set('Content-Type', 'application/json')
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(403)
-      .expect('Content-Type', /json/)
-  })
-
-  test('team member can get its own sealedsecrets', async () => {
-    await agent
-      .get(`/v1/teams/${teamId}/sealedsecrets`)
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-  })
-
-  test('team member cannot get others sealedsecrets', async () => {
-    await agent
-      .get(`/v1/teams/${otherTeamId}/sealedsecrets`)
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(403)
-  })
-
-  test('team member cannot get all sealedsecrets', async () => {
-    await agent.get('/v1/sealedsecrets').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
-  })
-
-  test('team member cannot get the sealedsecretskeys', async () => {
-    await agent.get('/v1/sealedsecretskeys').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
   })
 
   describe('Platform Admin /users endpoint tests', () => {

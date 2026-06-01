@@ -61,7 +61,6 @@ import {
   ObjWizard,
   Policies,
   Policy,
-  SealedSecret,
   SealedSecretManifestRequest,
   SealedSecretManifestResponse,
   Service,
@@ -2312,30 +2311,6 @@ export default class OtomiStack {
     return Buffer.from(secret.data!['.dockerconfigjson'], 'base64').toString('ascii')
   }
 
-  async createSealedSecret(teamId: string, data: SealedSecret): Promise<SealedSecret> {
-    // Convert V1 format to SealedSecretManifestRequest
-    const request: SealedSecretManifestRequest = {
-      kind: 'SealedSecret',
-      metadata: { name: data.name },
-      spec: {
-        encryptedData: data.encryptedData || {},
-        template: {
-          type: data.template?.type,
-          immutable: data.template?.immutable,
-          metadata: data.template?.metadata,
-        },
-      },
-    }
-    const manifest = await this.createAplSealedSecret(teamId, request)
-    // Convert back to V1 format
-    return {
-      name: manifest.metadata.name,
-      namespace: manifest.spec.template?.metadata?.namespace,
-      encryptedData: manifest.spec.encryptedData,
-      template: manifest.spec.template,
-    } as SealedSecret
-  }
-
   async createAplSealedSecret(
     teamId: string,
     data: SealedSecretManifestRequest,
@@ -2360,30 +2335,6 @@ export default class OtomiStack {
     const aplRecord = await this.saveNamespaceSealedSecret(namespace, data)
     await this.doDeployment(aplRecord)
     return aplRecord.content as unknown as SealedSecretManifestResponse
-  }
-
-  async editSealedSecret(teamId: string, name: string, data: SealedSecret): Promise<SealedSecret> {
-    // Convert V1 format to SealedSecretManifestRequest
-    const request: DeepPartial<SealedSecretManifestRequest> = {
-      kind: 'SealedSecret',
-      metadata: { name },
-      spec: {
-        encryptedData: data.encryptedData,
-        template: {
-          type: data.template?.type,
-          immutable: data.template?.immutable,
-          metadata: data.template?.metadata,
-        },
-      },
-    }
-    const manifest = await this.editAplSealedSecret(teamId, name, request)
-    // Convert back to V1 format
-    return {
-      name: manifest.metadata.name,
-      namespace: manifest.spec.template?.metadata?.namespace,
-      encryptedData: manifest.spec.encryptedData,
-      template: manifest.spec.template,
-    } as SealedSecret
   }
 
   async editAplSealedSecret(
@@ -2476,7 +2427,7 @@ export default class OtomiStack {
     return aplRecord.content as unknown as SealedSecretManifestResponse
   }
 
-  async deleteSealedSecret(teamId: string, name: string): Promise<void> {
+  async deleteAplSealedSecret(teamId: string, name: string): Promise<void> {
     const filePath = this.fileStore.deleteTeamResource('SealedSecret', teamId, name)
     await this.git.removeFile(filePath)
     await this.doDeleteDeployment([filePath])
@@ -2486,17 +2437,6 @@ export default class OtomiStack {
     const filePath = this.fileStore.deleteNamespaceResource('AplNamespaceSealedSecret', namespace, name)
     await this.git.removeFile(filePath)
     await this.doDeleteDeployment([filePath])
-  }
-
-  async getSealedSecret(teamId: string, name: string): Promise<SealedSecret> {
-    const manifest = await this.getAplSealedSecret(teamId, name)
-    // Convert to V1 format
-    return {
-      name: manifest.metadata.name,
-      namespace: manifest.spec.template?.metadata?.namespace,
-      encryptedData: manifest.spec.encryptedData,
-      template: manifest.spec.template,
-    } as SealedSecret
   }
 
   async getAplSealedSecret(teamId: string, name: string): Promise<SealedSecretManifestResponse> {
@@ -2515,16 +2455,6 @@ export default class OtomiStack {
     return ensureSealedSecretMetadata(sealedSecret as SealedSecretManifestResponse)
   }
 
-  getAllSealedSecrets(): SealedSecret[] {
-    return this.getAllAplSealedSecrets().map((manifest) => ({
-      name: manifest.metadata.name,
-      namespace: manifest.spec.template?.metadata?.namespace,
-      encryptedData: manifest.spec.encryptedData,
-      template: manifest.spec.template,
-      teamId: manifest.metadata.labels?.['apl.io/teamId'],
-    })) as SealedSecret[]
-  }
-
   getAllAplSealedSecrets(): SealedSecretManifestResponse[] {
     const files = this.fileStore.getAllTeamResourcesByKind('SealedSecret')
     return Array.from(files.values()).map((secret) => {
@@ -2535,7 +2465,7 @@ export default class OtomiStack {
     })
   }
 
-  getNamespacesWithSealedSecrets(): string[] {
+  getAplNamespacesWithSealedSecrets(): string[] {
     return this.fileStore.getNamespacesWithSealedSecrets()
   }
 
@@ -2562,16 +2492,6 @@ export default class OtomiStack {
       set(manifest, 'spec.template.metadata.namespace', namespace)
       return manifest
     })
-  }
-
-  getSealedSecrets(teamId: string): SealedSecret[] {
-    return this.getAplSealedSecrets(teamId).map((manifest) => ({
-      name: manifest.metadata.name,
-      namespace: manifest.spec.template?.metadata?.namespace,
-      encryptedData: manifest.spec.encryptedData,
-      template: manifest.spec.template,
-      teamId,
-    })) as SealedSecret[]
   }
 
   getAplSealedSecrets(teamId: string): SealedSecretManifestResponse[] {

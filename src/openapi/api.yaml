@@ -519,28 +519,10 @@ paths:
         '200':
           description: Successfully deleted a service
 
-  /v1/sealedsecrets:
-    get:
-      operationId: getAllSealedSecrets
-      x-eov-operation-handler: v1/sealedsecrets
-      description: Get all sealed secrets
-      x-aclSchema: SealedSecret
-      responses:
-        '200':
-          description: Successfully obtained all sealed secrets
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SealedSecret'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /v1/sealedsecretskeys:
+  /v2/sealedsecretskeys:
     get:
       operationId: getSealedSecretKeys
-      x-eov-operation-handler: v1/sealedsecretskeys
+      x-eov-operation-handler: v2/sealedsecretskeys
       description: Download sealed secret keys
       x-aclSchema: SealedSecretsKeys
       responses:
@@ -554,136 +536,6 @@ paths:
             application/key:
               schema:
                 $ref: '#/components/schemas/SealedSecretsKeys'
-
-  '/v1/teams/{teamId}/k8sSecrets':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-    get:
-      operationId: getSecretsFromK8s
-      x-eov-operation-handler: v1/teams/{teamId}/k8sSecrets
-      description: Get secrets from k8s
-      x-aclSchema: K8sSecret
-      responses:
-        '200':
-          description: Successfully obtained secrets from k8s
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/K8sSecret'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  '/v1/teams/{teamId}/sealedsecrets':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-    get:
-      operationId: getTeamSealedSecrets
-      x-eov-operation-handler: v1/teams/{teamId}/sealedsecrets
-      description: Get sealed secrets from a given team
-      x-aclSchema: SealedSecret
-      responses:
-        '200':
-          description: Successfully obtained sealed secrets
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SealedSecret'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpenApiValidationError'
-    post:
-      operationId: createSealedSecret
-      x-eov-operation-handler: v1/teams/{teamId}/sealedsecrets
-      description: Create a team sealed secret
-      x-aclSchema: SealedSecret
-      parameters:
-        - name: teamId
-          in: path
-          description: ID of team
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SealedSecret'
-        description: SealedSecret object
-        required: true
-      responses:
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '409':
-          $ref: '#/components/responses/OtomiStackError'
-        '200':
-          description: Successfully stored sealed secret configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SealedSecret'
-
-  '/v1/teams/{teamId}/sealedsecrets/{sealedSecretName}':
-    parameters:
-      - $ref: '#/components/parameters/teamParams'
-      - $ref: '#/components/parameters/sealedSecretParams'
-    get:
-      operationId: getSealedSecret
-      x-eov-operation-handler: v1/teams/{teamId}/sealedsecrets/{sealedSecretName}
-      description: Get a sealed secret from a given team
-      x-aclSchema: SealedSecret
-      responses:
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '200':
-          description: Successfully obtained sealed secret configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SealedSecret'
-    put:
-      operationId: editSealedSecret
-      x-eov-operation-handler: v1/teams/{teamId}/sealedsecrets/{sealedSecretName}
-      description: Edit a sealed secret from a given team
-      x-aclSchema: SealedSecret
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SealedSecret'
-        description: SealedSecret object that contains updated values
-        required: true
-      responses:
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '200':
-          description: Successfully edited a team sealed secret
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SealedSecret'
-    delete:
-      operationId: deleteSealedSecret
-      x-eov-operation-handler: v1/teams/{teamId}/sealedsecrets/{sealedSecretName}
-      description: Delete a sealed secret from a given team
-      x-aclSchema: SealedSecret
-      responses:
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '200':
-          description: Successfully deleted a team sealed secret
 
   /v2/sealedsecrets:
     get:
@@ -3177,8 +3029,6 @@ components:
       $ref: 'sealedsecret.yaml#/SealedSecretManifestSpec'
     SealedSecretsKeys:
       $ref: 'sealedsecretskeys.yaml#/SealedSecretsKeys'
-    K8sSecret:
-      $ref: 'k8sSecret.yaml#/K8sSecret'
     SessionUser:
       $ref: 'user.yaml#/SessionUser'
     Service:
