@@ -35,7 +35,7 @@ export default class CloudTty {
     this.debug = Debug('tty')
   }
 
-  async createOrPatch<T>(
+  async createOrPatch<T extends { body: KubernetesObject }>(
     createFunc: (params: T) => Promise<KubernetesObject>,
     patchFunc: (params: T) => Promise<KubernetesObject>,
     params: T,
@@ -44,7 +44,8 @@ export default class CloudTty {
       return await createFunc(params)
     } catch (error) {
       if (error instanceof ApiException && error.code === 409) {
-        return await patchFunc(params)
+        const { name } = params.body.metadata!
+        return await patchFunc({ name, ...params })
       } else {
         throw error
       }

@@ -101,10 +101,11 @@ describe('CloudTty', () => {
     })
     const patchFn = jest.fn().mockResolvedValue({ kind: 'patched' })
 
-    const result = await tty.createOrPatch(createFn, patchFn, { id: 'x' })
+    const params = { body: { metadata: { name: 'x' }, spec: {} } }
+    const result = await tty.createOrPatch(createFn, patchFn, params)
 
-    expect(createFn).toHaveBeenCalledWith({ id: 'x' })
-    expect(patchFn).toHaveBeenCalledWith({ id: 'x' })
+    expect(createFn).toHaveBeenCalledWith(params)
+    expect(patchFn).toHaveBeenCalledWith({ name: 'x', body: params.body })
     expect(result).toEqual({ kind: 'patched' })
   })
 
