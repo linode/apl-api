@@ -9,7 +9,7 @@ import { HttpError } from './error'
 import { FileStore } from './fileStore/file-store'
 import { Git } from './git'
 import { getSessionStack } from './middleware'
-import { App, Netpol, SealedSecret } from './otomi-models'
+import { App, SealedSecret } from './otomi-models'
 import * as getValuesSchemaModule from './utils'
 
 const platformAdminToken = getToken(['platform-admin'])
@@ -677,58 +677,6 @@ describe('API authz tests', () => {
     })
   })
 
-  describe('Code repository endpoints tests', () => {
-    const data = {
-      name: 'demo',
-      gitService: 'github' as 'gitea' | 'github' | 'gitlab',
-      repositoryUrl: 'github.com/buildpacks/samples',
-      private: true,
-      secret: 'demo',
-    }
-
-    test('team member can test own code repository url', async () => {
-      jest.spyOn(otomiStack, 'getTestRepoConnect').mockResolvedValue({ status: 'success' })
-
-      await agent
-        .get(`/v2/teams/${teamId}/coderepos/testRepoConnect`)
-        .query({
-          url: data.repositoryUrl,
-        })
-        .set('Authorization', `Bearer ${teamMemberToken}`)
-        .expect(200)
-    })
-
-    test('team member cannot test other team code repository url', async () => {
-      jest.spyOn(otomiStack, 'getTestRepoConnect').mockResolvedValue({ status: 'success' })
-
-      await agent
-        .get(`/v2/teams/${otherTeamId}/coderepos/testRepoConnect`)
-        .query({
-          url: data.repositoryUrl,
-        })
-        .set('Authorization', `Bearer ${teamMemberToken}`)
-        .expect(403)
-    })
-
-    test('team member can get own internal repository urls', async () => {
-      jest.spyOn(otomiStack, 'getInternalRepoUrls').mockResolvedValue([])
-
-      await agent
-        .get(`/v2/teams/${teamId}/internalRepoUrls`)
-        .set('Authorization', `Bearer ${teamMemberToken}`)
-        .expect(200)
-    })
-
-    test('team member cannot get other internal repository urls', async () => {
-      jest.spyOn(otomiStack, 'getInternalRepoUrls').mockResolvedValue([])
-
-      await agent
-        .get(`/v2/teams/${otherTeamId}/internalRepoUrls`)
-        .set('Authorization', `Bearer ${teamMemberToken}`)
-        .expect(403)
-    })
-  })
-
   describe('Policy endpoint tests', () => {
     const data = { action: 'Enforce', severity: 'high' }
 
@@ -765,106 +713,6 @@ describe('API authz tests', () => {
         .set('Authorization', `Bearer ${teamMemberToken}`)
         .expect(403)
         .expect('Content-Type', /json/)
-    })
-  })
-
-  describe('Network policy endpoints tests', () => {
-    const data = {
-      name: 'demo-netpol',
-      ruleType: {
-        type: 'ingress',
-        ingress: { mode: 'AllowAll', toLabelName: 'app', toLabelValue: 'my-app' },
-      },
-    }
-
-    test('team member can create its own netpol', async () => {
-      jest.spyOn(otomiStack, 'createNetpol').mockResolvedValue({} as Netpol)
-      await agent
-        .post(`/v1/teams/${teamId}/netpols`)
-        .send(data)
-        .set('Authorization', `Bearer ${teamMemberToken}`)
-        .expect(200)
-    })
-
-    test('team member can read its own netpol', async () => {
-      jest.spyOn(otomiStack, 'getNetpol').mockReturnValue({} as Netpol)
-      await agent
-        .get(`/v1/teams/${teamId}/netpols/my-netpol`)
-        .set('Authorization', `Bearer ${teamMemberToken}`)
-        .expect(200)
-    })
-
-    test('team member can update its own netpol', async () => {
-      jest.spyOn(otomiStack, 'editNetpol').mockResolvedValue({} as Netpol)
-
-      await agent
-        .put(`/v1/teams/${teamId}/netpols/my-netpol`)
-        .send(data)
-        .set('Authorization', `Bearer ${teamMemberToken}`)
-        .expect(200)
-    })
-
-    test('team member can delete its own netpol', async () => {
-      jest.spyOn(otomiStack, 'deleteNetpol').mockResolvedValue()
-
-      await agent
-        .delete(`/v1/teams/${teamId}/netpols/my-netpol`)
-        .set('Content-Type', 'application/json')
-        .set('Authorization', `Bearer ${teamMemberToken}`)
-        .expect(200)
-        .expect('Content-Type', /json/)
-    })
-
-    test('team member cannot create others netpol', async () => {
-      await agent
-        .post(`/v1/teams/${otherTeamId}/netpols`)
-        .send(data)
-        .set('Authorization', `Bearer ${teamMemberToken}`)
-        .expect(403)
-    })
-
-    test('team member cannot read others netpol', async () => {
-      await agent
-        .get(`/v1/teams/${otherTeamId}/netpols/my-netpol`)
-        .set('Authorization', `Bearer ${teamMemberToken}`)
-        .expect(403)
-    })
-
-    test('team member cannot update others netpol', async () => {
-      await agent
-        .put(`/v1/teams/${otherTeamId}/netpols/my-netpol`)
-        .send(data)
-        .set('Authorization', `Bearer ${teamMemberToken}`)
-        .expect(403)
-    })
-
-    test('team member cannot delete others netpol', async () => {
-      await agent
-        .delete(`/v1/teams/${otherTeamId}/netpols/my-netpol`)
-        .set('Content-Type', 'application/json')
-        .set('Authorization', `Bearer ${teamMemberToken}`)
-        .expect(403)
-        .expect('Content-Type', /json/)
-    })
-
-    test('team member can get its own team netpols', async () => {
-      await agent
-        .get(`/v1/teams/${teamId}/netpols`)
-        .set('Authorization', `Bearer ${teamMemberToken}`)
-        .expect(200)
-        .expect('Content-Type', /json/)
-    })
-
-    test('team member cannot get others team netpols', async () => {
-      await agent.get(`/v1/teams/${otherTeamId}/netpols`).set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
-    })
-
-    test('team member cannot get all netpols', async () => {
-      await agent.get('/v1/netpols').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
-    })
-
-    test('platform admin can get all netpols', async () => {
-      await agent.get('/v1/netpols').set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
     })
   })
 

@@ -1108,30 +1108,14 @@ export default class OtomiStack {
     return workloadFilePath
   }
 
-  getTeamNetpols(teamId: string): Netpol[] {
-    return this.getTeamAplNetpols(teamId).map((netpol) => getV1ObjectFromApl(netpol) as Netpol)
-  }
-
   getTeamAplNetpols(teamId: string): AplNetpolResponse[] {
     const files = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamNetworkControl', teamId)
     return Array.from(files.values()) as AplNetpolResponse[]
   }
 
-  getAllNetpols(): Netpol[] {
-    return this.getAllAplNetpols().map((netpol) => getV1ObjectFromApl(netpol) as Netpol)
-  }
-
   getAllAplNetpols(): AplNetpolResponse[] {
     const files = this.fileStore.getAllTeamResourcesByKind('AplTeamNetworkControl')
     return Array.from(files.values()) as AplNetpolResponse[]
-  }
-
-  async createNetpol(teamId: string, data: Netpol): Promise<Netpol> {
-    const newNetpol = await this.createAplNetpol(
-      teamId,
-      getAplObjectFromV1('AplTeamNetworkControl', data) as AplNetpolRequest,
-    )
-    return getV1ObjectFromApl(newNetpol) as Netpol
   }
 
   async createAplNetpol(teamId: string, data: AplNetpolRequest): Promise<AplNetpolResponse> {
@@ -1147,23 +1131,12 @@ export default class OtomiStack {
     return aplRecord.content as AplNetpolResponse
   }
 
-  getNetpol(teamId: string, name: string): Netpol {
-    const netpol = this.getAplNetpol(teamId, name)
-    return getV1ObjectFromApl(netpol) as Netpol
-  }
-
   getAplNetpol(teamId: string, name: string): AplNetpolResponse {
     const netpol = this.fileStore.getTeamResource('AplTeamNetworkControl', teamId, name)
     if (!netpol) {
       throw new NotExistError(`Network policy ${name} not found in team ${teamId}`)
     }
     return netpol as AplNetpolResponse
-  }
-
-  async editNetpol(teamId: string, name: string, data: Netpol): Promise<Netpol> {
-    const mergeObj = getV1MergeObject(data) as DeepPartial<AplNetpolRequest>
-    const mergedNetpol = await this.editAplNetpol(teamId, name, mergeObj)
-    return getV1ObjectFromApl(mergedNetpol) as Netpol
   }
 
   async editAplNetpol(
@@ -1184,7 +1157,7 @@ export default class OtomiStack {
     return aplRecord.content as AplNetpolResponse
   }
 
-  async deleteNetpol(teamId: string, name: string): Promise<void> {
+  async deleteAplNetpol(teamId: string, name: string): Promise<void> {
     const filePath = await this.deleteTeamConfigItem('AplTeamNetworkControl', teamId, name)
     await this.doDeleteDeployment([filePath])
   }
@@ -1530,7 +1503,7 @@ export default class OtomiStack {
     const workloads = teamId ? this.getTeamAplWorkloads(teamId) : this.getAllWorkloads()
     const services = teamId ? this.getTeamAplServices(teamId) : await this.getAllServices()
     const secrets = teamId ? this.getAplSealedSecrets(teamId) : this.getAllAplSealedSecrets()
-    const netpols = teamId ? this.getTeamAplNetpols(teamId) : this.getAllNetpols()
+    const netpols = teamId ? this.getTeamAplNetpols(teamId) : this.getAllAplNetpols()
 
     return [
       { name: 'code-repositories', count: codeRepos?.length },

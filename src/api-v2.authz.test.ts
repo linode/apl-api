@@ -678,6 +678,54 @@ describe('API V2 authz tests', () => {
       })
     })
 
+    describe('Code repository utility endpoints', () => {
+      const data = {
+        repositoryUrl: 'github.com/buildpacks/samples',
+      }
+
+      test('team member can test own code repository url', async () => {
+        jest.spyOn(otomiStack, 'getTestRepoConnect').mockResolvedValue({ status: 'success' })
+
+        await agent
+          .get('/v2/teams/team1/coderepos/testRepoConnect')
+          .query({
+            url: data.repositoryUrl,
+          })
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(200)
+      })
+
+      test('team member cannot test other team code repository url', async () => {
+        jest.spyOn(otomiStack, 'getTestRepoConnect').mockResolvedValue({ status: 'success' })
+
+        await agent
+          .get('/v2/teams/team2/coderepos/testRepoConnect')
+          .query({
+            url: data.repositoryUrl,
+          })
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('team member can get own internal repository urls', async () => {
+        jest.spyOn(otomiStack, 'getInternalRepoUrls').mockResolvedValue([])
+
+        await agent
+          .get('/v2/teams/team1/internalRepoUrls')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(200)
+      })
+
+      test('team member cannot get other internal repository urls', async () => {
+        jest.spyOn(otomiStack, 'getInternalRepoUrls').mockResolvedValue([])
+
+        await agent
+          .get('/v2/teams/team2/internalRepoUrls')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+    })
+
     describe('Cross-Team Access Denial', () => {
       test('team member cannot create code repo in other team', async () => {
         await agent
