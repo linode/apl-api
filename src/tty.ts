@@ -48,7 +48,10 @@ export default class CloudTty {
     } catch (error) {
       if (error instanceof ApiException && error.code === 409) {
         const { name } = params.body.metadata!
-        return await patchFunc({ name, ...params }, setHeaderOptions('Content-Type', PatchStrategy.StrategicMergePatch))
+        return await patchFunc(
+          { name, ...params, fieldManager: 'apl-api', force: true },
+          setHeaderOptions('Content-Type', PatchStrategy.ServerSideApply),
+        )
       } else {
         throw error
       }
