@@ -1500,7 +1500,7 @@ export default class OtomiStack {
     const codeRepos = teamId ? this.getTeamAplCodeRepos(teamId) : this.getAllAplCodeRepos()
     const builds = teamId ? this.getTeamAplBuilds(teamId) : this.getAllAplBuilds()
     const workloads = teamId ? this.getTeamAplWorkloads(teamId) : this.getAllWorkloads()
-    const services = teamId ? this.getTeamAplServices(teamId) : await this.getAllServices()
+    const services = teamId ? this.getTeamAplServices(teamId) : this.getAllAplServices()
     const secrets = teamId ? this.getAplSealedSecrets(teamId) : this.getAllAplSealedSecrets()
     const netpols = teamId ? this.getTeamAplNetpols(teamId) : this.getAllAplNetpols()
 
@@ -2007,32 +2007,14 @@ export default class OtomiStack {
     return { teamId, name, values: workload as any }
   }
 
-  async getAllServices(): Promise<Service[]> {
-    return Promise.all(this.getAllAplServices().map((service) => this.transformService(service) as Promise<Service>))
-  }
-
   getAllAplServices(): AplServiceResponse[] {
     const files = this.fileStore.getAllTeamResourcesByKind('AplTeamService')
     return Array.from(files.values()) as AplServiceResponse[]
   }
 
-  async getTeamServices(teamId: string): Promise<Service[]> {
-    return Promise.all(
-      this.getTeamAplServices(teamId).map((service) => this.transformService(service) as Promise<Service>),
-    )
-  }
-
   getTeamAplServices(teamId: string): AplServiceResponse[] {
     const files = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamService', teamId)
     return Array.from(files.values()) as AplServiceResponse[]
-  }
-
-  async createService(teamId: string, data: Service): Promise<Service> {
-    const newService = await this.createAplService(
-      teamId,
-      getAplObjectFromV1('AplTeamService', this.convertDbServiceToValues(data)) as AplServiceRequest,
-    )
-    return (await this.transformService(newService)) as Service
   }
 
   async createAplService(teamId: string, data: AplServiceRequest): Promise<AplServiceResponse> {
@@ -2048,23 +2030,12 @@ export default class OtomiStack {
     return aplRecord.content as AplServiceResponse
   }
 
-  async getService(teamId: string, name: string): Promise<Service> {
-    const service = this.getAplService(teamId, name)
-    return (await this.transformService(service)) as Service
-  }
-
   getAplService(teamId: string, name: string): AplServiceResponse {
     const service = this.fileStore.getTeamResource('AplTeamService', teamId, name)
     if (!service) {
       throw new NotExistError(`Service ${name} not found in team ${teamId}`)
     }
     return service as AplServiceResponse
-  }
-
-  async editService(teamId: string, name: string, data: Service): Promise<Service> {
-    const mergeObj = getV1MergeObject(this.convertDbServiceToValues(data)) as DeepPartial<AplServiceRequest>
-    const mergedService = await this.editAplService(teamId, name, mergeObj)
-    return getV1ObjectFromApl(mergedService) as Service
   }
 
   async editAplService(
@@ -2083,7 +2054,7 @@ export default class OtomiStack {
     return aplRecord.content as AplServiceResponse
   }
 
-  async deleteService(teamId: string, name: string): Promise<void> {
+  async deleteAplService(teamId: string, name: string): Promise<void> {
     const filePath = await this.deleteTeamConfigItem('AplTeamService', teamId, name)
     await this.doDeleteDeployment([filePath])
   }

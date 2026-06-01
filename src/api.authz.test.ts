@@ -227,70 +227,6 @@ describe('API authz tests', () => {
       .expect('Content-Type', /json/)
   })
 
-  test('team member can create its own services', async () => {
-    jest.spyOn(otomiStack, 'createService').mockResolvedValue({} as any)
-    await agent
-      .post('/v1/teams/team1/services')
-      .send({
-        name: 'newservice',
-        serviceType: 'ksvcPredeployed',
-        ingress: { type: 'cluster' },
-        networkPolicy: {
-          ingressPrivate: { mode: 'DenyAll' },
-        },
-      })
-      .set('Content-Type', 'application/json')
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-  })
-
-  test('team member can get its services', async () => {
-    await agent
-      .get('/v1/teams/team1/services')
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-  })
-
-  test('team member can get a specific service', async () => {
-    jest.spyOn(otomiStack, 'getService').mockResolvedValue({} as never)
-    await agent
-      .get('/v1/teams/team1/services/service1')
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-  })
-
-  test('team member can delete its own service', async () => {
-    jest.spyOn(otomiStack, 'deleteService').mockResolvedValue()
-    await agent
-      .delete('/v1/teams/team1/services/service2')
-      .set('Content-Type', 'application/json')
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-  })
-
-  test('team member cannot delete service from other team', async () => {
-    await agent
-      .delete('/v1/teams/team2/services/service1')
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(403)
-  })
-
-  test('team member cannot update service from other team', async () => {
-    await agent
-      .put('/v1/teams/team2/services/service1')
-      .send({
-        name: 'service1',
-        serviceType: 'ksvcPredeployed',
-        ingress: { type: 'cluster' },
-      })
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(403)
-  })
-
   test('team member cannot update workload from other team', async () => {
     await agent
       .put('/v1/teams/team2/workloads/my-uuid')
@@ -376,10 +312,6 @@ describe('API authz tests', () => {
     await agent.post('/v1/teams').expect(401)
   })
 
-  test('anonymous user cannot get services', async () => {
-    await agent.get('/v1/teams/team1/services').expect(401)
-  })
-
   test('anonymous user cannot get workloads', async () => {
     await agent.get('/v1/teams/team1/workloads').expect(401)
   })
@@ -394,22 +326,6 @@ describe('API authz tests', () => {
 
   test('anonymous user cannot delete a workload', async () => {
     await agent.delete('/v1/teams/team1/workloads/my-uuid').expect(401)
-  })
-
-  test('anonymous user cannot get a given service', async () => {
-    await agent.get('/v1/teams/team1/services/service1').expect(401)
-  })
-
-  test('anonymous user cannot edit a given service', async () => {
-    await agent.put('/v1/teams/team1/services/service1').expect(401)
-  })
-
-  test('anonymous user cannot delete a given service', async () => {
-    await agent.delete('/v1/teams/team1/services/service1').expect(401)
-  })
-
-  test('anonymous user cannot create a new service', async () => {
-    await agent.post('/v1/teams/team1/services').expect(401)
   })
 
   test('should handle exists exception and transform it to HTTP response with code 409', async () => {
@@ -660,24 +576,6 @@ describe('API authz tests', () => {
     test('anonymous user cannot get dockerconfig', async () => {
       await agent.get(`/v1/dockerconfig/${teamId}`).expect(401)
     })
-  })
-
-  test('team member cannot create its own services when disabled', async () => {
-    jest.spyOn(otomiStack, 'createService').mockResolvedValue({} as any)
-    await agent
-      .post('/v1/teams/team2/services')
-      .send({
-        name: 'newservice',
-        serviceType: 'ksvcPredeployed',
-        ingress: { type: 'cluster' },
-        networkPolicy: {
-          ingressPrivate: { mode: 'DenyAll' },
-        },
-      })
-      .set('Content-Type', 'application/json')
-      .set('Authorization', `Bearer ${team2MemberToken}`)
-      .expect(403)
-      .expect('Content-Type', /json/)
   })
 
   test('team member cannot access settings', async () => {

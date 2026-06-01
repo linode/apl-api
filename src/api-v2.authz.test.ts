@@ -1225,15 +1225,25 @@ describe('API V2 authz tests', () => {
   })
 
   test('team member cannot create its own services when disabled', async () => {
-    jest.spyOn(otomiStack, 'createService').mockResolvedValue({} as any)
+    jest.spyOn(otomiStack, 'createAplService').mockResolvedValue({} as any)
+
     await agent
-      .post('/v1/teams/team2/services')
+      .post('/v2/teams/team2/services')
       .send({
-        name: 'newservice',
-        serviceType: 'ksvcPredeployed',
-        ingress: { type: 'cluster' },
-        networkPolicy: {
-          ingressPrivate: { mode: 'DenyAll' },
+        kind: 'AplTeamService',
+        metadata: {
+          name: 'newservice',
+        },
+        spec: {
+          serviceType: 'ksvcPredeployed',
+          ingress: {
+            type: 'cluster',
+          },
+          networkPolicy: {
+            ingressPrivate: {
+              mode: 'DenyAll',
+            },
+          },
         },
       })
       .set('Content-Type', 'application/json')
