@@ -10,6 +10,6 @@ const debug = Debug('otomi:api:v2:workloadNames')
  */
 export const getAllWorkloadNames = (req: OpenApiRequestExt, res: Response): void => {
   debug('getAllWorkloadNames')
-  const v = req.otomi.getAllWorkloadNames()
+  const v = req.otomi.getAllAplWorkloadNames()
   res.json(v)
 }

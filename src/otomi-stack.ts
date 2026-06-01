@@ -8,15 +8,7 @@ import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, isEmpty, map, merge, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema } from 'src/app'
 import { APL_SECRETS_NAMESPACE, APL_USERS_NAMESPACE, PLATFORM_SECRETS_NAME } from 'src/constants'
-import {
-  AlreadyExists,
-  BadRequestError,
-  ForbiddenError,
-  HttpError,
-  NotExistError,
-  OtomiError,
-  ValidationError,
-} from 'src/error'
+import { AlreadyExists, ForbiddenError, HttpError, NotExistError, OtomiError, ValidationError } from 'src/error'
 import { getSettingsFileMaps } from 'src/fileStore/file-map'
 import { FileStore } from 'src/fileStore/file-store'
 import getRepo, { getWorktreeRepo, Git } from 'src/git'
@@ -159,7 +151,7 @@ import {
   userSecretDataToUser,
 } from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
-import { fetchWorkloadCatalog, isInteralGiteaURL, validateGitUrl } from './utils/workloadUtils'
+import { fetchWorkloadCatalog, isInteralGiteaURL } from './utils/workloadUtils'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -1499,7 +1491,7 @@ export default class OtomiStack {
   async getDashboard(teamId: string): Promise<Array<any>> {
     const codeRepos = teamId ? this.getTeamAplCodeRepos(teamId) : this.getAllAplCodeRepos()
     const builds = teamId ? this.getTeamAplBuilds(teamId) : this.getAllAplBuilds()
-    const workloads = teamId ? this.getTeamAplWorkloads(teamId) : this.getAllWorkloads()
+    const workloads = teamId ? this.getTeamAplWorkloads(teamId) : this.getAllAplWorkloads()
     const services = teamId ? this.getTeamAplServices(teamId) : this.getAllAplServices()
     const secrets = teamId ? this.getAplSealedSecrets(teamId) : this.getAllAplSealedSecrets()
     const netpols = teamId ? this.getTeamAplNetpols(teamId) : this.getAllAplNetpols()
@@ -1792,23 +1784,6 @@ export default class OtomiStack {
     if (existsSync(cacheDir)) rmSync(cacheDir, { recursive: true, force: true })
   }
 
-  async getWorkloadCatalog(data: {
-    url?: string
-    teamId: string
-  }): Promise<{ url: string; helmCharts: any; catalog: any }> {
-    const { url: clientUrl, teamId } = data
-    const url = clientUrl || env?.HELM_CHART_CATALOG
-
-    if (!url) throw new BadRequestError('Helm chart catalog URL is not set')
-
-    await validateGitUrl(url)
-
-    const uuid = uuidv4()
-    const helmChartsDir = `/tmp/otomi/charts/${uuid}`
-
-    return this.fetchCatalog(url, helmChartsDir, 'main', teamId)
-  }
-
   async getBYOWorkloadCatalog(
     url: string,
     branch: string,
@@ -1875,22 +1850,12 @@ export default class OtomiStack {
     }
   }
 
-  getTeamWorkloads(teamId: string): Workload[] {
-    return this.getTeamAplWorkloads(teamId).map(
-      (workload) => omit(getV1ObjectFromApl(workload), ['values']) as Workload,
-    )
-  }
-
   getTeamAplWorkloads(teamId: string): AplWorkloadResponse[] {
     const files = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamWorkload', teamId)
     return Array.from(files.values()) as AplWorkloadResponse[]
   }
 
-  getAllWorkloads(): Workload[] {
-    return this.getAllAplWorkloads().map((workload) => omit(getV1ObjectFromApl(workload), ['values']) as Workload)
-  }
-
-  getAllWorkloadNames(): WorkloadName[] {
+  getAllAplWorkloadNames(): WorkloadName[] {
     const workloads = this.getAllAplWorkloads().map((workload) => {
       const teamId = workload.metadata.labels['apl.io/teamId']
       return {
@@ -1906,14 +1871,6 @@ export default class OtomiStack {
   getAllAplWorkloads(): AplWorkloadResponse[] {
     const files = this.fileStore.getAllTeamResourcesByKind('AplTeamWorkload')
     return Array.from(files.values()) as AplWorkloadResponse[]
-  }
-
-  async createWorkload(teamId: string, data: Workload): Promise<Workload> {
-    const newWorkload = await this.createAplWorkload(
-      teamId,
-      getAplObjectFromV1('AplTeamWorkload', data) as AplWorkloadRequest,
-    )
-    return omit(getV1ObjectFromApl(newWorkload), ['values']) as Workload
   }
 
   async createAplWorkload(teamId: string, data: AplWorkloadRequest): Promise<AplWorkloadResponse> {
@@ -1934,11 +1891,6 @@ export default class OtomiStack {
     return aplRecord.content as AplWorkloadResponse
   }
 
-  getWorkload(teamId: string, name: string): Workload {
-    const workload = this.getAplWorkload(teamId, name)
-    return omit(getV1ObjectFromApl(workload), ['values']) as Workload
-  }
-
   getAplWorkload(teamId: string, name: string): AplWorkloadResponse {
     const workload = this.fileStore.getTeamResource('AplTeamWorkload', teamId, name)
     const workloadValues = this.fileStore.getTeamResource('AplTeamWorkloadValues', teamId, name)
@@ -1947,12 +1899,6 @@ export default class OtomiStack {
     }
     set(workload, 'spec.values', workloadValues || '')
     return workload as AplWorkloadResponse
-  }
-
-  async editWorkload(teamId: string, name: string, data: Workload): Promise<Workload> {
-    const mergeObj = getV1MergeObject(data) as DeepPartial<AplWorkloadRequest>
-    const mergedWorkload = await this.editAplWorkload(teamId, name, mergeObj)
-    return omit(getV1ObjectFromApl(mergedWorkload), ['values']) as Workload
   }
 
   async editAplWorkload(
@@ -1979,7 +1925,7 @@ export default class OtomiStack {
     return workloadResponse
   }
 
-  async deleteWorkload(teamId: string, name: string): Promise<void> {
+  async deleteAplWorkload(teamId: string, name: string): Promise<void> {
     const filePath = await this.deleteTeamWorkload('AplTeamWorkload', teamId, name)
     await this.doDeleteDeployment([filePath])
   }
@@ -2000,11 +1946,6 @@ export default class OtomiStack {
     return merge(pick(getV1ObjectFromApl(workload), ['id', 'teamId', 'name']), {
       values: data.values || undefined,
     }) as WorkloadValues
-  }
-
-  getWorkloadValues(teamId: string, name: string): WorkloadValues {
-    const workload = this.fileStore.getTeamResource('AplTeamWorkloadValues', teamId, name)
-    return { teamId, name, values: workload as any }
   }
 
   getAllAplServices(): AplServiceResponse[] {

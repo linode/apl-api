@@ -227,49 +227,6 @@ describe('API authz tests', () => {
       .expect('Content-Type', /json/)
   })
 
-  test('team member cannot update workload from other team', async () => {
-    await agent
-      .put('/v1/teams/team2/workloads/my-uuid')
-      .send({ name: 'wid', url: 'https://test.local/' })
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(403)
-  })
-
-  test('team member cannot delete workload from other team', async () => {
-    await agent
-      .delete('/v1/teams/team2/workloads/my-uuid')
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(403)
-  })
-
-  test('team member cannot update workload values from other team', async () => {
-    await agent
-      .put('/v1/teams/team2/workloads/my-uuid/values')
-      .send({ values: { a: 'b' } })
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(403)
-  })
-
-  test('team member can update workload values with payload lower than limit', async () => {
-    jest.spyOn(otomiStack, 'editWorkloadValues').mockResolvedValue({} as any)
-
-    const largePayload = { data: 'A'.repeat(400000) } // 400KB
-    await agent
-      .put('/v1/teams/team1/workloads/my-uuid/values')
-      .send({ values: largePayload })
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
-  })
-
-  test('team member cannot update workload values with payload higher than limit', async () => {
-    const largePayload = { data: 'A'.repeat(600000) } // 600KB
-    await agent
-      .put('/v1/teams/team1/workloads/my-uuid/values')
-      .send({ values: largePayload })
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(413)
-  })
-
   test('authenticated user should get api spec', async () => {
     await agent
       .get('/v1/apiDocs')
@@ -310,22 +267,6 @@ describe('API authz tests', () => {
 
   test('anonymous user cannot create a team', async () => {
     await agent.post('/v1/teams').expect(401)
-  })
-
-  test('anonymous user cannot get workloads', async () => {
-    await agent.get('/v1/teams/team1/workloads').expect(401)
-  })
-
-  test('anonymous user cannot modify a workload', async () => {
-    await agent.put('/v1/teams/team1/workloads/my-uuid').expect(401)
-  })
-
-  test('anonymous user cannot modify a workload values', async () => {
-    await agent.put('/v1/teams/team1/workloads/my-uuid/values').expect(401)
-  })
-
-  test('anonymous user cannot delete a workload', async () => {
-    await agent.delete('/v1/teams/team1/workloads/my-uuid').expect(401)
   })
 
   test('should handle exists exception and transform it to HTTP response with code 409', async () => {
