@@ -166,28 +166,43 @@ describe('Data validation', () => {
   })
 
   test('should create a password when password is not specified', async () => {
-    await otomiStack.createTeam({ name: 'test' })
+    await otomiStack.createAplTeam({
+      metadata: {
+        name: 'test',
+        labels: {
+          'apl.io/teamId': 'test',
+        },
+      },
+      spec: {},
+      kind: 'AplTeamSettingSet',
+    })
 
-    // Password should NOT be in the team settings (it's in a SealedSecret now)
     const teamSettings = otomiStack.fileStore.getTeamResource('AplTeamSettingSet', 'test', 'settings')
+
     expect(teamSettings).toBeDefined()
     expect(teamSettings?.spec.password).toBeUndefined()
 
-    // Verify Git operations were called (writeFile for team settings + writeTextFile for SealedSecret)
     expect(mockGit.writeFile).toHaveBeenCalled()
     expect(mockGit.writeTextFile).toHaveBeenCalled()
   })
 
   test('should not create a password when password is specified', async () => {
-    const myPassword = 'someAwesomePassword'
-    await otomiStack.createTeam({ name: 'test', password: myPassword })
+    await otomiStack.createAplTeam({
+      metadata: {
+        name: 'test',
+        labels: {
+          'apl.io/teamId': 'test',
+        },
+      },
+      spec: {},
+      kind: 'AplTeamSettingSet',
+    })
 
-    // Password should NOT be in the team settings (it's encrypted in a SealedSecret)
     const teamSettings = otomiStack.fileStore.getTeamResource('AplTeamSettingSet', 'test', 'settings')
+
     expect(teamSettings).toBeDefined()
     expect(teamSettings?.spec.password).toBeUndefined()
 
-    // Verify Git operations were called (SealedSecret was written)
     expect(mockGit.writeTextFile).toHaveBeenCalled()
   })
 

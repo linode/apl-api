@@ -129,7 +129,7 @@ import {
   testPublicRepoConnect,
 } from './utils/codeRepoUtils'
 import { isKnativeSupported } from './utils/k8sUtils'
-import { getAplObjectFromV1, getV1MergeObject, getV1ObjectFromApl } from './utils/manifests'
+import { getV1ObjectFromApl } from './utils/manifests'
 import {
   createPlatformSealedSecretManifest,
   createUserSealedSecret,
@@ -888,23 +888,12 @@ export default class OtomiStack {
   }
 
   getTeamSelfServiceFlags(id: string): TeamSelfService {
-    const data = this.getTeam(id)
-    return data.selfService
+    const data = this.getAplTeam(id)
+    return data.spec.selfService
   }
 
   getCore(): Core {
     return this.coreValues
-  }
-
-  getTeam(name: string): Team {
-    const settingsResponse = this.fileStore.getTeamResource('AplTeamSettingSet', name, 'settings')
-    if (!settingsResponse) {
-      throw new Error(`Team ${name} not found`)
-    }
-    const team = getV1ObjectFromApl(settingsResponse as AplTeamSettingsResponse) as Team
-    team.name = team.name || name
-    unset(team, 'password') // Remove password from the response
-    return team
   }
 
   getAplTeam(name: string): AplTeamSettingsResponse {
@@ -918,11 +907,6 @@ export default class OtomiStack {
     }
     unset(settingsResponse, 'spec.password') // Remove password from the response
     return settingsResponse
-  }
-
-  async createTeam(data: Team): Promise<Team> {
-    const newTeam = await this.createAplTeam(getAplObjectFromV1('AplTeamSettingSet', data) as AplTeamSettingsRequest)
-    return getV1ObjectFromApl(newTeam) as Team
   }
 
   async createAplTeam(data: AplTeamSettingsRequest): Promise<AplTeamSettingsResponse> {
@@ -961,12 +945,6 @@ export default class OtomiStack {
     return team.content as AplTeamSettingsResponse
   }
 
-  async editTeam(name: string, data: Team): Promise<Team> {
-    const mergeObj = getV1MergeObject(data) as DeepPartial<AplTeamSettingsRequest>
-    const mergedTeam = await this.editAplTeam(name, mergeObj)
-    return getV1ObjectFromApl(mergedTeam) as Team
-  }
-
   async editAplTeam(
     name: string,
     data: AplTeamSettingsRequest | DeepPartial<AplTeamSettingsRequest>,
@@ -982,7 +960,7 @@ export default class OtomiStack {
     return team.content as AplTeamSettingsResponse
   }
 
-  async deleteTeam(id: string): Promise<void> {
+  async deleteAplTeam(id: string): Promise<void> {
     const filePaths = await this.deleteTeamObjects(id)
     await this.doDeleteDeployment(filePaths)
   }
@@ -2174,7 +2152,7 @@ export default class OtomiStack {
   }
 
   async getKubecfg(teamId: string): Promise<KubeConfig> {
-    this.getTeam(teamId) // will throw if not existing
+    this.getAplTeam(teamId) // will throw if not existing
     const {
       cluster: { name, apiName = `otomi-${name}`, apiServer },
     } = (await this.getSettings(['cluster'])) as Record<string, any>
@@ -2215,7 +2193,7 @@ export default class OtomiStack {
   }
 
   async getDockerConfig(teamId: string): Promise<string> {
-    this.getTeam(teamId) // will throw if not existing
+    this.getAplTeam(teamId) // will throw if not existing
     const client = this.getApiClient()
     const namespace = `team-${teamId}`
     const secretName = 'harbor-pushsecret'

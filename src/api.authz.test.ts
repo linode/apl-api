@@ -5,7 +5,6 @@ import getToken from 'src/fixtures/jwt'
 import OtomiStack from 'src/otomi-stack'
 import request from 'supertest'
 import TestAgent from 'supertest/lib/agent'
-import { HttpError } from './error'
 import { FileStore } from './fileStore/file-store'
 import { Git } from './git'
 import { getSessionStack } from './middleware'
@@ -113,7 +112,6 @@ describe('API authz tests', () => {
   })
 
   beforeEach(() => {
-    jest.spyOn(otomiStack, 'createTeam').mockResolvedValue({ name: 'team', resourceQuota: [] })
     jest.spyOn(getValuesSchemaModule, 'getValuesSchema').mockResolvedValue({})
   })
 
@@ -147,43 +145,6 @@ describe('API authz tests', () => {
     })
   })
 
-  test('platform admin can update team self-service-flags', async () => {
-    jest.spyOn(otomiStack, 'editTeam').mockReturnValue({} as any)
-    await agent
-      .put('/v1/teams/team1')
-      .send({
-        name: 'team1',
-        selfService: {
-          apps: [],
-          team: [],
-          service: [],
-        },
-      })
-      .set('Authorization', `Bearer ${platformAdminToken}`)
-      .expect(200)
-  })
-
-  test('platform admin can get all teams', async () => {
-    await agent
-      .get('/v1/teams')
-      .set('Authorization', `Bearer ${platformAdminToken}`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-  })
-
-  test('platform admin can get a given team', async () => {
-    await agent
-      .get('/v1/teams/team1')
-      .set('Authorization', `Bearer ${platformAdminToken}`)
-      .expect(200)
-      .expect('Content-Type', /json/)
-  })
-
-  test('platform admin can create a team', async () => {
-    const data = { name: 'otomi', password: 'test' }
-    await agent.post('/v1/teams').send(data).set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
-  })
-
   test('platform admin can see values from an app', async () => {
     const values = { shown: true } as App['values']
     jest.spyOn(otomiStack, 'getApp').mockImplementation(() => ({ id: 'adminapp', values }))
@@ -192,39 +153,6 @@ describe('API authz tests', () => {
       .set('Authorization', `Bearer ${platformAdminToken}`)
       .expect(200)
     expect(response.body.values).toEqual(values)
-  })
-
-  test('team member cannot get all teams', async () => {
-    await agent
-      .get('/v1/teams')
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(403)
-      .expect('Content-Type', /json/)
-  })
-
-  test('team member cannot create a new team', async () => {
-    await agent
-      .post('/v1/teams')
-      .send({ name: 'otomi', password: 'test' })
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(403)
-  })
-
-  test('team member cannot get other teams', async () => {
-    jest.spyOn(otomiStack, 'getTeam').mockResolvedValue({} as never)
-    await agent
-      .get('/v1/teams/team2')
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(403)
-      .expect('Content-Type', /json/)
-  })
-
-  test('team member can get its team data', async () => {
-    await agent
-      .get('/v1/teams/team1')
-      .set('Authorization', `Bearer ${teamMemberToken}`)
-      .expect(200)
-      .expect('Content-Type', /json/)
   })
 
   test('authenticated user should get api spec', async () => {
@@ -251,28 +179,6 @@ describe('API authz tests', () => {
 
   test('anonymous user should get api spec', async () => {
     await agent.get('/v1/apiDocs').expect(200).expect('Content-Type', /json/)
-  })
-
-  test('anonymous user cannot get a specific team', async () => {
-    await agent.get('/v1/teams/team1').expect(401)
-  })
-
-  test('anonymous user cannot modify a team', async () => {
-    await agent.put('/v1/teams/team1').expect(401)
-  })
-
-  test('anonymous user cannot delete a team', async () => {
-    await agent.delete('/v1/teams/team1').expect(401)
-  })
-
-  test('anonymous user cannot create a team', async () => {
-    await agent.post('/v1/teams').expect(401)
-  })
-
-  test('should handle exists exception and transform it to HTTP response with code 409', async () => {
-    const data = { name: 'team1', password: 'test' }
-    jest.spyOn(otomiStack, 'createTeam').mockRejectedValue(new HttpError(409))
-    await agent.post('/v1/teams').send(data).set('Authorization', `Bearer ${platformAdminToken}`).expect(409)
   })
 
   describe('Platform Admin /users endpoint tests', () => {

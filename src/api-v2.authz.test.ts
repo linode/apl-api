@@ -103,26 +103,26 @@ describe('API V2 authz tests', () => {
       'getAplTeams',
       'getAplTeam',
       'editAplTeam',
-      'deleteTeam',
+      'deleteAplTeam',
       // Services
       'createAplService',
       'getAplService',
       'editAplService',
-      'deleteService',
+      'deleteAplService',
       'getAllAplServices',
       'getTeamAplServices',
       // Workloads
       'createAplWorkload',
       'getAplWorkload',
       'editAplWorkload',
-      'deleteWorkload',
+      'deleteAplWorkload',
       'getAllAplWorkloads',
       'getTeamAplWorkloads',
       // Sealed Secrets
       'createAplSealedSecret',
       'getAplSealedSecret',
       'editAplSealedSecret',
-      'deleteSealedSecret',
+      'deleteAplSealedSecret',
       'getAllAplSealedSecrets',
       'getAplSealedSecrets',
       // Code Repos
@@ -143,7 +143,7 @@ describe('API V2 authz tests', () => {
       'createAplNetpol',
       'getAplNetpol',
       'editAplNetpol',
-      'deleteNetpol',
+      'deleteAplNetpol',
       'getAllAplNetpols',
       'getTeamAplNetpols',
       // Policies
@@ -155,7 +155,7 @@ describe('API V2 authz tests', () => {
       'connectCloudtty',
       'deleteCloudtty',
       // Other
-      'createTeam',
+      'createAplTeam',
       // Git migration
       'migrateGitSettings',
       // API status
@@ -179,6 +179,50 @@ describe('API V2 authz tests', () => {
           }
         })
       }
+    })
+
+    const team1 = {
+      kind: 'AplTeamSettingSet',
+      metadata: {
+        name: 'team1',
+        labels: {
+          'apl.io/teamId': 'team1',
+        },
+      },
+      spec: {
+        selfService: {
+          teamMembers: {
+            createServices: true,
+            editSecurityPolicies: true,
+          },
+        },
+      },
+    }
+
+    const team2 = {
+      kind: 'AplTeamSettingSet',
+      metadata: {
+        name: 'team2',
+        labels: {
+          'apl.io/teamId': 'team2',
+        },
+      },
+      spec: {
+        selfService: {
+          teamMembers: {
+            createServices: false,
+            editSecurityPolicies: false,
+          },
+        },
+      },
+    }
+
+    jest.spyOn(otomiStack, 'getAplTeams').mockReturnValue([team1, team2] as any)
+
+    jest.spyOn(otomiStack, 'getAplTeam').mockImplementation((teamId: string) => {
+      if (teamId === 'team1') return team1 as any
+      if (teamId === 'team2') return team2 as any
+      throw new Error(`Team ${teamId} not found`)
     })
   })
 
@@ -1047,9 +1091,17 @@ describe('API V2 authz tests', () => {
           .expect(200)
       })
 
-      test('team member cannot update policy', async () => {
+      test('team member can update policy', async () => {
         await agent
           .put('/v2/teams/team1/policies/disallow-selinux')
+          .send(policyData)
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(200)
+      })
+
+      test('team member cannot update policy', async () => {
+        await agent
+          .put('/v2/teams/team2/policies/disallow-selinux')
           .send(policyData)
           .set('Authorization', `Bearer ${teamMemberToken}`)
           .expect(403)
