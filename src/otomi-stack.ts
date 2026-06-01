@@ -1,4 +1,4 @@
-import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
@@ -306,9 +306,12 @@ export default class OtomiStack {
     const maxRetries = env.GIT_INIT_MAX_RETRIES
     const timeoutMs = env.GIT_INIT_RETRY_INTERVAL_MS
     let attempt = 0
+    // Use the env var password as the initial value; refresh from K8s on retries
+    // to pick up ESO credential syncs that happen after pod startup (e.g. git provider switch).
+    let password = env.GIT_PASSWORD
     for (;;) {
       try {
-        this.git = await getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, env.GIT_PASSWORD, branch)
+        this.git = await getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, password, branch)
         await this.git.pull()
         //TODO fetch this url from the repo
         if (await this.git.fileExists(clusterSettingsFilePath)) break
@@ -326,6 +329,13 @@ export default class OtomiStack {
       }
       debug(`Trying again in ${timeoutMs} ms (attempt ${attempt}/${maxRetries})`)
       await new Promise((resolve) => setTimeout(resolve, timeoutMs))
+      // Re-read password from K8s in case ESO has just synced fresh credentials
+      try {
+        const secret = await getSecretValues('otomi-api-git-credentials', 'otomi')
+        if (secret?.GIT_PASSWORD) password = secret.GIT_PASSWORD
+      } catch {
+        // K8s not reachable or secret absent — keep the current password
+      }
     }
 
     if (inflateValues) {
