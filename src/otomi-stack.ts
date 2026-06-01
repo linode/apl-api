@@ -930,7 +930,7 @@ export default class OtomiStack {
     // Encrypt password into a SealedSecret manifest
     const sealedSecretName = `team-${teamName}-settings-secrets`
     const sealedSecretYaml = await createPlatformSealedSecretManifest(sealedSecretName, APL_SECRETS_NAMESPACE, {
-      password,
+      settings_password: password,
     })
     const sealedSecretPath = getNamespaceSealedSecretsValuesFilePath(APL_SECRETS_NAMESPACE, sealedSecretName)
     await this.git.writeTextFile(sealedSecretPath, sealedSecretYaml)
