@@ -129,7 +129,7 @@ describe('API V2 authz tests', () => {
       'createAplCodeRepo',
       'getAplCodeRepo',
       'editAplCodeRepo',
-      'deleteCodeRepo',
+      'deleteAplCodeRepo',
       'getAllAplCodeRepos',
       'getTeamAplCodeRepos',
       // Builds

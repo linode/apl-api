@@ -1,4 +1,4 @@
-import { CoreV1Api, KubeConfig, User as k8sUser, V1ObjectReference } from '@kubernetes/client-node'
+import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
@@ -54,7 +54,6 @@ import {
   buildPlatformObject,
   buildTeamObject,
   Cloudtty,
-  CodeRepo,
   Core,
   DeepPartial,
   K8sService,
@@ -1372,30 +1371,14 @@ export default class OtomiStack {
     return updatedUsers
   }
 
-  getTeamCodeRepos(teamId: string): CodeRepo[] {
-    return this.getTeamAplCodeRepos(teamId).map((codeRepo) => getV1ObjectFromApl(codeRepo) as CodeRepo)
-  }
-
   getTeamAplCodeRepos(teamId: string): AplCodeRepoResponse[] {
     const files = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamCodeRepo', teamId)
     return Array.from(files.values()) as AplCodeRepoResponse[]
   }
 
-  getAllCodeRepos(): CodeRepo[] {
-    return this.getAllAplCodeRepos().map((codeRepo) => getV1ObjectFromApl(codeRepo) as CodeRepo)
-  }
-
   getAllAplCodeRepos(): AplCodeRepoResponse[] {
     const files = this.fileStore.getAllTeamResourcesByKind('AplTeamCodeRepo')
     return Array.from(files.values()) as AplCodeRepoResponse[]
-  }
-
-  async createCodeRepo(teamId: string, data: CodeRepo): Promise<CodeRepo> {
-    const newCodeRepo = await this.createAplCodeRepo(
-      teamId,
-      getAplObjectFromV1('AplTeamCodeRepo', data) as AplCodeRepoRequest,
-    )
-    return getV1ObjectFromApl(newCodeRepo) as CodeRepo
   }
 
   async createAplCodeRepo(teamId: string, data: AplCodeRepoRequest): Promise<AplCodeRepoResponse> {
@@ -1414,22 +1397,12 @@ export default class OtomiStack {
     return aplRecord.content as AplCodeRepoResponse
   }
 
-  getCodeRepo(teamId: string, name: string): CodeRepo {
-    return getV1ObjectFromApl(this.getAplCodeRepo(teamId, name)) as CodeRepo
-  }
-
   getAplCodeRepo(teamId: string, name: string): AplCodeRepoResponse {
     const codeRepo = this.fileStore.getTeamResource('AplTeamCodeRepo', teamId, name)
     if (!codeRepo) {
       throw new NotExistError(`Code repo ${name} not found in team ${teamId}`)
     }
     return codeRepo as AplCodeRepoResponse
-  }
-
-  async editCodeRepo(teamId: string, name: string, data: CodeRepo): Promise<CodeRepo> {
-    const mergeObj = getV1MergeObject(data) as DeepPartial<AplCodeRepoRequest>
-    const mergedCodeRepo = await this.editAplCodeRepo(teamId, name, mergeObj)
-    return getV1ObjectFromApl(mergedCodeRepo) as CodeRepo
   }
 
   async editAplCodeRepo(
@@ -1451,7 +1424,7 @@ export default class OtomiStack {
     return aplRecord.content as AplCodeRepoResponse
   }
 
-  async deleteCodeRepo(teamId: string, name: string): Promise<void> {
+  async deleteAplCodeRepo(teamId: string, name: string): Promise<void> {
     const filePath = await this.deleteTeamConfigItem('AplTeamCodeRepo', teamId, name)
     await this.doDeleteDeployment([filePath])
   }
@@ -1542,7 +1515,7 @@ export default class OtomiStack {
   }
 
   async getDashboard(teamId: string): Promise<Array<any>> {
-    const codeRepos = teamId ? this.getTeamAplCodeRepos(teamId) : this.getAllCodeRepos()
+    const codeRepos = teamId ? this.getTeamAplCodeRepos(teamId) : this.getAllAplCodeRepos()
     const builds = teamId ? this.getTeamAplBuilds(teamId) : this.getAllBuilds()
     const workloads = teamId ? this.getTeamAplWorkloads(teamId) : this.getAllWorkloads()
     const services = teamId ? this.getTeamAplServices(teamId) : await this.getAllServices()
