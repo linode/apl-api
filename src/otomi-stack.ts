@@ -1516,7 +1516,7 @@ export default class OtomiStack {
 
   async getDashboard(teamId: string): Promise<Array<any>> {
     const codeRepos = teamId ? this.getTeamAplCodeRepos(teamId) : this.getAllAplCodeRepos()
-    const builds = teamId ? this.getTeamAplBuilds(teamId) : this.getAllBuilds()
+    const builds = teamId ? this.getTeamAplBuilds(teamId) : this.getAllAplBuilds()
     const workloads = teamId ? this.getTeamAplWorkloads(teamId) : this.getAllWorkloads()
     const services = teamId ? this.getTeamAplServices(teamId) : await this.getAllServices()
     const secrets = teamId ? this.getAplSealedSecrets(teamId) : this.getAllAplSealedSecrets()
@@ -1532,27 +1532,14 @@ export default class OtomiStack {
     ]
   }
 
-  getTeamBuilds(teamId: string): Build[] {
-    return this.getTeamAplBuilds(teamId).map((build) => getV1ObjectFromApl(build) as Build)
-  }
-
   getTeamAplBuilds(teamId: string): AplBuildResponse[] {
     const files = this.fileStore.getTeamResourcesByKindAndTeamId('AplTeamBuild', teamId)
     return Array.from(files.values()) as AplBuildResponse[]
   }
 
-  getAllBuilds(): Build[] {
-    return this.getAllAplBuilds().map((build) => getV1ObjectFromApl(build) as Build)
-  }
-
   getAllAplBuilds(): AplBuildResponse[] {
     const files = this.fileStore.getAllTeamResourcesByKind('AplTeamBuild')
     return Array.from(files.values()) as AplBuildResponse[]
-  }
-
-  async createBuild(teamId: string, data: Build): Promise<Build> {
-    const newBuild = await this.createAplBuild(teamId, getAplObjectFromV1('AplTeamBuild', data) as AplBuildRequest)
-    return getV1ObjectFromApl(newBuild) as Build
   }
 
   async createAplBuild(teamId: string, data: AplBuildRequest): Promise<AplBuildResponse> {
@@ -1579,22 +1566,12 @@ export default class OtomiStack {
     return aplRecord.content as AplBuildResponse
   }
 
-  getBuild(teamId: string, name: string): Build {
-    return getV1ObjectFromApl(this.getAplBuild(teamId, name)) as Build
-  }
-
   getAplBuild(teamId: string, name: string): AplBuildResponse {
     const build = this.fileStore.getTeamResource('AplTeamBuild', teamId, name)
     if (!build) {
       throw new NotExistError(`Build ${name} not found in team ${teamId}`)
     }
     return build as AplBuildResponse
-  }
-
-  async editBuild(teamId: string, name: string, data: Build): Promise<Build> {
-    const mergeObj = getV1MergeObject(data) as DeepPartial<AplBuildRequest>
-    const mergedBuild = await this.editAplBuild(teamId, name, mergeObj)
-    return getV1ObjectFromApl(mergedBuild) as Build
   }
 
   async editAplBuild(
@@ -1616,7 +1593,7 @@ export default class OtomiStack {
     return aplRecord.content as AplBuildResponse
   }
 
-  async deleteBuild(teamId: string, name: string): Promise<void> {
+  async deleteAplBuild(teamId: string, name: string): Promise<void> {
     const filePath = await this.deleteTeamConfigItem('AplTeamBuild', teamId, name)
     await this.doDeleteDeployment([filePath])
   }

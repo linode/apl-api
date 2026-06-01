@@ -136,7 +136,7 @@ describe('API V2 authz tests', () => {
       'createAplBuild',
       'getAplBuild',
       'editAplBuild',
-      'deleteBuild',
+      'deleteAplBuild',
       'getAllAplBuilds',
       'getTeamAplBuilds',
       // Network Policies
