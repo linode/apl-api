@@ -52,12 +52,15 @@ jest.mock('@kubernetes/client-node', () => {
   class CoreV1Api {}
   class CustomObjectsApi {}
   class RbacAuthorizationV1Api {}
+  const PatchStrategy = { StrategicMergePatch: 'application/strategic-merge-patch+json' }
 
   return {
     ApiException: MockApiException,
     CoreV1Api,
     CustomObjectsApi,
     RbacAuthorizationV1Api,
+    PatchStrategy,
+    setHeaderOptions: jest.fn(),
     KubeConfig: jest.fn().mockImplementation(() => ({
       makeApiClient: mockMakeApiClient,
       loadFromDefault: jest.fn(),
@@ -105,7 +108,7 @@ describe('CloudTty', () => {
     const result = await tty.createOrPatch(createFn, patchFn, params)
 
     expect(createFn).toHaveBeenCalledWith(params)
-    expect(patchFn).toHaveBeenCalledWith({ name: 'x', body: params.body })
+    expect(patchFn).toHaveBeenCalledWith({ name: 'x', body: params.body }, undefined)
     expect(result).toEqual({ kind: 'patched' })
   })
 

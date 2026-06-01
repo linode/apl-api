@@ -1,10 +1,13 @@
 import {
   ApiException,
+  ConfigurationOptions,
   CoreV1Api,
   CustomObjectsApi,
   KubeConfig,
   KubernetesObject,
+  PatchStrategy,
   RbacAuthorizationV1Api,
+  setHeaderOptions,
 } from '@kubernetes/client-node'
 import Debug from 'debug'
 import { SessionUser } from './otomi-models'
@@ -37,7 +40,7 @@ export default class CloudTty {
 
   async createOrPatch<T extends { body: KubernetesObject }>(
     createFunc: (params: T) => Promise<KubernetesObject>,
-    patchFunc: (params: T) => Promise<KubernetesObject>,
+    patchFunc: (params: T, options?: ConfigurationOptions) => Promise<KubernetesObject>,
     params: T,
   ): Promise<KubernetesObject> {
     try {
@@ -45,7 +48,7 @@ export default class CloudTty {
     } catch (error) {
       if (error instanceof ApiException && error.code === 409) {
         const { name } = params.body.metadata!
-        return await patchFunc({ name, ...params })
+        return await patchFunc({ name, ...params }, setHeaderOptions('Content-Type', PatchStrategy.StrategicMergePatch))
       } else {
         throw error
       }
