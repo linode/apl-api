@@ -53,6 +53,6 @@ export const patchAplNetpol = async (req: OpenApiRequestExt, res: Response): Pro
 export const deleteAplNetpol = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, netpolName } = req.params
   debug(`deleteNetpol(${netpolName})`)
-  await req.otomi.deleteNetpol(decodeURIComponent(teamId), decodeURIComponent(netpolName))
+  await req.otomi.deleteAplNetpol(decodeURIComponent(teamId), decodeURIComponent(netpolName))
   res.json({})
 }

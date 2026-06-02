@@ -3,10 +3,10 @@ import { Request, Response } from 'express'
 import { getSealedSecretsKeys } from 'src/k8s-operations'
 import YAML from 'yaml'
 
-const debug = Debug('otomi:api:v1:sealedsecrets')
+const debug = Debug('otomi:api:v2:sealedsecrets')
 
 /**
- * GET /v1/sealedsecretskeys
+ * GET /v2/sealedsecretskeys
  * Get sealed secrets keys
  */
 export const getSealedSecretKeys = async (req: Request, res: Response): Promise<void> => {
