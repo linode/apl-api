@@ -53,6 +53,6 @@ export const patchAplSealedSecret = async (req: OpenApiRequestExt, res: Response
 export const deleteAplSealedSecret = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, sealedSecretName } = req.params
   debug(`deleteSealedSecret(${sealedSecretName})`)
-  await req.otomi.deleteSealedSecret(decodeURIComponent(teamId), decodeURIComponent(sealedSecretName))
+  await req.otomi.deleteAplSealedSecret(decodeURIComponent(teamId), decodeURIComponent(sealedSecretName))
   res.json({})
 }
