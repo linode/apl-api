@@ -166,28 +166,43 @@ describe('Data validation', () => {
   })
 
   test('should create a password when password is not specified', async () => {
-    await otomiStack.createTeam({ name: 'test' })
+    await otomiStack.createAplTeam({
+      metadata: {
+        name: 'test',
+        labels: {
+          'apl.io/teamId': 'test',
+        },
+      },
+      spec: {},
+      kind: 'AplTeamSettingSet',
+    })
 
-    // Password should NOT be in the team settings (it's in a SealedSecret now)
     const teamSettings = otomiStack.fileStore.getTeamResource('AplTeamSettingSet', 'test', 'settings')
+
     expect(teamSettings).toBeDefined()
     expect(teamSettings?.spec.password).toBeUndefined()
 
-    // Verify Git operations were called (writeFile for team settings + writeTextFile for SealedSecret)
     expect(mockGit.writeFile).toHaveBeenCalled()
     expect(mockGit.writeTextFile).toHaveBeenCalled()
   })
 
   test('should not create a password when password is specified', async () => {
-    const myPassword = 'someAwesomePassword'
-    await otomiStack.createTeam({ name: 'test', password: myPassword })
+    await otomiStack.createAplTeam({
+      metadata: {
+        name: 'test',
+        labels: {
+          'apl.io/teamId': 'test',
+        },
+      },
+      spec: {},
+      kind: 'AplTeamSettingSet',
+    })
 
-    // Password should NOT be in the team settings (it's encrypted in a SealedSecret)
     const teamSettings = otomiStack.fileStore.getTeamResource('AplTeamSettingSet', 'test', 'settings')
+
     expect(teamSettings).toBeDefined()
     expect(teamSettings?.spec.password).toBeUndefined()
 
-    // Verify Git operations were called (SealedSecret was written)
     expect(mockGit.writeTextFile).toHaveBeenCalled()
   })
 
@@ -942,7 +957,7 @@ describe('PodService', () => {
   })
 })
 
-describe('Code repositories tests', () => {
+describe('APL code repositories tests', () => {
   let otomiStack: OtomiStack
   let mockGit: jest.Mocked<Git>
 
@@ -950,21 +965,17 @@ describe('Code repositories tests', () => {
     otomiStack = new OtomiStack()
     await otomiStack.init()
 
-    // Initialize FileStore
     const { FileStore } = require('./fileStore/file-store')
     otomiStack.fileStore = new FileStore()
 
-    // Mock Git operations
     mockGit = mockDeep<Git>()
     otomiStack.git = mockGit
 
     const { getSessionStack } = require('src/middleware')
     jest.mocked(getSessionStack).mockResolvedValue(otomiStack)
 
-    // Pre-create team in FileStore
     createTestTeam(otomiStack, 'demo', {})
 
-    // Pre-create a code repo for testing get/edit/delete operations
     const codeRepo: AplCodeRepoResponse = {
       kind: 'AplTeamCodeRepo',
       metadata: {
@@ -973,14 +984,17 @@ describe('Code repositories tests', () => {
         },
         name: 'code-1',
       },
-      spec: { gitService: 'gitea', repositoryUrl: 'https://gitea.test.com' },
+      spec: {
+        gitService: 'gitea',
+        repositoryUrl: 'https://gitea.test.com',
+      },
       status: {},
     }
+
     otomiStack.fileStore.setTeamResource(codeRepo)
 
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
     jest.spyOn(otomiStack, 'doDeleteDeployment').mockResolvedValue()
-    jest.spyOn(mockGit, 'removeFile').mockResolvedValue()
   })
 
   afterEach(() => {
@@ -988,119 +1002,132 @@ describe('Code repositories tests', () => {
   })
 
   test('should create an internal code repository', async () => {
-    const codeRepo = await otomiStack.createCodeRepo('demo', {
-      name: 'code-2',
-      gitService: 'gitea',
-      repositoryUrl: 'https://gitea-new.test.com',
+    const codeRepo = await otomiStack.createAplCodeRepo('demo', {
+      metadata: {
+        name: 'code-2',
+      },
+      spec: {
+        gitService: 'gitea',
+        repositoryUrl: 'https://gitea-new.test.com',
+      },
+      kind: 'AplTeamCodeRepo',
     })
 
-    // Verify return value
     expect(codeRepo).toEqual({
-      teamId: 'demo',
-      name: 'code-2',
-      gitService: 'gitea',
-      repositoryUrl: 'https://gitea-new.test.com',
+      kind: 'AplTeamCodeRepo',
+      metadata: {
+        labels: {
+          'apl.io/teamId': 'demo',
+        },
+        name: 'code-2',
+      },
+      spec: {
+        gitService: 'gitea',
+        repositoryUrl: 'https://gitea-new.test.com',
+      },
+      status: expect.any(Object),
     })
 
-    // Verify FileStore state
     const stored = otomiStack.fileStore.getTeamResource('AplTeamCodeRepo', 'demo', 'code-2')
     expect(stored).toBeDefined()
     expect(stored?.metadata.name).toBe('code-2')
     expect(stored?.spec.gitService).toBe('gitea')
     expect(stored?.spec.repositoryUrl).toBe('https://gitea-new.test.com')
+    expect(stored?.spec.private).toBeUndefined()
+    expect(stored?.spec.secret).toBeUndefined()
 
-    // Verify Git operations
-    expect(mockGit.writeFile).toHaveBeenCalledWith(
-      'env/teams/demo/codeRepos/code-2.yaml',
-      expect.objectContaining({ kind: 'AplTeamCodeRepo' }),
-    )
     expect(otomiStack.doDeployment).toHaveBeenCalled()
   })
 
   test('should get an existing internal code repository', () => {
-    // code-1 is already pre-created in beforeEach
-    const result = otomiStack.getCodeRepo('demo', 'code-1')
+    const result = otomiStack.getAplCodeRepo('demo', 'code-1')
 
     expect(result).toEqual({
-      teamId: 'demo',
-      name: 'code-1',
-      gitService: 'gitea',
-      repositoryUrl: 'https://gitea.test.com',
+      kind: 'AplTeamCodeRepo',
+      metadata: {
+        labels: {
+          'apl.io/teamId': 'demo',
+        },
+        name: 'code-1',
+      },
+      spec: {
+        gitService: 'gitea',
+        repositoryUrl: 'https://gitea.test.com',
+      },
+      status: {},
     })
   })
 
   test('should edit an existing internal code repository', async () => {
-    const codeRepo = await otomiStack.editCodeRepo('demo', 'code-1', {
-      teamId: 'demo',
-      name: 'code-1',
-      gitService: 'gitea',
-      repositoryUrl: 'https://gitea-updated.test.com',
+    const codeRepo = await otomiStack.editAplCodeRepo('demo', 'code-1', {
+      spec: {
+        gitService: 'gitea',
+        repositoryUrl: 'https://gitea-updated.test.com',
+      },
     })
 
-    // Verify return value
-    expect(codeRepo).toEqual({
-      teamId: 'demo',
-      name: 'code-1',
-      gitService: 'gitea',
-      repositoryUrl: 'https://gitea-updated.test.com',
-    })
+    expect(codeRepo.metadata.name).toBe('code-1')
+    expect(codeRepo.spec.gitService).toBe('gitea')
+    expect(codeRepo.spec.repositoryUrl).toBe('https://gitea-updated.test.com')
+    expect(codeRepo.spec.private).toBeUndefined()
+    expect(codeRepo.spec.secret).toBeUndefined()
 
-    // Verify FileStore was updated
     const stored = otomiStack.fileStore.getTeamResource('AplTeamCodeRepo', 'demo', 'code-1')
     expect(stored?.spec.repositoryUrl).toBe('https://gitea-updated.test.com')
+    expect(stored?.spec.private).toBeUndefined()
+    expect(stored?.spec.secret).toBeUndefined()
 
-    // Verify Git operations
-    expect(mockGit.writeFile).toHaveBeenCalled()
     expect(otomiStack.doDeployment).toHaveBeenCalled()
   })
 
   test('should delete an existing internal code repository', async () => {
-    // Verify code-1 exists in FileStore
     let stored = otomiStack.fileStore.getTeamResource('AplTeamCodeRepo', 'demo', 'code-1')
     expect(stored).toBeDefined()
 
-    await otomiStack.deleteCodeRepo('demo', 'code-1')
+    await otomiStack.deleteAplCodeRepo('demo', 'code-1')
 
-    // Verify it was deleted from FileStore
     stored = otomiStack.fileStore.getTeamResource('AplTeamCodeRepo', 'demo', 'code-1')
     expect(stored).toBeUndefined()
 
-    // Verify Git operations
-    expect(mockGit.removeFile).toHaveBeenCalled()
     expect(otomiStack.doDeleteDeployment).toHaveBeenCalled()
   })
 
   test('should create an external public code repository', async () => {
-    const codeRepo = await otomiStack.createCodeRepo('demo', {
-      name: 'ext-pub-1',
-      gitService: 'github',
-      repositoryUrl: 'https://github.test.com',
+    const codeRepo = await otomiStack.createAplCodeRepo('demo', {
+      metadata: {
+        name: 'ext-pub-1',
+      },
+      spec: {
+        gitService: 'github',
+        repositoryUrl: 'https://github.test.com',
+      },
+      kind: 'AplTeamCodeRepo',
     })
 
-    // Verify return value
-    expect(codeRepo).toEqual({
-      teamId: 'demo',
-      name: 'ext-pub-1',
-      gitService: 'github',
-      repositoryUrl: 'https://github.test.com',
-    })
+    expect(codeRepo.metadata.name).toBe('ext-pub-1')
+    expect(codeRepo.metadata.labels['apl.io/teamId']).toBe('demo')
+    expect(codeRepo.spec.gitService).toBe('github')
+    expect(codeRepo.spec.repositoryUrl).toBe('https://github.test.com')
+    expect(codeRepo.spec.private).toBeFalsy()
+    expect(codeRepo.spec.secret).toBeUndefined()
 
-    // Verify FileStore state
     const stored = otomiStack.fileStore.getTeamResource('AplTeamCodeRepo', 'demo', 'ext-pub-1')
     expect(stored).toBeDefined()
     expect(stored?.spec.gitService).toBe('github')
+    expect(stored?.spec.repositoryUrl).toBe('https://github.test.com')
+    expect(stored?.spec.secret).toBeUndefined()
 
-    // Verify Git operations
-    expect(mockGit.writeFile).toHaveBeenCalled()
+    expect(otomiStack.doDeployment).toHaveBeenCalled()
   })
 
   test('should get an existing external public code repository', () => {
-    // Create external public repo in FileStore
     const extPubRepo: AplCodeRepoResponse = {
       kind: 'AplTeamCodeRepo',
       metadata: {
         name: 'ext-pub-get',
-        labels: { 'apl.io/teamId': 'demo' },
+        labels: {
+          'apl.io/teamId': 'demo',
+        },
       },
       spec: {
         gitService: 'github',
@@ -1108,24 +1135,22 @@ describe('Code repositories tests', () => {
       },
       status: {},
     }
+
     otomiStack.fileStore.setTeamResource(extPubRepo)
 
-    const result = otomiStack.getCodeRepo('demo', 'ext-pub-get')
-    expect(result).toEqual({
-      teamId: 'demo',
-      name: 'ext-pub-get',
-      gitService: 'github',
-      repositoryUrl: 'https://github.test.com',
-    })
+    const result = otomiStack.getAplCodeRepo('demo', 'ext-pub-get')
+
+    expect(result).toEqual(extPubRepo)
   })
 
   test('should edit an existing external public code repository', async () => {
-    // Create repo to edit
     const extPubRepo: AplCodeRepoResponse = {
       kind: 'AplTeamCodeRepo',
       metadata: {
         name: 'ext-pub-edit',
-        labels: { 'apl.io/teamId': 'demo' },
+        labels: {
+          'apl.io/teamId': 'demo',
+        },
       },
       spec: {
         gitService: 'github',
@@ -1133,35 +1158,36 @@ describe('Code repositories tests', () => {
       },
       status: {},
     }
+
     otomiStack.fileStore.setTeamResource(extPubRepo)
 
-    const codeRepo = await otomiStack.editCodeRepo('demo', 'ext-pub-edit', {
-      teamId: 'demo',
-      name: 'ext-pub-edit',
-      gitService: 'github',
-      repositoryUrl: 'https://github-updated.test.com',
+    const codeRepo = await otomiStack.editAplCodeRepo('demo', 'ext-pub-edit', {
+      spec: {
+        gitService: 'github',
+        repositoryUrl: 'https://github-updated.test.com',
+      },
     })
 
-    // Verify return value
-    expect(codeRepo).toEqual({
-      teamId: 'demo',
-      name: 'ext-pub-edit',
-      gitService: 'github',
-      repositoryUrl: 'https://github-updated.test.com',
-    })
+    expect(codeRepo.metadata.name).toBe('ext-pub-edit')
+    expect(codeRepo.spec.gitService).toBe('github')
+    expect(codeRepo.spec.repositoryUrl).toBe('https://github-updated.test.com')
+    expect(codeRepo.spec.secret).toBeUndefined()
 
-    // Verify FileStore was updated
     const stored = otomiStack.fileStore.getTeamResource('AplTeamCodeRepo', 'demo', 'ext-pub-edit')
     expect(stored?.spec.repositoryUrl).toBe('https://github-updated.test.com')
+    expect(stored?.spec.secret).toBeUndefined()
+
+    expect(otomiStack.doDeployment).toHaveBeenCalled()
   })
 
   test('should delete an existing external public code repository', async () => {
-    // Create repo to delete
     const extPubRepo: AplCodeRepoResponse = {
       kind: 'AplTeamCodeRepo',
       metadata: {
         name: 'ext-pub-del',
-        labels: { 'apl.io/teamId': 'demo' },
+        labels: {
+          'apl.io/teamId': 'demo',
+        },
       },
       spec: {
         gitService: 'github',
@@ -1169,48 +1195,54 @@ describe('Code repositories tests', () => {
       },
       status: {},
     }
+
     otomiStack.fileStore.setTeamResource(extPubRepo)
 
-    await otomiStack.deleteCodeRepo('demo', 'ext-pub-del')
+    await otomiStack.deleteAplCodeRepo('demo', 'ext-pub-del')
 
-    // Verify it was deleted
     const stored = otomiStack.fileStore.getTeamResource('AplTeamCodeRepo', 'demo', 'ext-pub-del')
     expect(stored).toBeUndefined()
+
+    expect(otomiStack.doDeleteDeployment).toHaveBeenCalled()
   })
 
   test('should create an external private code repository', async () => {
-    const codeRepo = await otomiStack.createCodeRepo('demo', {
-      name: 'ext-priv-1',
-      gitService: 'github',
-      repositoryUrl: 'https://github.test.com',
-      private: true,
-      secret: 'test',
+    const codeRepo = await otomiStack.createAplCodeRepo('demo', {
+      metadata: {
+        name: 'ext-priv-1',
+      },
+      spec: {
+        gitService: 'github',
+        repositoryUrl: 'https://github.test.com',
+        private: true,
+        secret: 'test',
+      },
+      kind: 'AplTeamCodeRepo',
     })
 
-    // Verify return value
-    expect(codeRepo).toEqual({
-      teamId: 'demo',
-      name: 'ext-priv-1',
-      gitService: 'github',
-      repositoryUrl: 'https://github.test.com',
-      private: true,
-      secret: 'test',
-    })
+    expect(codeRepo.metadata.name).toBe('ext-priv-1')
+    expect(codeRepo.metadata.labels['apl.io/teamId']).toBe('demo')
+    expect(codeRepo.spec.gitService).toBe('github')
+    expect(codeRepo.spec.repositoryUrl).toBe('https://github.test.com')
+    expect(codeRepo.spec.private).toBe(true)
+    expect(codeRepo.spec.secret).toBe('test')
 
-    // Verify FileStore state
     const stored = otomiStack.fileStore.getTeamResource('AplTeamCodeRepo', 'demo', 'ext-priv-1')
     expect(stored).toBeDefined()
     expect(stored?.spec.private).toBe(true)
     expect(stored?.spec.secret).toBe('test')
+
+    expect(otomiStack.doDeployment).toHaveBeenCalled()
   })
 
   test('should edit an existing external private code repository', async () => {
-    // Create repo to edit
     const extPrivRepo: AplCodeRepoResponse = {
       kind: 'AplTeamCodeRepo',
       metadata: {
         name: 'ext-priv-edit',
-        labels: { 'apl.io/teamId': 'demo' },
+        labels: {
+          'apl.io/teamId': 'demo',
+        },
       },
       spec: {
         gitService: 'github',
@@ -1220,39 +1252,39 @@ describe('Code repositories tests', () => {
       },
       status: {},
     }
+
     otomiStack.fileStore.setTeamResource(extPrivRepo)
 
-    const codeRepo = await otomiStack.editCodeRepo('demo', 'ext-priv-edit', {
-      teamId: 'demo',
-      name: 'ext-priv-edit',
-      gitService: 'github',
-      repositoryUrl: 'https://github.test.com',
-      private: true,
-      secret: 'test-updated',
+    const codeRepo = await otomiStack.editAplCodeRepo('demo', 'ext-priv-edit', {
+      spec: {
+        gitService: 'github',
+        repositoryUrl: 'https://github.test.com',
+        private: true,
+        secret: 'test-updated',
+      },
     })
 
-    // Verify return value
-    expect(codeRepo).toEqual({
-      teamId: 'demo',
-      name: 'ext-priv-edit',
-      gitService: 'github',
-      repositoryUrl: 'https://github.test.com',
-      private: true,
-      secret: 'test-updated',
-    })
+    expect(codeRepo.metadata.name).toBe('ext-priv-edit')
+    expect(codeRepo.spec.gitService).toBe('github')
+    expect(codeRepo.spec.repositoryUrl).toBe('https://github.test.com')
+    expect(codeRepo.spec.private).toBe(true)
+    expect(codeRepo.spec.secret).toBe('test-updated')
 
-    // Verify FileStore was updated
     const stored = otomiStack.fileStore.getTeamResource('AplTeamCodeRepo', 'demo', 'ext-priv-edit')
+    expect(stored?.spec.private).toBe(true)
     expect(stored?.spec.secret).toBe('test-updated')
+
+    expect(otomiStack.doDeployment).toHaveBeenCalled()
   })
 
   test('should delete an existing external private code repository', async () => {
-    // Create repo to delete
     const extPrivRepo: AplCodeRepoResponse = {
       kind: 'AplTeamCodeRepo',
       metadata: {
         name: 'ext-priv-del',
-        labels: { 'apl.io/teamId': 'demo' },
+        labels: {
+          'apl.io/teamId': 'demo',
+        },
       },
       spec: {
         gitService: 'github',
@@ -1262,13 +1294,15 @@ describe('Code repositories tests', () => {
       },
       status: {},
     }
+
     otomiStack.fileStore.setTeamResource(extPrivRepo)
 
-    await otomiStack.deleteCodeRepo('demo', 'ext-priv-del')
+    await otomiStack.deleteAplCodeRepo('demo', 'ext-priv-del')
 
-    // Verify it was deleted
     const stored = otomiStack.fileStore.getTeamResource('AplTeamCodeRepo', 'demo', 'ext-priv-del')
     expect(stored).toBeUndefined()
+
+    expect(otomiStack.doDeleteDeployment).toHaveBeenCalled()
   })
 })
 

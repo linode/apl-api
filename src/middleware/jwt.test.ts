@@ -66,7 +66,15 @@ describe('JWT claims mapping', () => {
   })
 
   test('Multiple team groups should result in the same amount of teams existing', async () => {
-    await Promise.all(multiTeamUser.map(async (teamId) => otomiStack.createTeam({ name: teamId })))
+    await Promise.all(
+      multiTeamUser.map(async (teamId) =>
+        otomiStack.createAplTeam({
+          kind: 'AplTeamSettingSet',
+          spec: {},
+          metadata: { name: teamId, labels: { 'apl.io/teamId': teamId } },
+        }),
+      ),
+    )
     const user = getUser(multiTeamJWT, otomiStack)
     expect(user.teams).toEqual(multiTeamUser)
     expect(user.isPlatformAdmin).toBeFalsy()
@@ -74,7 +82,15 @@ describe('JWT claims mapping', () => {
 
   test("Non existing team groups should not be added to the user's list of teams", async () => {
     const extraneousTeamsList = [...multiTeamUser, 'nonexist']
-    await Promise.all(extraneousTeamsList.map(async (teamId) => otomiStack.createTeam({ name: teamId })))
+    await Promise.all(
+      extraneousTeamsList.map(async (teamId) =>
+        otomiStack.createAplTeam({
+          kind: 'AplTeamSettingSet',
+          spec: {},
+          metadata: { name: teamId, labels: { 'apl.io/teamId': teamId } },
+        }),
+      ),
+    )
     const user = getUser(multiTeamJWT, otomiStack)
     expect(user.teams).toEqual(multiTeamUser)
     expect(user.isPlatformAdmin).toBeFalsy()
