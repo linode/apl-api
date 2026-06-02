@@ -103,47 +103,47 @@ describe('API V2 authz tests', () => {
       'getAplTeams',
       'getAplTeam',
       'editAplTeam',
-      'deleteTeam',
+      'deleteAplTeam',
       // Services
       'createAplService',
       'getAplService',
       'editAplService',
-      'deleteService',
+      'deleteAplService',
       'getAllAplServices',
       'getTeamAplServices',
       // Workloads
       'createAplWorkload',
       'getAplWorkload',
       'editAplWorkload',
-      'deleteWorkload',
+      'deleteAplWorkload',
       'getAllAplWorkloads',
       'getTeamAplWorkloads',
       // Sealed Secrets
       'createAplSealedSecret',
       'getAplSealedSecret',
       'editAplSealedSecret',
-      'deleteSealedSecret',
+      'deleteAplSealedSecret',
       'getAllAplSealedSecrets',
       'getAplSealedSecrets',
       // Code Repos
       'createAplCodeRepo',
       'getAplCodeRepo',
       'editAplCodeRepo',
-      'deleteCodeRepo',
+      'deleteAplCodeRepo',
       'getAllAplCodeRepos',
       'getTeamAplCodeRepos',
       // Builds
       'createAplBuild',
       'getAplBuild',
       'editAplBuild',
-      'deleteBuild',
+      'deleteAplBuild',
       'getAllAplBuilds',
       'getTeamAplBuilds',
       // Network Policies
       'createAplNetpol',
       'getAplNetpol',
       'editAplNetpol',
-      'deleteNetpol',
+      'deleteAplNetpol',
       'getAllAplNetpols',
       'getTeamAplNetpols',
       // Policies
@@ -155,7 +155,7 @@ describe('API V2 authz tests', () => {
       'connectCloudtty',
       'deleteCloudtty',
       // Other
-      'createTeam',
+      'createAplTeam',
       // Git migration
       'migrateGitSettings',
       // API status
@@ -179,6 +179,50 @@ describe('API V2 authz tests', () => {
           }
         })
       }
+    })
+
+    const team1 = {
+      kind: 'AplTeamSettingSet',
+      metadata: {
+        name: 'team1',
+        labels: {
+          'apl.io/teamId': 'team1',
+        },
+      },
+      spec: {
+        selfService: {
+          teamMembers: {
+            createServices: true,
+            editSecurityPolicies: true,
+          },
+        },
+      },
+    }
+
+    const team2 = {
+      kind: 'AplTeamSettingSet',
+      metadata: {
+        name: 'team2',
+        labels: {
+          'apl.io/teamId': 'team2',
+        },
+      },
+      spec: {
+        selfService: {
+          teamMembers: {
+            createServices: false,
+            editSecurityPolicies: false,
+          },
+        },
+      },
+    }
+
+    jest.spyOn(otomiStack, 'getAplTeams').mockReturnValue([team1, team2] as any)
+
+    jest.spyOn(otomiStack, 'getAplTeam').mockImplementation((teamId: string) => {
+      if (teamId === 'team1') return team1 as any
+      if (teamId === 'team2') return team2 as any
+      throw new Error(`Team ${teamId} not found`)
     })
   })
 
@@ -678,6 +722,54 @@ describe('API V2 authz tests', () => {
       })
     })
 
+    describe('Code repository utility endpoints', () => {
+      const data = {
+        repositoryUrl: 'github.com/buildpacks/samples',
+      }
+
+      test('team member can test own code repository url', async () => {
+        jest.spyOn(otomiStack, 'getTestRepoConnect').mockResolvedValue({ status: 'success' })
+
+        await agent
+          .get('/v2/teams/team1/coderepos/testRepoConnect')
+          .query({
+            url: data.repositoryUrl,
+          })
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(200)
+      })
+
+      test('team member cannot test other team code repository url', async () => {
+        jest.spyOn(otomiStack, 'getTestRepoConnect').mockResolvedValue({ status: 'success' })
+
+        await agent
+          .get('/v2/teams/team2/coderepos/testRepoConnect')
+          .query({
+            url: data.repositoryUrl,
+          })
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('team member can get own internal repository urls', async () => {
+        jest.spyOn(otomiStack, 'getInternalRepoUrls').mockResolvedValue([])
+
+        await agent
+          .get('/v2/teams/team1/internalRepoUrls')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(200)
+      })
+
+      test('team member cannot get other internal repository urls', async () => {
+        jest.spyOn(otomiStack, 'getInternalRepoUrls').mockResolvedValue([])
+
+        await agent
+          .get('/v2/teams/team2/internalRepoUrls')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+    })
+
     describe('Cross-Team Access Denial', () => {
       test('team member cannot create code repo in other team', async () => {
         await agent
@@ -999,9 +1091,17 @@ describe('API V2 authz tests', () => {
           .expect(200)
       })
 
-      test('team member cannot update policy', async () => {
+      test('team member can update policy', async () => {
         await agent
           .put('/v2/teams/team1/policies/disallow-selinux')
+          .send(policyData)
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(200)
+      })
+
+      test('team member cannot update policy', async () => {
+        await agent
+          .put('/v2/teams/team2/policies/disallow-selinux')
           .send(policyData)
           .set('Authorization', `Bearer ${teamMemberToken}`)
           .expect(403)
@@ -1177,15 +1277,25 @@ describe('API V2 authz tests', () => {
   })
 
   test('team member cannot create its own services when disabled', async () => {
-    jest.spyOn(otomiStack, 'createService').mockResolvedValue({} as any)
+    jest.spyOn(otomiStack, 'createAplService').mockResolvedValue({} as any)
+
     await agent
-      .post('/v1/teams/team2/services')
+      .post('/v2/teams/team2/services')
       .send({
-        name: 'newservice',
-        serviceType: 'ksvcPredeployed',
-        ingress: { type: 'cluster' },
-        networkPolicy: {
-          ingressPrivate: { mode: 'DenyAll' },
+        kind: 'AplTeamService',
+        metadata: {
+          name: 'newservice',
+        },
+        spec: {
+          serviceType: 'ksvcPredeployed',
+          ingress: {
+            type: 'cluster',
+          },
+          networkPolicy: {
+            ingressPrivate: {
+              mode: 'DenyAll',
+            },
+          },
         },
       })
       .set('Content-Type', 'application/json')
