@@ -52,12 +52,15 @@ jest.mock('@kubernetes/client-node', () => {
   class CoreV1Api {}
   class CustomObjectsApi {}
   class RbacAuthorizationV1Api {}
+  const PatchStrategy = { ServerSideApply: 'application/apply-patch+yaml' }
 
   return {
     ApiException: MockApiException,
     CoreV1Api,
     CustomObjectsApi,
     RbacAuthorizationV1Api,
+    PatchStrategy,
+    setHeaderOptions: jest.fn().mockImplementation(() => 'header-options'),
     KubeConfig: jest.fn().mockImplementation(() => ({
       makeApiClient: mockMakeApiClient,
       loadFromDefault: jest.fn(),
@@ -87,9 +90,10 @@ describe('CloudTty', () => {
     const createFn = jest.fn().mockResolvedValue({ kind: 'created' })
     const patchFn = jest.fn().mockResolvedValue({ kind: 'patched' })
 
-    const result = await tty.createOrPatch(createFn, patchFn, { id: 'x' })
+    const params = { body: { metadata: { name: 'x' }, spec: {} } }
+    const result = await tty.createOrPatch(createFn, patchFn, params)
 
-    expect(createFn).toHaveBeenCalledWith({ id: 'x' })
+    expect(createFn).toHaveBeenCalledWith(params)
     expect(patchFn).not.toHaveBeenCalled()
     expect(result).toEqual({ kind: 'created' })
   })
@@ -101,10 +105,14 @@ describe('CloudTty', () => {
     })
     const patchFn = jest.fn().mockResolvedValue({ kind: 'patched' })
 
-    const result = await tty.createOrPatch(createFn, patchFn, { id: 'x' })
+    const params = { body: { metadata: { name: 'x' }, spec: {} } }
+    const result = await tty.createOrPatch(createFn, patchFn, params)
 
-    expect(createFn).toHaveBeenCalledWith({ id: 'x' })
-    expect(patchFn).toHaveBeenCalledWith({ id: 'x' })
+    expect(createFn).toHaveBeenCalledWith(params)
+    expect(patchFn).toHaveBeenCalledWith(
+      { name: 'x', body: params.body, fieldManager: 'apl-api', force: true },
+      'header-options',
+    )
     expect(result).toEqual({ kind: 'patched' })
   })
 
