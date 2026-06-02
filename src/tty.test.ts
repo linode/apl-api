@@ -60,7 +60,7 @@ jest.mock('@kubernetes/client-node', () => {
     CustomObjectsApi,
     RbacAuthorizationV1Api,
     PatchStrategy,
-    setHeaderOptions: jest.fn(),
+    setHeaderOptions: jest.fn().mockImplementation(() => 'header-options'),
     KubeConfig: jest.fn().mockImplementation(() => ({
       makeApiClient: mockMakeApiClient,
       loadFromDefault: jest.fn(),
@@ -110,7 +110,7 @@ describe('CloudTty', () => {
     expect(createFn).toHaveBeenCalledWith(params)
     expect(patchFn).toHaveBeenCalledWith(
       { name: 'x', body: params.body, fieldManager: 'apl-api', force: true },
-      undefined,
+      'header-options',
     )
     expect(result).toEqual({ kind: 'patched' })
   })
