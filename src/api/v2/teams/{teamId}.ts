@@ -44,6 +44,6 @@ export const patchAplTeam = async (req: OpenApiRequestExt, res: Response): Promi
 export const deleteAplTeam = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId } = req.params
   debug(`deleteTeam(${teamId})`)
-  await req.otomi.deleteTeam(teamId)
+  await req.otomi.deleteAplTeam(teamId)
   res.json({})
 }

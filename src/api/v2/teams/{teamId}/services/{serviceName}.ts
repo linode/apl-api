@@ -53,6 +53,6 @@ export const patchAplService = async (req: OpenApiRequestExt, res: Response): Pr
 export const deleteAplService = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, serviceName } = req.params
   debug(`deleteService(${serviceName})`)
-  await req.otomi.deleteService(decodeURIComponent(teamId), decodeURIComponent(serviceName))
+  await req.otomi.deleteAplService(decodeURIComponent(teamId), decodeURIComponent(serviceName))
   res.json({})
 }
