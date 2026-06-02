@@ -53,6 +53,6 @@ export const patchAplWorkload = async (req: OpenApiRequestExt, res: Response): P
 export const deleteAplWorkload = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, workloadName } = req.params
   debug(`deleteWorkload(${workloadName})`)
-  await req.otomi.deleteWorkload(decodeURIComponent(teamId), decodeURIComponent(workloadName))
+  await req.otomi.deleteAplWorkload(decodeURIComponent(teamId), decodeURIComponent(workloadName))
   res.json({})
 }

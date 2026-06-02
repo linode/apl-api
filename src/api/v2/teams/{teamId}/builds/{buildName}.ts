@@ -53,6 +53,6 @@ export const patchAplBuild = (req: OpenApiRequestExt, res: Response): void => {
 export const deleteAplBuild = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, buildName } = req.params
   debug(`deleteBuild(${buildName})`)
-  await req.otomi.deleteBuild(decodeURIComponent(teamId), decodeURIComponent(buildName))
+  await req.otomi.deleteAplBuild(decodeURIComponent(teamId), decodeURIComponent(buildName))
   res.json({})
 }
