@@ -93,6 +93,7 @@ import {
   GIT_LOCAL_PATH,
   GIT_PASSWORD,
   GIT_REPO_URL,
+  GIT_SSH_KEY_PATH,
   GIT_USER,
   HELM_CHART_CATALOG,
   HIDDEN_APPS,
@@ -172,6 +173,7 @@ const env = cleanEnv({
   GIT_LOCAL_PATH,
   GIT_PASSWORD,
   GIT_REPO_URL,
+  GIT_SSH_KEY_PATH,
   GIT_USER,
   HELM_CHART_CATALOG,
   VERSIONS,
@@ -298,10 +300,12 @@ export default class OtomiStack {
     let attempt = 0
     // Use the env var password as the initial value; refresh from K8s on retries
     // to pick up ESO credential syncs that happen after pod startup (e.g. git provider switch).
+    const sshKeyPath = env.GIT_SSH_KEY_PATH
+    const isSsh = url?.startsWith('git@')
     let password = env.GIT_PASSWORD
     for (;;) {
       try {
-        this.git = await getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, password, branch)
+        this.git = await getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, password, branch, sshKeyPath)
         await this.git.pull()
         //TODO fetch this url from the repo
         if (await this.git.fileExists(clusterSettingsFilePath)) break
@@ -319,12 +323,14 @@ export default class OtomiStack {
       }
       debug(`Trying again in ${timeoutMs} ms (attempt ${attempt}/${maxRetries})`)
       await new Promise((resolve) => setTimeout(resolve, timeoutMs))
-      // Re-read password from K8s in case ESO has just synced fresh credentials
-      try {
-        const secret = await getSecretValues('otomi-api-git-credentials', 'otomi')
-        if (secret?.GIT_PASSWORD) password = secret.GIT_PASSWORD
-      } catch {
-        // K8s not reachable or secret absent — keep the current password
+      if (!isSsh) {
+        // Re-read password from K8s in case ESO has just synced fresh credentials
+        try {
+          const secret = await getSecretValues('otomi-api-git-credentials', 'otomi')
+          if (secret?.GIT_PASSWORD) password = secret.GIT_PASSWORD
+        } catch {
+          // K8s not reachable or secret absent — keep the current password
+        }
       }
     }
 

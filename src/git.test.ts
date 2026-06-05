@@ -1,5 +1,5 @@
 import simpleGit from 'simple-git'
-import { Git } from './git'
+import { Git, getWorktreeRepo, default as getRepo } from './git'
 
 jest.mock('simple-git')
 
@@ -7,18 +7,74 @@ const mockRaw = jest.fn()
 const mockPush = jest.fn()
 const mockRemote = jest.fn()
 const mockFetch = jest.fn()
+const mockAddConfig = jest.fn()
+const mockEnv = jest.fn().mockReturnThis()
 const mockGitInstance = {
-  env: jest.fn().mockReturnThis(),
+  env: mockEnv,
   raw: mockRaw,
   push: mockPush,
   remote: mockRemote,
   fetch: mockFetch,
+  addConfig: mockAddConfig,
 }
 ;(simpleGit as jest.Mock).mockReturnValue(mockGitInstance)
 
 function makeRepo(): Git {
   return new Git('/tmp/test', 'https://origin.example.com/repo.git', 'user', 'user@example.com', undefined, 'main')
 }
+
+describe('Git SSH authentication', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('sets GIT_SSH_COMMAND on the SimpleGit instance when constructed with an SSH URL and key path', () => {
+    new Git('/tmp/test', 'git@github.com:org/repo.git', 'user', 'user@example.com', undefined, 'main', '/mnt/keys/id_rsa')
+
+    expect(mockEnv).toHaveBeenCalledWith(
+      'GIT_SSH_COMMAND',
+      'ssh -i /mnt/keys/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null',
+    )
+  })
+
+  it('does not set GIT_SSH_COMMAND when constructed with an HTTPS URL', () => {
+    new Git('/tmp/test', 'https://github.com/org/repo.git', 'user', 'user@example.com', undefined, 'main')
+
+    expect(mockEnv).not.toHaveBeenCalledWith('GIT_SSH_COMMAND', expect.anything())
+  })
+})
+
+describe('getWorktreeRepo', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('propagates GIT_SSH_COMMAND to the worktree when main repo uses SSH', async () => {
+    const mainRepo = new Git(
+      '/tmp/main',
+      'git@github.com:org/repo.git',
+      'user',
+      'user@example.com',
+      undefined,
+      'main',
+      '/mnt/keys/id_rsa',
+    )
+    jest.spyOn(mainRepo, 'createWorktree').mockResolvedValue()
+    mockAddConfig.mockResolvedValue(undefined)
+    mockEnv.mockClear()
+
+    await getWorktreeRepo(mainRepo, '/tmp/worktrees/session-1')
+
+    expect(mockEnv).toHaveBeenCalledWith(
+      'GIT_SSH_COMMAND',
+      'ssh -i /mnt/keys/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null',
+    )
+  })
+})
+
+describe('getRepo', () => {
+  it('throws a descriptive error when given an SSH URL without GIT_SSH_KEY_PATH', async () => {
+    await expect(
+      getRepo('/tmp/test', 'git@github.com:org/repo.git', 'user', 'user@example.com', '', 'main'),
+    ).rejects.toThrow('GIT_SSH_KEY_PATH')
+  })
+})
 
 describe('Git.testRemoteConnection', () => {
   beforeEach(() => jest.clearAllMocks())
