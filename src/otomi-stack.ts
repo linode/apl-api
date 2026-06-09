@@ -1218,9 +1218,9 @@ export default class OtomiStack {
     if (!existingData) {
       throw new NotExistError(`User ${id} not found`)
     }
+
     const existingUser = userSecretDataToUser(existingData)
 
-    // Merge updates, preserving initialPassword from existing secret
     const user: User = {
       ...existingUser,
       ...data,
@@ -1228,9 +1228,23 @@ export default class OtomiStack {
       initialPassword: existingUser.initialPassword,
     }
 
+    this.validateUserTeamsExist(user)
+
     const aplRecord = await this.saveUser(user)
     await this.doDeployment(aplRecord)
+
     return user
+  }
+
+  private validateUserTeamsExist(user: User): void {
+    const existingTeamIds = new Set(this.getTeamIds().filter((teamId) => teamId !== 'admin'))
+    const userTeamIds = user.teams ?? []
+
+    const missingTeamIds = userTeamIds.filter((teamId) => !existingTeamIds.has(teamId))
+
+    if (missingTeamIds.length > 0) {
+      throw new NotExistError(`Team(s) not found: ${missingTeamIds.join(', ')}`)
+    }
   }
 
   async deleteUser(id: string): Promise<void> {
