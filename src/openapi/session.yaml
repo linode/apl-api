@@ -1,4 +1,11 @@
 Session:
+  x-acl:
+    platformAdmin:
+      - read-any
+    teamAdmin:
+      - read-any
+    teamMember:
+      - read-any
   properties:
     ca:
       type: string

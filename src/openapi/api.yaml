@@ -166,6 +166,7 @@ paths:
       operationId: fetchPodsFromLabel
       x-eov-operation-handler: v2/teams/{teamId}/kubernetes/fetchPodsFromLabel
       description: Get pods name from label
+      x-aclSchema: Netpol
       parameters:
         - name: labelSelector
           in: query
@@ -450,6 +451,7 @@ paths:
       operationId: getNamespacesWithSealedSecrets
       x-eov-operation-handler: v2/namespaces/namespaces
       description: Get namespaces that contain sealed secrets
+      x-aclSchema: SealedSecret
       responses:
         '200':
           description: List of namespaces
@@ -991,6 +993,7 @@ paths:
       operationId: getK8sVersion
       x-eov-operation-handler: v1/k8sVersion
       description: Get cluster k8s version
+      x-aclSchema: K8sVersion
       responses:
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -1715,6 +1718,7 @@ paths:
       operationId: getSession
       x-eov-operation-handler: v1/session
       description: Get the session for the current user
+      x-aclSchema: Session
       responses:
         '200':
           description: Get the session for the logged in user
@@ -2613,6 +2617,8 @@ components:
       $ref: 'knowledgeBase.yaml#/KnowledgeBase'
     Kubecfg:
       $ref: 'kubecfg.yaml#/Kubecfg'
+    K8sVersion:
+      $ref: 'k8sVersion.yaml#/K8sVersion'
     Netpol:
       $ref: 'netpol.yaml#/Netpol'
     DockerConfig:
