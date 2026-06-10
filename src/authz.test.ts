@@ -1,347 +1,215 @@
 import Authz from 'src/authz'
 import { OpenAPIDoc, SessionRole, SessionUser } from 'src/otomi-models'
+import generatedSchema from './generated-schema.json'
 
-const sessionTeam: SessionUser = {
+const spec = generatedSchema as unknown as OpenAPIDoc & { openapi: string }
+
+const teamId = 'mercury'
+const otherTeamId = 'venus'
+
+const httpMethods = ['get', 'post', 'put', 'patch', 'delete'] as const
+
+const sessionTeam = (overrides: Partial<SessionUser> = {}): SessionUser => ({
   authz: {},
   isPlatformAdmin: false,
   isTeamAdmin: false,
   roles: [SessionRole.TeamMember],
   name: 'joe',
   email: 'a@b.c',
-  teams: ['mercury'],
+  teams: [teamId],
+  ...overrides,
+})
+
+const sessionPlatformAdmin = (): SessionUser =>
+  sessionTeam({
+    isPlatformAdmin: true,
+    roles: [SessionRole.PlatformAdmin],
+  })
+
+const sessionTeamAdmin = (): SessionUser =>
+  sessionTeam({
+    isTeamAdmin: true,
+    roles: [SessionRole.TeamAdmin],
+  })
+
+const getAclHolder = (schema: any) => {
+  if (schema?.['x-acl']) return schema
+  return schema?.allOf?.find((item: any) => item?.['x-acl'])
 }
 
-const sessionAdmin: SessionUser = { ...sessionTeam, roles: [SessionRole.PlatformAdmin] }
-
-describe('Schema wise permissions', () => {
-  const spec: OpenAPIDoc = {
-    components: {
-      schemas: {
-        Service: {
-          type: 'object',
-          'x-acl': {
-            platformAdmin: ['read-any', 'update-any'],
-            teamAdmin: ['read-any', 'update-any'],
-            teamMember: ['read'],
-          },
-          properties: {
-            name: { type: 'string' },
-            ingress: { type: 'object' },
-            teamId: { type: 'string' },
-          },
-        },
-      },
-    },
-  }
-
-  test('An admin can get and update all services', () => {
-    const authz = new Authz(spec).init(sessionAdmin)
-    expect(authz.validateWithCasl('create', 'Service', 'mercury')).toBe(false)
-    expect(authz.validateWithCasl('delete', 'Service', 'mercury')).toBe(false)
-    expect(authz.validateWithCasl('read', 'Service', 'mercury')).toBe(true)
-    expect(authz.validateWithCasl('update', 'Service', 'mercury')).toBe(true)
+describe('Authz using generated OpenAPI schema', () => {
+  test('loads the generated OpenAPI schema', () => {
+    expect(spec.openapi).toBeDefined()
+    expect(spec.security).toBeDefined()
+    expect(spec.paths).toBeDefined()
+    expect(spec.components?.schemas).toBeDefined()
+    expect(spec.components.schemas.Service).toBeDefined()
+    expect(spec.components.schemas.Service['x-acl']).toBeDefined()
   })
 
-  test('A team can only get its own service', () => {
-    const authz = new Authz(spec).init(sessionTeam)
-    expect(authz.validateWithCasl('create', 'Service', 'mercury')).toBe(false)
-    expect(authz.validateWithCasl('delete', 'Service', 'mercury')).toBe(false)
-    expect(authz.validateWithCasl('read', 'Service', 'mercury')).toBe(true)
-    expect(authz.validateWithCasl('update', 'Service', 'mercury')).toBe(false)
+  test('platform admin can CRUD Service for any team', () => {
+    const authz = new Authz(spec).init(sessionPlatformAdmin())
+
+    expect(authz.validateWithCasl('create', 'Service', otherTeamId)).toBe(true)
+    expect(authz.validateWithCasl('read', 'Service', otherTeamId)).toBe(true)
+    expect(authz.validateWithCasl('update', 'Service', otherTeamId)).toBe(true)
+    expect(authz.validateWithCasl('delete', 'Service', otherTeamId)).toBe(true)
+  })
+
+  test('team admin can CRUD Service for own team', () => {
+    const authz = new Authz(spec).init(sessionTeamAdmin())
+
+    expect(authz.validateWithCasl('create', 'Service', teamId)).toBe(true)
+    expect(authz.validateWithCasl('read', 'Service', teamId)).toBe(true)
+    expect(authz.validateWithCasl('update', 'Service', teamId)).toBe(true)
+    expect(authz.validateWithCasl('delete', 'Service', teamId)).toBe(true)
+  })
+
+  test('team admin cannot CRUD Service for another team', () => {
+    const authz = new Authz(spec).init(sessionTeamAdmin())
+
+    expect(authz.validateWithCasl('create', 'Service', otherTeamId)).toBe(false)
+    expect(authz.validateWithCasl('read', 'Service', otherTeamId)).toBe(false)
+    expect(authz.validateWithCasl('update', 'Service', otherTeamId)).toBe(false)
+    expect(authz.validateWithCasl('delete', 'Service', otherTeamId)).toBe(false)
+  })
+
+  test('team member can CRUD Service for own team according to generated schema', () => {
+    const authz = new Authz(spec).init(sessionTeam())
+
+    expect(authz.validateWithCasl('create', 'Service', teamId)).toBe(true)
+    expect(authz.validateWithCasl('read', 'Service', teamId)).toBe(true)
+    expect(authz.validateWithCasl('update', 'Service', teamId)).toBe(true)
+    expect(authz.validateWithCasl('delete', 'Service', teamId)).toBe(true)
+  })
+
+  test('team member cannot CRUD Service for another team', () => {
+    const authz = new Authz(spec).init(sessionTeam())
+
+    expect(authz.validateWithCasl('create', 'Service', otherTeamId)).toBe(false)
+    expect(authz.validateWithCasl('read', 'Service', otherTeamId)).toBe(false)
+    expect(authz.validateWithCasl('update', 'Service', otherTeamId)).toBe(false)
+    expect(authz.validateWithCasl('delete', 'Service', otherTeamId)).toBe(false)
+  })
+
+  test('Team schema permissions are stricter than Service permissions', () => {
+    const authz = new Authz(spec).init(sessionTeam())
+
+    expect(authz.validateWithCasl('read', 'Team', teamId)).toBe(true)
+    expect(authz.validateWithCasl('create', 'Team', teamId)).toBe(false)
+    expect(authz.validateWithCasl('update', 'Team', teamId)).toBe(false)
+    expect(authz.validateWithCasl('delete', 'Team', teamId)).toBe(false)
+  })
+
+  test('returns false for missing schema name', () => {
+    const authz = new Authz(spec).init(sessionTeam())
+
+    expect(authz.validateWithCasl('read', '', teamId)).toBe(false)
+  })
+
+  test('returns false for unknown schema name', () => {
+    const authz = new Authz(spec).init(sessionTeam())
+
+    expect(authz.validateWithCasl('read', 'DefinitelyNotASchema', teamId)).toBe(false)
+  })
+
+  test('property without x-acl inherits resource permission', () => {
+    const authz = new Authz(spec).init(sessionTeam())
+
+    expect(authz.validatePropertyWithCasl('read', 'Service', 'name', teamId)).toBe(true)
   })
 })
 
-describe('Ownership wise resource permissions', () => {
-  const spec: OpenAPIDoc = {
-    components: {
-      schemas: {
-        Service: {
-          type: 'object',
-          'x-acl': {
-            teamMember: ['update'],
-          },
-          properties: {
-            name: { type: 'string' },
-            teamId: { type: 'string' },
-          },
-        },
-      },
-    },
-    paths: {},
-    security: [],
-  }
+describe('Generated OpenAPI ACL contract', () => {
+  test('every secured operation has x-aclSchema pointing to a schema with x-acl', () => {
+    const failures: string[] = []
 
-  test('A team cannot update service from another team', () => {
-    const authz = new Authz(spec).init(sessionTeam)
-    expect(authz.validateWithCasl('update', 'Service', 'venus')).toBe(false)
-  })
+    Object.entries(spec.paths ?? {}).forEach(([pathName, pathItem]) => {
+      httpMethods.forEach((method) => {
+        const operation = (pathItem as any)[method]
+        if (!operation) return
 
-  test('A team can update its own service', () => {
-    const authz = new Authz(spec).init(sessionTeam)
-    expect(authz.validateWithCasl('update', 'Service', 'mercury')).toBe(true)
-  })
-})
+        const isSecurityExplicitlyDisabled = Array.isArray(operation.security) && operation.security.length === 0
+        if (isSecurityExplicitlyDisabled) return
 
-describe('Schema collection wise permissions', () => {
-  const spec: OpenAPIDoc = {
-    components: {
-      schemas: {
-        Services: {
-          properties: {},
-          type: 'array',
-          'x-acl': {
-            platformAdmin: ['read-any'],
-            teamAdmin: ['read-any'],
-            teamMember: ['read-any'],
-          },
-          items: {
-            type: 'object',
-          },
-        },
-      },
-    },
-    paths: {},
-    security: [],
-  }
+        const operationId = operation.operationId ?? '<missing operationId>'
+        const location = `${method.toUpperCase()} ${pathName} (${operationId})`
 
-  test('An admin can only get collection of services', () => {
-    const authz = new Authz(spec).init(sessionAdmin)
-    expect(authz.validateWithCasl('create', 'Services', 'mercury')).toBe(false)
-    expect(authz.validateWithCasl('delete', 'Services', 'mercury')).toBe(false)
-    expect(authz.validateWithCasl('read', 'Services', 'mercury')).toBe(true)
-    expect(authz.validateWithCasl('update', 'Services', 'mercury')).toBe(false)
-  })
+        if (!operation.operationId) {
+          failures.push(`${location} is missing operationId`)
+        }
 
-  test('A team can only get collection of services', () => {
-    const authz = new Authz(spec).init(sessionTeam)
-    expect(authz.validateWithCasl('create', 'Services', 'mercury')).toBe(false)
-    expect(authz.validateWithCasl('delete', 'Services', 'mercury')).toBe(false)
-    expect(authz.validateWithCasl('read', 'Services', 'mercury')).toBe(true)
-    expect(authz.validateWithCasl('update', 'Services', 'mercury')).toBe(false)
-  })
+        const aclSchemaName = operation['x-aclSchema']
 
-  test('A team can doSomething', () => {
-    const authz = new Authz(spec).init(sessionTeam)
-    sessionTeam.authz = { teamA: { deniedAttributes: { Team: ['a', 'b'] } } }
-    expect(() => authz.hasSelfService('teamA', 'doSomething')).not.toThrow()
-    sessionTeam.authz = {}
-  })
+        if (!aclSchemaName) {
+          failures.push(`${location} is missing x-aclSchema`)
+          return
+        }
 
-  test('A team cannot doSomething', () => {
-    const authz = new Authz(spec).init(sessionTeam)
-    sessionTeam.authz = { teamA: { deniedAttributes: { Team: ['a', 'b', 'doSomething'] } } }
-    expect(() => authz.hasSelfService('teamA', 'doSomething')).not.toThrow()
-    sessionTeam.authz = {}
+        const schema = spec.components.schemas[aclSchemaName]
+
+        if (!schema) {
+          failures.push(`${location} references missing schema "${aclSchemaName}"`)
+          return
+        }
+
+        if (!getAclHolder(schema)) {
+          failures.push(`${location} references schema "${aclSchemaName}" but it has no x-acl`)
+        }
+      })
+    })
+
+    expect(failures).toEqual([])
   })
 })
 
 describe('Self-service permissions', () => {
-  const spec: OpenAPIDoc = {
-    components: {
-      schemas: {
-        Kubecfg: { type: 'object', 'x-acl': { teamMember: ['read'] }, properties: {} },
-        DockerConfig: { type: 'object', 'x-acl': { teamMember: ['read'] }, properties: {} },
-        Cloudtty: { type: 'object', 'x-acl': { teamMember: ['create'] }, properties: {} },
-        Policy: { type: 'object', 'x-acl': { teamMember: ['update'] }, properties: {} },
-      },
-    },
-    paths: {},
-    security: [],
-  }
+  test('allows self-service permission when it is not denied', () => {
+    const authz = new Authz(spec).init(sessionTeam())
 
-  const teamId = 'mercury'
-  let authz: Authz
-  beforeEach(() => {
-    authz = new Authz(spec).init({ ...sessionTeam, teams: [teamId] })
+    expect(authz.hasSelfService(teamId, 'createServices')).toBe(true)
+    expect(authz.hasSelfService(teamId, 'editSecurityPolicies')).toBe(true)
+    expect(authz.hasSelfService(teamId, 'useCloudShell')).toBe(true)
+    expect(authz.hasSelfService(teamId, 'downloadKubeconfig')).toBe(true)
+    expect(authz.hasSelfService(teamId, 'downloadDockerLogin')).toBe(true)
   })
 
-  test('Team member can download kubeconfig (self-service)', () => {
-    expect(authz.hasSelfService(teamId, 'downloadKubeconfig')).toBeDefined()
-  })
-  test('Team member can download docker login (self-service)', () => {
-    expect(authz.hasSelfService(teamId, 'downloadDockerLogin')).toBeDefined()
-  })
-  test('Team member can use cloud shell (self-service)', () => {
-    expect(authz.hasSelfService(teamId, 'useCloudShell')).toBeDefined()
-  })
-  test('Team member can edit security policies (self-service)', () => {
-    expect(authz.hasSelfService(teamId, 'editSecurityPolicies')).toBeDefined()
-  })
-  test('Team member cannot use undefined self-service permission', () => {
-    expect(authz.hasSelfService(teamId, 'notARealPermission')).toBeDefined()
-  })
-})
-
-describe('Authz middleware cases', () => {
-  const spec: OpenAPIDoc = {
-    components: { schemas: { Service: { type: 'object', 'x-acl': { teamMember: ['read'] }, properties: {} } } },
-    paths: {},
-    security: [],
-  }
-  let authz: Authz
-  beforeEach(() => {
-    authz = new Authz(spec).init(sessionTeam)
-  })
-
-  test('Returns false if user is not in team', () => {
-    expect(authz.validateWithCasl('read', 'Service', 'notMyTeam')).toBe(false)
-  })
-  test('Returns true if user is in team', () => {
-    expect(authz.validateWithCasl('read', 'Service', 'mercury')).toBe(true)
-  })
-  test('Returns false if schema is missing', () => {
-    expect(authz.validateWithCasl('read', '', 'mercury')).toBe(false)
-  })
-  test('Returns false if action is not allowed', () => {
-    expect(authz.validateWithCasl('delete', 'Service', 'mercury')).toBe(false)
-  })
-})
-
-describe('Platform admin, team admin and team member scenarios', () => {
-  const spec: OpenAPIDoc = {
-    components: {
-      schemas: {
-        Resource: {
-          type: 'object',
-          'x-acl': {
-            platformAdmin: ['create-any', 'read-any', 'update-any', 'delete-any'],
-            teamAdmin: ['create', 'read', 'update', 'delete'],
-            teamMember: ['read'],
-          },
-          properties: {},
-        },
-      },
-    },
-    paths: {},
-    security: [],
-  }
-  const platformAdmin: SessionUser = { ...sessionTeam, isPlatformAdmin: true, roles: [SessionRole.PlatformAdmin] }
-  const teamAdmin: SessionUser = { ...sessionTeam, isTeamAdmin: true, roles: [SessionRole.TeamAdmin] }
-  const myTeam = 'mercury'
-  const otherTeam = 'venus'
-
-  test('Platform admin can CRUD any resource', () => {
-    const authz = new Authz(spec).init(platformAdmin)
-    expect(authz.validateWithCasl('create', 'Resource', 'anyTeam')).toBe(true)
-    expect(authz.validateWithCasl('read', 'Resource', 'anyTeam')).toBe(true)
-    expect(authz.validateWithCasl('update', 'Resource', 'anyTeam')).toBe(true)
-    expect(authz.validateWithCasl('delete', 'Resource', 'anyTeam')).toBe(true)
-  })
-  test('Team admin can CRUD resources in their team', () => {
-    const authz = new Authz(spec).init(teamAdmin)
-    expect(authz.validateWithCasl('create', 'Resource', myTeam)).toBe(true)
-    expect(authz.validateWithCasl('read', 'Resource', myTeam)).toBe(true)
-    expect(authz.validateWithCasl('update', 'Resource', myTeam)).toBe(true)
-    expect(authz.validateWithCasl('delete', 'Resource', myTeam)).toBe(true)
-  })
-  test('Team admin cannot CRUD resources in other teams', () => {
-    const authz = new Authz(spec).init(teamAdmin)
-    expect(authz.validateWithCasl('create', 'Resource', otherTeam)).toBe(false)
-    expect(authz.validateWithCasl('read', 'Resource', otherTeam)).toBe(false)
-    expect(authz.validateWithCasl('update', 'Resource', otherTeam)).toBe(false)
-    expect(authz.validateWithCasl('delete', 'Resource', otherTeam)).toBe(false)
-  })
-  test('Team member can Read resources', () => {
-    const authz = new Authz(spec).init(sessionTeam)
-    expect(authz.validateWithCasl('read', 'Resource', myTeam)).toBe(true)
-  })
-  test('Team member cannot CUD resources', () => {
-    const authz = new Authz(spec).init(sessionTeam)
-    expect(authz.validateWithCasl('create', 'Resource', myTeam)).toBe(false)
-    expect(authz.validateWithCasl('update', 'Resource', myTeam)).toBe(false)
-    expect(authz.validateWithCasl('delete', 'Resource', myTeam)).toBe(false)
-  })
-  test('Team member cannot CRUD resources in other teams', () => {
-    const authz = new Authz(spec).init(sessionTeam)
-    expect(authz.validateWithCasl('create', 'Resource', otherTeam)).toBe(false)
-    expect(authz.validateWithCasl('read', 'Resource', otherTeam)).toBe(false)
-    expect(authz.validateWithCasl('update', 'Resource', otherTeam)).toBe(false)
-    expect(authz.validateWithCasl('delete', 'Resource', otherTeam)).toBe(false)
-  })
-  test('Platform admin can perform self-service actions', () => {
-    const authz = new Authz(spec).init(platformAdmin)
-    expect(authz.hasSelfService('anyTeam', 'downloadKubeconfig')).toBeDefined()
-    expect(authz.hasSelfService('anyTeam', 'downloadDockerLogin')).toBeDefined()
-    expect(authz.hasSelfService('anyTeam', 'useCloudShell')).toBeDefined()
-    expect(authz.hasSelfService('anyTeam', 'editSecurityPolicies')).toBeDefined()
-  })
-})
-
-describe('Fallback to CASL when no self-service permission', () => {
-  const spec: OpenAPIDoc = {
-    components: {
-      schemas: {
-        App: { type: 'object', 'x-acl': { teamMember: ['read'] }, properties: {} },
-      },
-    },
-    paths: {},
-    security: [],
-  }
-  let authz: Authz
-  beforeEach(() => {
-    authz = new Authz(spec).init(sessionTeam)
-  })
-  test('Falls back to CASL for non-self-service action', () => {
-    expect(authz.validateWithCasl('read', 'App', 'mercury')).toBe(true)
-  })
-  test('Returns false for denied action', () => {
-    expect(authz.validateWithCasl('delete', 'App', 'mercury')).toBe(false)
-  })
-})
-
-describe('Team member self-service vs. other team resources', () => {
-  const spec: OpenAPIDoc = {
-    components: {
-      schemas: {
-        Service: {
-          type: 'object',
-          'x-acl': {
-            teamMember: ['read', 'update', 'delete', 'create'],
-          },
-          properties: {
-            name: { type: 'string' },
-            teamId: { type: 'string' },
+  test('denies self-service permission when listed in deniedAttributes.teamMembers', () => {
+    const authz = new Authz(spec).init(
+      sessionTeam({
+        authz: {
+          [teamId]: {
+            deniedAttributes: {
+              teamMembers: ['editSecurityPolicies'],
+            },
           },
         },
-      },
-    },
-    paths: {},
-    security: [],
-  }
-  const myTeam = 'mercury'
-  const otherTeam = 'venus'
-  let authz: Authz
-  beforeEach(() => {
-    authz = new Authz(spec).init({ ...sessionTeam, teams: [myTeam] })
+      }),
+    )
+
+    expect(authz.hasSelfService(teamId, 'editSecurityPolicies')).toBe(false)
+    expect(authz.hasSelfService(teamId, 'downloadKubeconfig')).toBe(true)
   })
 
-  test('Team member can CRUD own team resource', () => {
-    expect(authz.validateWithCasl('create', 'Service', myTeam)).toBe(true)
-    expect(authz.validateWithCasl('read', 'Service', myTeam)).toBe(true)
-    expect(authz.validateWithCasl('update', 'Service', myTeam)).toBe(true)
-    expect(authz.validateWithCasl('delete', 'Service', myTeam)).toBe(true)
+  test('denied permission for another team does not deny current team permission', () => {
+    const authz = new Authz(spec).init(
+      sessionTeam({
+        authz: {
+          [otherTeamId]: {
+            deniedAttributes: {
+              teamMembers: ['editSecurityPolicies'],
+            },
+          },
+        },
+      }),
+    )
+
+    expect(authz.hasSelfService(teamId, 'editSecurityPolicies')).toBe(true)
   })
 
-  test('Team member cannot CRUD another team resource', () => {
-    expect(authz.validateWithCasl('create', 'Service', otherTeam)).toBe(false)
-    expect(authz.validateWithCasl('read', 'Service', otherTeam)).toBe(false)
-    expect(authz.validateWithCasl('update', 'Service', otherTeam)).toBe(false)
-    expect(authz.validateWithCasl('delete', 'Service', otherTeam)).toBe(false)
-  })
+  test('unknown self-service permission currently defaults to allowed', () => {
+    const authz = new Authz(spec).init(sessionTeam())
 
-  test('Team member with no self-service permission cannot perform custom self-service action', () => {
-    sessionTeam.authz = { [myTeam]: { deniedAttributes: { Policy: ['editSecurityPolicies'] } } }
-    expect(() => authz.hasSelfService(myTeam, 'editSecurityPolicies')).not.toThrow()
-    sessionTeam.authz = {}
-  })
-
-  test('Team member with no self-service permission cannot perform custom self-service action in another team', () => {
-    sessionTeam.authz = { [otherTeam]: { deniedAttributes: { Policy: ['editSecurityPolicies'] } } }
-    expect(() => authz.hasSelfService(myTeam, 'editSecurityPolicies')).not.toThrow()
-    sessionTeam.authz = {}
-  })
-
-  test('Team member with self-service permission can perform allowed self-service action', () => {
-    expect(() => authz.hasSelfService(myTeam, 'read')).not.toThrow()
+    expect(authz.hasSelfService(teamId, 'notARealPermission')).toBe(true)
   })
 })
