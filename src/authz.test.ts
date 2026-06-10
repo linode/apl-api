@@ -7,6 +7,8 @@ const spec = generatedSchema as unknown as OpenAPIDoc & { openapi: string }
 const teamId = 'mercury'
 const otherTeamId = 'venus'
 
+const httpMethods = ['get', 'post', 'put', 'patch', 'delete'] as const
+
 const sessionTeam = (overrides: Partial<SessionUser> = {}): SessionUser => ({
   authz: {},
   isPlatformAdmin: false,
@@ -29,6 +31,11 @@ const sessionTeamAdmin = (): SessionUser =>
     isTeamAdmin: true,
     roles: [SessionRole.TeamAdmin],
   })
+
+const getAclHolder = (schema: any) => {
+  if (schema?.['x-acl']) return schema
+  return schema?.allOf?.find((item: any) => item?.['x-acl'])
+}
 
 describe('Authz using generated OpenAPI schema', () => {
   test('loads the generated OpenAPI schema', () => {
@@ -110,6 +117,49 @@ describe('Authz using generated OpenAPI schema', () => {
     const authz = new Authz(spec).init(sessionTeam())
 
     expect(authz.validatePropertyWithCasl('read', 'Service', 'name', teamId)).toBe(true)
+  })
+})
+
+describe('Generated OpenAPI ACL contract', () => {
+  test('every secured operation has x-aclSchema pointing to a schema with x-acl', () => {
+    const failures: string[] = []
+
+    Object.entries(spec.paths ?? {}).forEach(([pathName, pathItem]) => {
+      httpMethods.forEach((method) => {
+        const operation = (pathItem as any)[method]
+        if (!operation) return
+
+        const isSecurityExplicitlyDisabled = Array.isArray(operation.security) && operation.security.length === 0
+        if (isSecurityExplicitlyDisabled) return
+
+        const operationId = operation.operationId ?? '<missing operationId>'
+        const location = `${method.toUpperCase()} ${pathName} (${operationId})`
+
+        if (!operation.operationId) {
+          failures.push(`${location} is missing operationId`)
+        }
+
+        const aclSchemaName = operation['x-aclSchema']
+
+        if (!aclSchemaName) {
+          failures.push(`${location} is missing x-aclSchema`)
+          return
+        }
+
+        const schema = spec.components.schemas[aclSchemaName]
+
+        if (!schema) {
+          failures.push(`${location} references missing schema "${aclSchemaName}"`)
+          return
+        }
+
+        if (!getAclHolder(schema)) {
+          failures.push(`${location} references schema "${aclSchemaName}" but it has no x-acl`)
+        }
+      })
+    })
+
+    expect(failures).toEqual([])
   })
 })
 
