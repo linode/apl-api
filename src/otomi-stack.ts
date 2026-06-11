@@ -1237,7 +1237,7 @@ export default class OtomiStack {
   }
 
   private validateUserTeamsExist(user: User): void {
-    const existingTeamIds = new Set(this.getTeamIds().filter((teamId) => teamId !== 'admin'))
+    const existingTeamIds = new Set(this.getTeamIds())
     const userTeamIds = user.teams ?? []
 
     const missingTeamIds = userTeamIds.filter((teamId) => !existingTeamIds.has(teamId))
