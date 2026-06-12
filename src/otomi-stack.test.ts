@@ -9,7 +9,7 @@ import {
 } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { loadSpec } from './app'
-import { ValidationError } from './error'
+import { NotExistError, ValidationError } from './error'
 import { Git } from './git'
 
 jest.mock('./tty', () => ({
@@ -619,6 +619,60 @@ describe('Users tests', () => {
           code: 403,
         })
       })
+    })
+
+    it('should not allow editing a user into a team that does not exist', async () => {
+      createTestTeam(otomiStack, 'team1')
+
+      const user = {
+        ...teamMember1,
+        id: 'missing-team-user',
+        email: 'missing-team-user@dev.linode-apl.net',
+        teams: ['team1'],
+      }
+
+      createTestUser(otomiStack, user)
+
+      await expect(
+        otomiStack.editUser(
+          user.id!,
+          {
+            ...user,
+            teams: ['team1', 'team-does-not-exist'],
+          },
+          platformAdminSession,
+        ),
+      ).rejects.toThrow(new NotExistError('Team(s) not found: team-does-not-exist'))
+
+      expect(mockGit.writeTextFile).not.toHaveBeenCalled()
+      expect(otomiStack.doDeployment).not.toHaveBeenCalled()
+    })
+
+    it('should allow editing a user into existing teams', async () => {
+      createTestTeam(otomiStack, 'team1')
+      createTestTeam(otomiStack, 'team2')
+
+      const user = {
+        ...teamMember1,
+        id: 'existing-team-user',
+        email: 'existing-team-user@dev.linode-apl.net',
+        teams: ['team1'],
+      }
+
+      createTestUser(otomiStack, user)
+
+      const result = await otomiStack.editUser(
+        user.id!,
+        {
+          ...user,
+          teams: ['team1', 'team2'],
+        },
+        platformAdminSession,
+      )
+
+      expect(result.teams).toEqual(['team1', 'team2'])
+      expect(mockGit.writeTextFile).toHaveBeenCalled()
+      expect(otomiStack.doDeployment).toHaveBeenCalled()
     })
 
     describe('canTeamAdminUpdateUserTeams', () => {
