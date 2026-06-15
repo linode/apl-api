@@ -7,7 +7,7 @@ import { readFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, isEmpty, map, merge, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema } from 'src/app'
-import { APL_SECRETS_NAMESPACE, APL_USERS_NAMESPACE, PLATFORM_SECRETS_NAME } from 'src/constants'
+import { APL_SECRETS_NAMESPACE, APL_USERS_NAMESPACE, GITEA_SECRETS_NAME, PLATFORM_SECRETS_NAME } from 'src/constants'
 import { AlreadyExists, ForbiddenError, HttpError, NotExistError, OtomiError, ValidationError } from 'src/error'
 import { getSettingsFileMaps } from 'src/fileStore/file-map'
 import { FileStore } from 'src/fileStore/file-store'
@@ -1472,8 +1472,8 @@ export default class OtomiStack {
     if (!gitea?.values?.enabled) return []
     const { cluster } = await this.getSettings(['cluster'])
     const username = (gitea.values?.adminUsername as string) || 'otomi-admin'
-    const platformSecrets = await getSecretValues(PLATFORM_SECRETS_NAME, APL_SECRETS_NAMESPACE)
-    const password = platformSecrets?.git_password
+    const giteaSecrets = await getSecretValues(GITEA_SECRETS_NAME, APL_SECRETS_NAMESPACE)
+    const password = giteaSecrets?.adminPassword
     const orgName = `team-${teamId}`
     const domainSuffix = cluster?.domainSuffix
     const internalRepoUrls = (await getGiteaRepoUrls(username, password, orgName, domainSuffix)) || []
