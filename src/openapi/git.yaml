@@ -2,8 +2,10 @@ AplGit:
   x-acl:
     platformAdmin:
       - update-any
-    teamAdmin: []
-    teamMember: []
+    teamAdmin:
+      - read-any
+    teamMember:
+      - read-any
   type: object
   additionalProperties: false
   properties:
