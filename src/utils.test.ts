@@ -3,7 +3,6 @@ import os from 'os'
 import path from 'path'
 import { Cluster } from 'src/otomi-models'
 import { getSanitizedErrorMessage, getServiceUrl, safeReadTextFile, sanitizeGitPassword } from 'src/utils'
-import { cleanEnv, GIT_PASSWORD } from './validators'
 
 describe('Utils', () => {
   const cluster: Cluster = {
@@ -63,26 +62,26 @@ describe('Utils', () => {
   })
 
   describe('sanitizeGitPassword should remove git credentials', () => {
-    const env = cleanEnv({
-      GIT_PASSWORD,
-    })
+    const gitPassword = 'test*Password'
     test('from strings', () => {
-      expect(sanitizeGitPassword('test string')).toBe('test string')
-      expect(sanitizeGitPassword(`${env.GIT_PASSWORD} test string ${env.GIT_PASSWORD}`)).toBe('**** test string ****')
+      expect(sanitizeGitPassword('test string', '')).toEqual('test string')
+      expect(sanitizeGitPassword(`${gitPassword} test string ${gitPassword}`, gitPassword)).toBe(
+        '**** test string ****',
+      )
     })
     test('from objects', () => {
-      expect(sanitizeGitPassword(JSON.stringify({ test: 'some string' }))).toEqual('{"test":"some string"}')
-      expect(sanitizeGitPassword(JSON.stringify({ test: `some string ${env.GIT_PASSWORD}` }))).toEqual(
+      expect(sanitizeGitPassword(JSON.stringify({ test: 'some string' }), '')).toEqual('{"test":"some string"}')
+      expect(sanitizeGitPassword(JSON.stringify({ test: `some string ${gitPassword}` }), gitPassword)).toEqual(
         '{"test":"some string ****"}',
       )
     })
     test('return empty string on empty or undefined input', () => {
-      expect(sanitizeGitPassword('')).toEqual('')
-      expect(sanitizeGitPassword(undefined)).toEqual('')
+      expect(sanitizeGitPassword('', '')).toEqual('')
+      expect(sanitizeGitPassword(undefined, '')).toEqual('')
     })
     test('extract message from exception', () => {
-      expect(getSanitizedErrorMessage(new Error('test error'))).toEqual('test error')
-      expect(getSanitizedErrorMessage(new Error(`test error ${env.GIT_PASSWORD}`))).toEqual('test error ****')
+      expect(getSanitizedErrorMessage(new Error('test error'), '')).toEqual('test error')
+      expect(getSanitizedErrorMessage(new Error(`test error ${gitPassword}`), gitPassword)).toEqual('test error ****')
     })
   })
 

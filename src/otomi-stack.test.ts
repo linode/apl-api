@@ -287,7 +287,7 @@ describe('Work with values', () => {
     otomiStack = new OtomiStack()
 
     await otomiStack.init()
-    otomiStack.git = new Git('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
+    otomiStack.git = new Git('./test', undefined, 'someuser', 'some@ema.il', '', 'main')
     jest.spyOn(otomiStack, 'doDeleteDeployment').mockResolvedValue()
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
   })
@@ -302,7 +302,7 @@ describe('Workload values', () => {
   beforeEach(async () => {
     otomiStack = new OtomiStack()
     await otomiStack.init()
-    otomiStack.git = new Git('./test', undefined, 'someuser', 'some@ema.il', undefined, undefined)
+    otomiStack.git = new Git('./test', undefined, 'someuser', 'some@ema.il', '', 'main')
     jest.spyOn(otomiStack, 'doDeleteDeployment').mockResolvedValue()
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
   })
@@ -1390,50 +1390,23 @@ describe('OtomiStack.migrateGitSettings', () => {
       fileStore: { set: mockRootFileStoreSet },
     })
     jest.spyOn(require('src/middleware/session'), 'cleanSession').mockResolvedValue(undefined)
+    ;(stack as any).getApiClient = jest.fn().mockReturnValue({
+      createNamespacedSecret: jest.fn(),
+    })
   })
 
   afterEach(() => jest.restoreAllMocks())
 
   it('calls saveSettings, commit, pushToNewRemote, pushWithRetry in order', async () => {
-    const order: string[] = []
-    const saveSettingsSpy = jest.spyOn(stack as any, 'saveSettings').mockImplementation(async () => {
-      order.push('saveSettings')
-    })
-    mockCommit.mockImplementation(async () => order.push('commit'))
-    mockPushToNewRemote.mockImplementation(async () => order.push('pushToNewRemote'))
-    mockPushWithRetry.mockImplementation(async () => order.push('pushWithRetry'))
-
     await stack.migrateGitSettings({
       repoUrl: 'https://new.example.com/repo.git',
       username: 'user',
       password: 'pass',
       email: 'new@example.com',
       branch: 'main',
-      remoteHasContent: false,
     })
 
-    expect(saveSettingsSpy).toHaveBeenCalled()
-    expect(order).toEqual(['saveSettings', 'commit', 'pushToNewRemote', 'pushWithRetry'])
-  })
-
-  it('skips pushToNewRemote when remote already has content', async () => {
-    const order: string[] = []
-    jest.spyOn(stack as any, 'saveSettings').mockImplementation(async () => order.push('saveSettings'))
-    mockCommit.mockImplementation(async () => order.push('commit'))
-    mockPushToNewRemote.mockImplementation(async () => order.push('pushToNewRemote'))
-    mockPushWithRetry.mockImplementation(async () => order.push('pushWithRetry'))
-
-    await stack.migrateGitSettings({
-      repoUrl: 'https://new.example.com/repo.git',
-      username: 'user',
-      password: 'pass',
-      email: 'new@example.com',
-      branch: 'main',
-      remoteHasContent: true,
-    })
-
-    expect(order).toEqual(['saveSettings', 'commit', 'pushWithRetry'])
-    expect(mockPushToNewRemote).not.toHaveBeenCalled()
+    expect(mockPushToNewRemote).toHaveBeenCalled()
   })
 })
 

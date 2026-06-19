@@ -1,26 +1,36 @@
 import Debug from 'debug'
-import simpleGit from 'simple-git'
-import { cleanEnv, GIT_BRANCH, GIT_PASSWORD, GIT_REPO_URL, GIT_USER } from 'src/validators'
+import { GitConfig } from '../otomi-models'
+import { Git } from '../git'
 
 const debug = Debug('otomi:git-connect')
 
-const env = cleanEnv({
-  GIT_REPO_URL,
-  GIT_BRANCH,
-  GIT_USER,
-  GIT_PASSWORD,
-})
+export function getProtocol(url: string | undefined): string {
+  return url && url.includes('://') ? url.split('://')[0] : 'file'
+}
 
-export default async function getLatestRemoteCommitSha(): Promise<string | undefined> {
+export function getAuthenticatedUrl(gitConfig: GitConfig): string {
+  const protocol = getProtocol(gitConfig.repoUrl)
+  if (protocol === 'file') {
+    return gitConfig.repoUrl
+  }
+  const { repoUrl, username, password } = gitConfig
+  const url = new URL(repoUrl)
+  if (username) {
+    url.username = username
+    url.password = password
+  } else {
+    url.username = password
+    url.password = ''
+  }
+  return url.toString()
+}
+
+export default async function getLatestRemoteCommitSha(git: Git): Promise<string | undefined> {
   try {
-    const git = simpleGit()
-    const repoUrl = new URL(env.GIT_REPO_URL)
-    repoUrl.username = encodeURIComponent(env.GIT_USER)
-    repoUrl.password = encodeURIComponent(env.GIT_PASSWORD)
-    const result = await git.listRemote(['--refs', repoUrl.toString(), env.GIT_BRANCH])
+    const result = await git.git.listRemote(['--refs', git.remote, `refs/heads/${git.branch}`])
     const [sha] = result.trim().split(/\s/)
     if (!sha) {
-      debug('No remote commit found for branch %s', env.GIT_BRANCH)
+      debug('No remote commit found for branch %s', git.branch)
       return undefined
     }
     return sha

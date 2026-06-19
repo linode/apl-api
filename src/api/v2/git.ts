@@ -1,7 +1,7 @@
 import Debug from 'debug'
 import { Response } from 'express'
 import { lockApi } from 'src/middleware'
-import { OpenApiRequestExt } from 'src/otomi-models'
+import { GitConfig, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:git')
 
@@ -16,18 +16,12 @@ const debug = Debug('otomi:api:v2:git')
  */
 export const migrateGit = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   debug('migrateGit')
-  const { repoUrl, username, password, email, branch } = req.body as {
-    repoUrl: string
-    username?: string
-    password: string
-    email: string
-    branch: string
-  }
+  const newGitConfig = req.body as GitConfig
 
   // Validate new remote connectivity; returns true if remote already has content
   let remoteHasContent: boolean
   try {
-    remoteHasContent = await req.otomi.git.testRemoteConnection(repoUrl, password, branch, username)
+    remoteHasContent = await req.otomi.git.testRemoteConnection(newGitConfig)
   } catch (e: any) {
     if (e.message.includes('not found')) {
       const error = { message: `Cannot connect to new git remote`, statusCode: 404 }
@@ -44,7 +38,7 @@ export const migrateGit = async (req: OpenApiRequestExt, res: Response): Promise
   }
 
   // Write config + commit locally → push to new remote (if empty) → push to current remote
-  await req.otomi.migrateGitSettings({ repoUrl, username, password, email, branch, remoteHasContent })
+  await req.otomi.migrateGitSettings(newGitConfig)
 
   await lockApi()
 

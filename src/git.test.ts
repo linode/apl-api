@@ -17,7 +17,7 @@ const mockGitInstance = {
 ;(simpleGit as jest.Mock).mockReturnValue(mockGitInstance)
 
 function makeRepo(): Git {
-  return new Git('/tmp/test', 'https://origin.example.com/repo.git', 'user', 'user@example.com', undefined, 'main')
+  return new Git('/tmp/test', 'https://origin.example.com/repo.git', 'user', 'user@example.com', '', 'main')
 }
 
 describe('Git.testRemoteConnection', () => {
@@ -26,7 +26,14 @@ describe('Git.testRemoteConnection', () => {
   it('returns false when remote is empty (no refs)', async () => {
     mockRaw.mockResolvedValue('')
     const repo = makeRepo()
-    const result = await repo.testRemoteConnection('https://example.com/repo.git', 'mypass', 'main', 'myuser')
+    const gitConfig = {
+      repoUrl: 'https://example.com/repo.git',
+      password: 'mypass',
+      branch: 'main',
+      username: 'myuser',
+      email: '',
+    }
+    const result = await repo.testRemoteConnection(gitConfig)
     expect(result).toBe(false)
     expect(mockRaw).toHaveBeenCalledWith(['ls-remote', expect.stringContaining('myuser'), 'refs/heads/main'])
   })
@@ -34,14 +41,27 @@ describe('Git.testRemoteConnection', () => {
   it('returns true when remote has existing refs', async () => {
     mockRaw.mockResolvedValue('abc123\trefs/heads/main\n')
     const repo = makeRepo()
-    const result = await repo.testRemoteConnection('https://example.com/repo.git', 'mypass', 'main', 'myuser')
+    const gitConfig = {
+      repoUrl: 'https://example.com/repo.git',
+      password: 'mypass',
+      branch: 'main',
+      username: 'myuser',
+      email: '',
+    }
+    const result = await repo.testRemoteConnection(gitConfig)
     expect(result).toBe(true)
   })
 
   it('calls ls-remote with PAT only (no username) in url', async () => {
     mockRaw.mockResolvedValue('abc123\trefs/heads/main\n')
     const repo = makeRepo()
-    const result = await repo.testRemoteConnection('https://example.com/repo.git', 'mytoken', 'main')
+    const gitConfig = {
+      repoUrl: 'https://example.com/repo.git',
+      password: 'mytoken',
+      branch: 'main',
+      email: '',
+    }
+    const result = await repo.testRemoteConnection(gitConfig)
     expect(result).toBe(true)
     expect(mockRaw).toHaveBeenCalledWith(['ls-remote', 'https://mytoken@example.com/repo.git', 'refs/heads/main'])
   })
@@ -49,7 +69,14 @@ describe('Git.testRemoteConnection', () => {
   it('returns false when branch does not exist but remote has other refs', async () => {
     mockRaw.mockResolvedValue('')
     const repo = makeRepo()
-    const result = await repo.testRemoteConnection('https://example.com/repo.git', 'mypass', 'feature-branch', 'myuser')
+    const gitConfig = {
+      repoUrl: 'https://example.com/repo.git',
+      password: 'mytoken',
+      username: 'myuser',
+      branch: 'feature-branch',
+      email: '',
+    }
+    const result = await repo.testRemoteConnection(gitConfig)
     expect(result).toBe(false)
     expect(mockRaw).toHaveBeenCalledWith(['ls-remote', expect.stringContaining('myuser'), 'refs/heads/feature-branch'])
   })
@@ -57,7 +84,14 @@ describe('Git.testRemoteConnection', () => {
   it('throws when ls-remote fails (unreachable remote)', async () => {
     mockRaw.mockRejectedValue(new Error('exit code 128'))
     const repo = makeRepo()
-    await expect(repo.testRemoteConnection('https://bad.example.com/repo.git', 'p', 'main', 'u')).rejects.toThrow()
+    const gitConfig = {
+      repoUrl: 'https://bad.example.com/repo.git',
+      password: 'p',
+      username: 'u',
+      branch: 'main',
+      email: '',
+    }
+    await expect(repo.testRemoteConnection(gitConfig)).rejects.toThrow()
   })
 })
 
@@ -69,7 +103,14 @@ describe('Git.pushToNewRemote', () => {
     mockRemote.mockResolvedValue('')
     mockPush.mockResolvedValue({})
     const repo = makeRepo()
-    await repo.pushToNewRemote('https://example.com/repo.git', 'main', 'p', 'u')
+    const gitConfig = {
+      repoUrl: 'https://example.com/repo.git',
+      branch: 'main',
+      password: 'p',
+      username: 'u',
+      email: '',
+    }
+    await repo.pushToNewRemote(gitConfig)
 
     expect(mockFetch).toHaveBeenCalledWith(['origin', '--unshallow'])
     expect(mockRemote).toHaveBeenCalledWith(
@@ -84,7 +125,14 @@ describe('Git.pushToNewRemote', () => {
     mockRemote.mockResolvedValue('')
     mockPush.mockResolvedValue({})
     const repo = makeRepo()
-    await repo.pushToNewRemote('https://example.com/repo.git', 'main', 'p', 'u')
+    const gitConfig = {
+      repoUrl: 'https://example.com/repo.git',
+      branch: 'main',
+      password: 'p',
+      username: 'u',
+      email: '',
+    }
+    await repo.pushToNewRemote(gitConfig)
 
     expect(mockPush).toHaveBeenCalledWith('migration-remote', 'HEAD:refs/heads/main')
   })
@@ -94,7 +142,13 @@ describe('Git.pushToNewRemote', () => {
     mockRemote.mockResolvedValue('')
     mockPush.mockResolvedValue({})
     const repo = makeRepo()
-    await repo.pushToNewRemote('https://example.com/repo.git', 'main', 'mytoken')
+    const gitConfig = {
+      repoUrl: 'https://example.com/repo.git',
+      branch: 'main',
+      password: 'mytoken',
+      email: '',
+    }
+    await repo.pushToNewRemote(gitConfig)
 
     expect(mockRemote).toHaveBeenCalledWith(
       expect.arrayContaining(['add', 'migration-remote', 'https://mytoken@example.com/repo.git']),
@@ -106,7 +160,14 @@ describe('Git.pushToNewRemote', () => {
     mockRemote.mockResolvedValue('')
     mockPush.mockResolvedValue({})
     const repo = makeRepo() // local branch is 'main'
-    await repo.pushToNewRemote('https://example.com/repo.git', 'feature-branch', 'p', 'u')
+    const gitConfig = {
+      repoUrl: 'https://example.com/repo.git',
+      branch: 'feature-branch',
+      username: 'u',
+      password: 'p',
+      email: '',
+    }
+    await repo.pushToNewRemote(gitConfig)
 
     expect(mockPush).toHaveBeenCalledWith('migration-remote', 'HEAD:refs/heads/feature-branch')
   })
@@ -116,7 +177,14 @@ describe('Git.pushToNewRemote', () => {
     mockRemote.mockResolvedValue('')
     mockPush.mockRejectedValue(new Error('push failed'))
     const repo = makeRepo()
-    await expect(repo.pushToNewRemote('https://example.com/repo.git', 'main', 'p', 'u')).rejects.toThrow('push failed')
+    const gitConfig = {
+      repoUrl: 'https://example.com/repo.git',
+      branch: 'main',
+      username: 'u',
+      password: 'p',
+      email: '',
+    }
+    await expect(repo.pushToNewRemote(gitConfig)).rejects.toThrow('push failed')
     expect(mockRemote).toHaveBeenCalledWith(['remove', 'migration-remote'])
   })
 })

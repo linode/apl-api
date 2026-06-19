@@ -7,44 +7,22 @@ import { glob } from 'glob'
 import { merge } from 'lodash'
 import { basename, dirname, join } from 'path'
 import simpleGit, { CheckRepoActions, CleanOptions, CommitResult, ResetMode, SimpleGit } from 'simple-git'
-import {
-  cleanEnv,
-  GIT_BRANCH,
-  GIT_LOCAL_PATH,
-  GIT_PASSWORD,
-  GIT_PUSH_RETRIES,
-  GIT_REPO_URL,
-  GIT_USER,
-} from 'src/validators'
+import { cleanEnv, GIT_LOCAL_PATH, GIT_PASSWORD, GIT_PUSH_RETRIES } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { GitPullError } from './error'
-import { Core } from './otomi-models'
+import { Core, GitConfig } from './otomi-models'
 import { getSanitizedErrorMessage, removeBlankAttributes, sanitizeGitPassword } from './utils'
+import { getAuthenticatedUrl, getProtocol } from './git/connect'
 
 const debug = Debug('otomi:repo')
 
 const env = cleanEnv({
-  GIT_BRANCH,
   GIT_LOCAL_PATH,
   GIT_PASSWORD,
-  GIT_REPO_URL,
-  GIT_USER,
   GIT_PUSH_RETRIES,
 })
 
-const getProtocol = (url): string => (url && url.includes('://') ? url.split('://')[0] : 'http')
-
 const getUrl = (url): string => (!url || url.includes('://') ? url : `${getProtocol(url)}://${url}`)
-
-function getUrlAuth(url, user: string | undefined, password): string | undefined {
-  if (!url) return
-  const protocol = getProtocol(url)
-  const [_, bareUrl] = url.split('://')
-  const credentials = user
-    ? `${encodeURIComponent(user)}:${encodeURIComponent(password)}`
-    : encodeURIComponent(password)
-  return protocol === 'file' ? `${protocol}://${bareUrl}` : `${protocol}://${credentials}@${bareUrl}`
-}
 
 export class Git {
   branch: string
@@ -57,18 +35,11 @@ export class Git {
   remote: string
   remoteBranch: string
   url: string | undefined
-  urlAuth: string | undefined
+  urlAuth: string
   user: string
 
-  constructor(
-    path: string,
-    url: string | undefined,
-    user: string,
-    email: string,
-    urlAuth: string | undefined,
-    branch: string | undefined,
-  ) {
-    this.branch = branch || 'main'
+  constructor(path: string, url: string | undefined, user: string, email: string, urlAuth: string, branch: string) {
+    this.branch = branch
     this.email = email
     this.path = path
     this.remote = 'origin'
@@ -81,16 +52,12 @@ export class Git {
     this.git = simpleGit(this.path).env('GIT_SSL_NO_VERIFY', String(gitSSLNoVerify))
   }
 
-  getProtocol() {
-    return getProtocol(this.url)
-  }
-
   async addConfig(): Promise<void> {
     debug(`Adding git config`)
     await this.git.addConfig('user.name', this.user)
     await this.git.addConfig('user.email', this.email)
     if (this.isRootClone()) {
-      if (this.getProtocol() === 'file') {
+      if (getProtocol(this.url) === 'file') {
         // tell the the git repo there to accept updates even when it is checked out
         const _git = simpleGit(this.url!.replace('file://', ''))
         await _git.addConfig('receive.denyCurrentBranch', 'updateInstead')
@@ -189,7 +156,7 @@ export class Git {
   }
 
   hasRemote(): boolean {
-    return !!env.GIT_REPO_URL
+    return !!this.url
   }
 
   async initFromTestFolder(): Promise<void> {
@@ -208,18 +175,13 @@ export class Git {
   async clone(): Promise<void> {
     debug(`Checking if local git repository exists at: ${this.path}`)
     const isRepo = await this.git.checkIsRepo(CheckRepoActions.IS_REPO_ROOT)
-    // remote root url
-    this.url = getUrl(`${env.GIT_REPO_URL}`)
     if (!isRepo) {
       debug(`Initializing repo...`)
       if (!this.hasRemote() && this.isRootClone()) {
         return await this.initFromTestFolder()
-      } else if (!this.isRootClone()) {
-        // child clone, point to remote root
-        this.urlAuth = getUrlAuth(this.url, env.GIT_USER, env.GIT_PASSWORD)
       }
       debug(`Cloning from '${this.url}' to '${this.path}'`)
-      await this.git.clone(this.urlAuth!, this.path)
+      await this.git.clone(this.urlAuth, this.path)
       await this.addConfig()
       await this.git.checkout(this.branch)
     } else if (this.url) {
@@ -254,7 +216,7 @@ export class Git {
       debug(`Pull summary: ${summJson}`)
       this.commitSha = await this.getCommitSha()
     } catch (e) {
-      const eMessage = getSanitizedErrorMessage(e)
+      const eMessage = getSanitizedErrorMessage(e, this.password)
       debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', eMessage)
       this.corrupt = true
       try {
@@ -282,7 +244,7 @@ export class Git {
           await this.git.raw(['rebase', `${this.remote}/${this.branch}`, '--strategy-option=ours'])
         }
       } catch (error) {
-        const errorMessage = getSanitizedErrorMessage(error)
+        const errorMessage = getSanitizedErrorMessage(error, this.password)
         debug('Failed to remove upstream commits: ', errorMessage)
         throw new GitPullError('Failed to remove upstream commits!')
       }
@@ -309,15 +271,15 @@ export class Git {
     return
   }
 
-  async testRemoteConnection(url: string, password: string, branch: string, user?: string): Promise<boolean> {
-    const authUrl = password ? getUrlAuth(url, user, password) : url
+  async testRemoteConnection(gitConfig: GitConfig): Promise<boolean> {
+    const authUrl = getAuthenticatedUrl(gitConfig)
     // returns true only if the configured branch exists on the remote
-    const result = await this.git.raw(['ls-remote', authUrl!, `refs/heads/${branch}`])
+    const result = await this.git.raw(['ls-remote', authUrl, `refs/heads/${gitConfig.branch}`])
     return result.trim().length > 0
   }
 
-  async pushToNewRemote(url: string, branch: string, password: string, user?: string): Promise<void> {
-    const authUrl = password ? getUrlAuth(url, user, password) : url
+  async pushToNewRemote(newGitConfig: GitConfig): Promise<void> {
+    const authUrl = getAuthenticatedUrl(newGitConfig)
     // Pulls use --depth which can leave the clone shallow. A shallow clone cannot be pushed to a
     // fresh empty remote because referenced parent objects are missing. Unshallow first to restore
     // full history; ignore failures when the repo is already complete.
@@ -327,14 +289,14 @@ export class Git {
       debug('Unshallow fetch skipped (repo is not shallow or fetch failed)')
     }
     try {
-      await this.git.remote(['add', 'migration-remote', authUrl!])
+      await this.git.remote(['add', 'migration-remote', authUrl])
       // Push HEAD so the worktree's session branch commit is included, not the stale local main
-      await this.git.push('migration-remote', `HEAD:refs/heads/${branch}`)
+      await this.git.push('migration-remote', `HEAD:refs/heads/${newGitConfig.branch}`)
     } finally {
       try {
         await this.git.remote(['remove', 'migration-remote'])
       } catch (e) {
-        debug(`Could not remove migration-remote: ${getSanitizedErrorMessage(e)}`)
+        debug(`Could not remove migration-remote: ${getSanitizedErrorMessage(e, newGitConfig.password)}`)
       }
     }
   }
@@ -358,13 +320,13 @@ export class Git {
       await this.git.raw(['worktree', 'remove', worktreePath])
       debug(`Worktree removed successfully: ${worktreePath}`)
     } catch (error) {
-      const errorMessage = getSanitizedErrorMessage(error)
+      const errorMessage = getSanitizedErrorMessage(error, this.password)
       debug(`Error removing worktree: ${errorMessage}`)
       try {
         await this.git.raw(['worktree', 'remove', '--force', worktreePath])
         debug(`Worktree force removed: ${worktreePath}`)
       } catch (err) {
-        const errMessage = getSanitizedErrorMessage(err)
+        const errMessage = getSanitizedErrorMessage(err, this.password)
         debug(`Failed to force remove worktree: ${errMessage}`)
         if (await pathExists(worktreePath)) {
           rmSync(worktreePath, { recursive: true, force: true })
@@ -398,8 +360,8 @@ export class Git {
         }
       }
     } catch (e) {
-      const sanitizedMessage = getSanitizedErrorMessage(e)
-      const sanitizedCommands = sanitizeGitPassword(JSON.stringify(e.task?.commands))
+      const sanitizedMessage = getSanitizedErrorMessage(e, this.password)
+      const sanitizedCommands = sanitizeGitPassword(JSON.stringify(e.task?.commands), this.password)
       debug(`${sanitizedMessage} for command ${sanitizedCommands}`)
       debug('Git save error')
       throw new GitPullError()
@@ -432,17 +394,14 @@ export async function getWorktreeRepo(
 
 export default async function getRepo(
   path: string,
-  url: string,
-  user: string,
-  email: string,
-  password: string,
-  branch: string,
+  gitConfig: GitConfig,
   method: 'clone' | 'init' = 'clone',
 ): Promise<Git> {
   await ensureDir(path, { mode: 0o744 })
-  const urlNormalized = getUrl(url)
-  const urlAuth = getUrlAuth(urlNormalized, user, password)
-  const repo = new Git(path, urlNormalized, user, email, urlAuth, branch)
+  const { repoUrl, branch, username, email } = gitConfig
+  const urlNormalized = getUrl(repoUrl)
+  const urlAuth = getAuthenticatedUrl(gitConfig)
+  const repo = new Git(path, urlNormalized, username ?? 'otomi-admin', email, urlAuth, branch)
   await repo[method]()
   return repo
 }

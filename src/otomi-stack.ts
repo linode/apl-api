@@ -1,4 +1,11 @@
-import { CoreV1Api, User as k8sUser, KubeConfig, V1ObjectReference } from '@kubernetes/client-node'
+import {
+  ApiException,
+  CoreV1Api,
+  KubeConfig,
+  User as k8sUser,
+  V1ObjectReference,
+  V1Secret,
+} from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
@@ -7,7 +14,15 @@ import { readFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, isEmpty, map, merge, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema } from 'src/app'
-import { APL_SECRETS_NAMESPACE, APL_USERS_NAMESPACE, GITEA_SECRETS_NAME, PLATFORM_SECRETS_NAME } from 'src/constants'
+import {
+  APL_SECRETS_NAMESPACE,
+  APL_USERS_NAMESPACE,
+  GIT_CONFIG_SECRET_NAME,
+  GIT_DEFAULT_CONFIG,
+  GIT_LEGACY_CONFIG,
+  GITEA_SECRETS_NAME,
+  PLATFORM_SECRETS_NAME,
+} from 'src/constants'
 import { AlreadyExists, ForbiddenError, HttpError, NotExistError, OtomiError, ValidationError } from 'src/error'
 import { getSettingsFileMaps } from 'src/fileStore/file-map'
 import { FileStore } from 'src/fileStore/file-store'
@@ -48,6 +63,7 @@ import {
   Cloudtty,
   Core,
   DeepPartial,
+  GitConfig,
   K8sService,
   Netpol,
   ObjWizard,
@@ -209,30 +225,13 @@ function getTeamDatabaseValuesFilePath(teamId: string, databaseName: string): st
   return `env/teams/${teamId}/databases/${databaseName}`
 }
 
-function buildUpdatedOtomiSettings(
-  otomi: Settings['otomi'],
-  params: { repoUrl: string; username?: string; password: string; email: string; branch: string },
-): Record<string, any> {
-  const { repoUrl, username, password, email, branch } = params
-  return {
-    ...otomi,
-    git: {
-      ...(otomi?.git ?? {}),
-      repoUrl,
-      email,
-      branch,
-      ...(username !== undefined && { username }),
-      password,
-    },
-  }
-}
-
 export default class OtomiStack {
   private coreValues: Core
   editor?: string
   sessionId?: string
   isLoaded = false
   public locked = false
+  gitConfig: GitConfig
   git: Git
   fileStore: FileStore
   private cloudTty: CloudTty
@@ -291,24 +290,24 @@ export default class OtomiStack {
     await this.init()
     // every editor gets their own folder to detect conflicts upon deploy
     const path = this.getRepoPath()
-    const branch = env.GIT_BRANCH
-    const url = env.GIT_REPO_URL
+    this.gitConfig = await this.getGitConfig()
+
     const maxRetries = env.GIT_INIT_MAX_RETRIES
     const timeoutMs = env.GIT_INIT_RETRY_INTERVAL_MS
     let attempt = 0
     // Use the env var password as the initial value; refresh from K8s on retries
     // to pick up ESO credential syncs that happen after pod startup (e.g. git provider switch).
-    let password = env.GIT_PASSWORD
     for (;;) {
+      const { repoUrl: url, branch } = this.gitConfig
       try {
-        this.git = await getRepo(path, url, env.GIT_USER, env.GIT_EMAIL, password, branch)
+        this.git = await getRepo(path, this.gitConfig)
         await this.git.pull()
         //TODO fetch this url from the repo
         if (await this.git.fileExists(clusterSettingsFilePath)) break
         debug(`Values are not present at ${url}:${branch}`)
       } catch (e) {
         // Remove password from error message
-        const errorMessage = getSanitizedErrorMessage(e)
+        const errorMessage = getSanitizedErrorMessage(e, this.gitConfig.password)
         debug(`Error while initializing git repository: ${errorMessage}`)
         debug(`Git repository is not ready: ${url}:${branch}`)
       }
@@ -321,8 +320,7 @@ export default class OtomiStack {
       await new Promise((resolve) => setTimeout(resolve, timeoutMs))
       // Re-read password from K8s in case ESO has just synced fresh credentials
       try {
-        const secret = await getSecretValues('otomi-api-git-credentials', 'otomi')
-        if (secret?.GIT_PASSWORD) password = secret.GIT_PASSWORD
+        this.gitConfig = await this.getGitConfig()
       } catch {
         // K8s not reachable or secret absent — keep the current password
       }
@@ -339,13 +337,12 @@ export default class OtomiStack {
     await this.init()
     debug(`Creating worktree for session ${this.sessionId}`)
 
+    const { branch, password } = this.gitConfig
     try {
-      await mainRepo.git.revparse(`--verify refs/heads/${env.GIT_BRANCH}`)
+      await mainRepo.git.revparse(`--verify refs/heads/${branch}`)
     } catch (error) {
-      const errorMessage = getSanitizedErrorMessage(error)
-      throw new Error(
-        `Main repository does not have branch '${env.GIT_BRANCH}'. Cannot create worktree. ${errorMessage}`,
-      )
+      const errorMessage = getSanitizedErrorMessage(error, password)
+      throw new Error(`Main repository does not have branch '${branch}'. Cannot create worktree. ${errorMessage}`)
     }
 
     // Pull latest changes so the worktree starts from up-to-date state
@@ -353,11 +350,11 @@ export default class OtomiStack {
       debug(`Pulled latest changes before creating worktree for session ${this.sessionId}`)
       await mainRepo.pull(true, true)
     } catch (e) {
-      debug(`Warning: could not pull latest before creating worktree: ${getSanitizedErrorMessage(e)}`)
+      debug(`Warning: could not pull latest before creating worktree: ${getSanitizedErrorMessage(e, password)}`)
     }
 
     const worktreePath = this.getRepoPath()
-    this.git = await getWorktreeRepo(mainRepo, worktreePath, env.GIT_BRANCH)
+    this.git = await getWorktreeRepo(mainRepo, worktreePath, this.gitConfig.branch)
     this.fileStore = new FileStore()
 
     debug(`Worktree created for ${this.editor} in ${this.sessionId}`)
@@ -637,70 +634,111 @@ export default class OtomiStack {
     return settings
   }
 
-  async migrateGitSettings(params: {
-    repoUrl: string
-    username?: string
-    password: string
-    email: string
-    branch: string
-    remoteHasContent: boolean
-  }): Promise<void> {
-    const { otomi } = await this.getSettings()
-    const updatedOtomi = buildUpdatedOtomiSettings(otomi, params)
+  async migrateGitSettings(params: GitConfig): Promise<void> {
+    await this.commitAndPushMigration({ ...GIT_DEFAULT_CONFIG, ...params })
+    await this.storeGitConfig(params)
+  }
 
-    // Encrypt the password into the otomi-secrets SealedSecret and strip it from the settings YAML
-    const sealedSecretRecord = await this.extractAndStoreSettingsSecrets('otomi', { otomi: updatedOtomi })
-    const valuesSchema = await getValuesSchema()
-    const subSchema = valuesSchema.properties?.otomi
-    if (subSchema) {
-      removeSettingsSecrets(extractSecretPaths(subSchema), updatedOtomi)
+  private async getClusterGitConfig(): Promise<GitConfig> {
+    const api = this.getApiClient()
+    const decodedData = {}
+    const defaults = {
+      password: '',
+      ...GIT_DEFAULT_CONFIG,
+    }
+    try {
+      const { data } = await api.readNamespacedSecret({
+        name: GIT_CONFIG_SECRET_NAME,
+        namespace: APL_SECRETS_NAMESPACE,
+      })
+      if (data) {
+        Object.entries(data || {}).forEach(([key, value]) => {
+          decodedData[key] = Buffer.from(value, 'base64').toString('utf-8')
+        })
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV !== 'development') {
+        debug('Could not read Git config from cluster, continuing with development defaults')
+        defaults.repoUrl = ''
+      } else if (!(error instanceof ApiException && error.code === 404)) {
+        throw error
+      }
+    }
+    return {
+      ...defaults,
+      ...decodedData,
+    }
+  }
+
+  /**
+   * Retrieves Git configuration from the cluster (if available).
+   *
+   * Missing data is filled with defaults. Environment variables take precedence if set.
+   */
+  private async getGitConfig(): Promise<GitConfig> {
+    let gitConfig
+    if (process.env.NODE_ENV === 'test') {
+      gitConfig = { password: '', ...GIT_DEFAULT_CONFIG, repoUrl: '' }
+    } else {
+      gitConfig = await this.getClusterGitConfig()
+    }
+    if ([GIT_DEFAULT_CONFIG.repoUrl, GIT_LEGACY_CONFIG.repoUrl].includes(gitConfig.repoUrl) && !gitConfig.username) {
+      // On legacy (Gitea) and default configurations, assume otomi-admin login
+      gitConfig.username = 'otomi-admin'
     }
 
-    const { filePath, aplObject } = await this.persistOtomiSettings(updatedOtomi)
-    await this.commitAndPushMigration({ ...params, filePath, aplObject, sealedSecretRecord })
+    const envConfig = {
+      branch: env.GIT_BRANCH,
+      email: env.GIT_EMAIL,
+      repoUrl: env.GIT_REPO_URL,
+      username: env.GIT_USER,
+      password: env.GIT_PASSWORD,
+    }
+    Object.values(envConfig).forEach(([key, value]) => {
+      if (value) {
+        gitConfig[key] = value
+      }
+    })
+    return gitConfig
   }
 
-  private async persistOtomiSettings(
-    updatedOtomi: Record<string, any>,
-  ): Promise<{ filePath: string; aplObject: AplObject }> {
-    const filePath = getResourceFilePath('AplCapabilitySet', 'otomi')
-    const aplObject = toPlatformObject('AplCapabilitySet', 'otomi', updatedOtomi)
-    this.fileStore.set(filePath, aplObject)
-    await this.saveSettings()
-    return { filePath, aplObject }
+  private async storeGitConfig(gitConfig: Partial<GitConfig>): Promise<void> {
+    const api = this.getApiClient()
+    const encodedData = {}
+    Object.entries(gitConfig).forEach(([key, value]) => {
+      if (value) {
+        encodedData[key] = Buffer.from(value).toString('base64')
+      }
+    })
+    const name = GIT_CONFIG_SECRET_NAME
+    const namespace = APL_SECRETS_NAMESPACE
+    const secret: V1Secret = {
+      metadata: {
+        name,
+        namespace,
+      },
+      data: encodedData,
+      type: 'Opaque',
+    }
+    try {
+      await api.createNamespacedSecret({ namespace, body: secret })
+    } catch (error) {
+      if (error instanceof ApiException && error.code === 409) {
+        await api.replaceNamespacedSecret({ namespace, name, body: secret })
+      } else {
+        throw error
+      }
+    }
   }
 
-  private async commitAndPushMigration(params: {
-    repoUrl: string
-    branch: string
-    password: string
-    username?: string
-    remoteHasContent: boolean
-    filePath: string
-    aplObject: AplObject
-    sealedSecretRecord?: AplRecord
-  }): Promise<void> {
-    const { repoUrl, branch, password, username, remoteHasContent, filePath, aplObject, sealedSecretRecord } = params
-    const rootStack = await getSessionStack()
+  private async commitAndPushMigration(newGitConfig: GitConfig): Promise<void> {
     try {
       await this.git.commit(this.editor!)
-      if (!remoteHasContent) {
-        // Remote is empty: push so the new remote has the config pointing to itself
-        await this.git.pushToNewRemote(repoUrl, branch, password, username)
-      }
-      // Push to current remote so the operator picks up the git config change
-      await this.git.pushWithRetry()
-      await rootStack.git.git.pull()
-      rootStack.fileStore.set(filePath, aplObject)
-      if (sealedSecretRecord) {
-        rootStack.fileStore.set(sealedSecretRecord.filePath, sealedSecretRecord.content)
-      }
-      debug(`Updated root stack values with ${this.sessionId} migration changes`)
-    } catch (e) {
-      e.message = getSanitizedErrorMessage(e)
-      throw e
-    } finally {
+      await this.git.pushToNewRemote(newGitConfig)
       await cleanSession(this.sessionId!)
+    } catch (e) {
+      e.message = getSanitizedErrorMessage(e, newGitConfig.password)
+      throw e
     }
   }
 
@@ -2007,7 +2045,7 @@ export default class OtomiStack {
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
     } catch (e) {
-      e.message = getSanitizedErrorMessage(e)
+      e.message = getSanitizedErrorMessage(e, this.gitConfig.password)
       throw e
     } finally {
       // Clean up the session
@@ -2028,7 +2066,7 @@ export default class OtomiStack {
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
     } catch (e) {
-      e.message = getSanitizedErrorMessage(e)
+      e.message = getSanitizedErrorMessage(e, this.gitConfig.password)
       throw e
     } finally {
       // Clean up the session
@@ -2051,7 +2089,7 @@ export default class OtomiStack {
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
     } catch (e) {
-      e.message = getSanitizedErrorMessage(e)
+      e.message = getSanitizedErrorMessage(e, this.gitConfig.password)
       throw e
     } finally {
       // Clean up the session
