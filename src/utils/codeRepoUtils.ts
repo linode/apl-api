@@ -171,6 +171,7 @@ export async function extractRepositoryRefs(repoUrl: string, git: SimpleGit = si
         GIT_TERMINAL_PROMPT: '0',
         GIT_SSL_NO_VERIFY: 'true',
       })
+      // FIXME: When values is not on Gitea, this is broken
       const username = process.env.GIT_USER as string
       const accessToken = process.env.GIT_PASSWORD as string
       formattedRepoUrl = repoUrl.replace(
