@@ -286,6 +286,14 @@ export default class OtomiStack {
     this.fileStore = await FileStore.load(this.getRepoPath())
   }
 
+  async refreshGitConfig() {
+    try {
+      this.gitConfig = await this.getGitConfig()
+    } catch {
+      // Do not raise errors, but keep existing configuration
+    }
+  }
+
   async initGit(inflateValues = true): Promise<void> {
     await this.init()
     // every editor gets their own folder to detect conflicts upon deploy
@@ -637,6 +645,7 @@ export default class OtomiStack {
   async migrateGitSettings(params: GitConfig): Promise<void> {
     await this.commitAndPushMigration({ ...GIT_DEFAULT_CONFIG, ...params })
     await this.storeGitConfig(params)
+    this.gitConfig = await this.getGitConfig(params)
   }
 
   private async getClusterGitConfig(): Promise<GitConfig> {
@@ -671,16 +680,16 @@ export default class OtomiStack {
   }
 
   /**
-   * Retrieves Git configuration from the cluster (if available).
+   * Retrieves Git configuration from given values or the cluster (if available).
    *
    * Missing data is filled with defaults. Environment variables take precedence if set.
    */
-  private async getGitConfig(): Promise<GitConfig> {
+  private async getGitConfig(inputConfig?: Partial<GitConfig>): Promise<GitConfig> {
     let gitConfig
     if (process.env.NODE_ENV === 'test') {
       gitConfig = { password: '', ...GIT_DEFAULT_CONFIG, repoUrl: '' }
     } else {
-      gitConfig = await this.getClusterGitConfig()
+      gitConfig = inputConfig || (await this.getClusterGitConfig())
     }
     if ([GIT_DEFAULT_CONFIG.repoUrl, GIT_LEGACY_CONFIG.repoUrl].includes(gitConfig.repoUrl) && !gitConfig.username) {
       // On legacy (Gitea) and default configurations, assume otomi-admin login
