@@ -480,9 +480,11 @@ export default class OtomiStack {
         }
       })
 
-      // Apply otomi nodeSelector transformation if needed
       if (keys.includes('otomi')) {
+        // Apply otomi nodeSelector transformation if needed
         this.transformOtomiNodeSelector(settings)
+        // Merge in Git configuration
+        set(settings, 'otomi.git', omit(this.gitConfig, ['password']))
       }
     } else {
       // No keys specified: fetch all settings
@@ -604,6 +606,11 @@ export default class OtomiStack {
           return { ...acc, [name]: value }
         }, {})
         updatedSettingsData.otomi.nodeSelector = nodeSelectorObject
+      }
+      if (updatedSettingsData.otomi?.git) {
+        await this.storeGitConfig(updatedSettingsData.otomi?.git)
+        this.gitConfig = await this.getGitConfig(updatedSettingsData.otomi?.git)
+        unset(updatedSettingsData, 'otomi.git')
       }
     }
 
