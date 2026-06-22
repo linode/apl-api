@@ -667,11 +667,9 @@ export default class OtomiStack {
         name: GIT_CONFIG_SECRET_NAME,
         namespace: APL_SECRETS_NAMESPACE,
       })
-      if (data) {
-        Object.entries(data || {}).forEach(([key, value]) => {
-          decodedData[key] = Buffer.from(value, 'base64').toString('utf-8')
-        })
-      }
+      Object.entries(data || {}).forEach(([key, value]) => {
+        decodedData[key] = Buffer.from(value, 'base64').toString('utf-8')
+      })
     } catch (error) {
       if (process.env.NODE_ENV !== 'development') {
         debug('Could not read Git config from cluster, continuing with development defaults')
@@ -710,7 +708,7 @@ export default class OtomiStack {
       username: env.GIT_USER,
       password: env.GIT_PASSWORD,
     }
-    Object.values(envConfig).forEach(([key, value]) => {
+    Object.entries(envConfig).forEach(([key, value]) => {
       if (value) {
         gitConfig[key] = value
       }
