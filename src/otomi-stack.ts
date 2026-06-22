@@ -485,7 +485,7 @@ export default class OtomiStack {
         // Apply otomi nodeSelector transformation if needed
         this.transformOtomiNodeSelector(settings)
         // Merge in Git configuration
-        set(settings, 'otomi.git', omit(this.gitConfig, ['password']))
+        set(settings, 'otomi.git', await this.getGitSettings())
       }
     } else {
       // No keys specified: fetch all settings
