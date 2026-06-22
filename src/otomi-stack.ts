@@ -314,7 +314,7 @@ export default class OtomiStack {
         debug(`Values are not present at ${url}:${branch}`)
       } catch (e) {
         // Remove password from error message
-        const errorMessage = getSanitizedErrorMessage(e, this.gitConfig.password)
+        const errorMessage = getSanitizedErrorMessage(e)
         debug(`Error while initializing git repository: ${errorMessage}`)
         debug(`Git repository is not ready: ${url}:${branch}`)
       }
@@ -344,11 +344,11 @@ export default class OtomiStack {
     await this.init()
     debug(`Creating worktree for session ${this.sessionId}`)
 
-    const { branch, password } = this.gitConfig
+    const { branch } = mainRepo
     try {
       await mainRepo.git.revparse(`--verify refs/heads/${branch}`)
     } catch (error) {
-      const errorMessage = getSanitizedErrorMessage(error, password)
+      const errorMessage = getSanitizedErrorMessage(error)
       throw new Error(`Main repository does not have branch '${branch}'. Cannot create worktree. ${errorMessage}`)
     }
 
@@ -357,7 +357,7 @@ export default class OtomiStack {
       debug(`Pulled latest changes before creating worktree for session ${this.sessionId}`)
       await mainRepo.pull(true, true)
     } catch (e) {
-      debug(`Warning: could not pull latest before creating worktree: ${getSanitizedErrorMessage(e, password)}`)
+      debug(`Warning: could not pull latest before creating worktree: ${getSanitizedErrorMessage(e)}`)
     }
 
     const worktreePath = this.getRepoPath()
@@ -753,7 +753,7 @@ export default class OtomiStack {
       await this.git.pushToNewRemote(newGitConfig)
       await cleanSession(this.sessionId!)
     } catch (e) {
-      e.message = getSanitizedErrorMessage(e, newGitConfig.password)
+      e.message = getSanitizedErrorMessage(e)
       throw e
     }
   }
@@ -2036,7 +2036,7 @@ export default class OtomiStack {
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
     } catch (e) {
-      e.message = getSanitizedErrorMessage(e, this.gitConfig.password)
+      e.message = getSanitizedErrorMessage(e)
       throw e
     } finally {
       // Clean up the session
@@ -2057,7 +2057,7 @@ export default class OtomiStack {
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
     } catch (e) {
-      e.message = getSanitizedErrorMessage(e, this.gitConfig.password)
+      e.message = getSanitizedErrorMessage(e)
       throw e
     } finally {
       // Clean up the session
@@ -2080,7 +2080,7 @@ export default class OtomiStack {
 
       debug(`Updated root stack values with ${this.sessionId} changes`)
     } catch (e) {
-      e.message = getSanitizedErrorMessage(e, this.gitConfig.password)
+      e.message = getSanitizedErrorMessage(e)
       throw e
     } finally {
       // Clean up the session

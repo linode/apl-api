@@ -62,26 +62,34 @@ describe('Utils', () => {
   })
 
   describe('sanitizeGitPassword should remove git credentials', () => {
-    const gitPassword = 'test*Password'
+    const authUrl1 = 'http://.my-password%20n@example.com/'
+    const authUrl2 = 'https://admin-user:.my-password%20n@example.com/'
     test('from strings', () => {
-      expect(sanitizeGitPassword('test string', '')).toEqual('test string')
-      expect(sanitizeGitPassword(`${gitPassword} test string ${gitPassword}`, gitPassword)).toBe(
-        '**** test string ****',
-      )
+      expect(sanitizeGitPassword('test string')).toEqual('test string')
+      expect(sanitizeGitPassword(`test string ${authUrl1} here`)).toBe('test string http://***@example.com/ here')
+      expect(sanitizeGitPassword(`test string ${authUrl2} here`)).toBe('test string https://***@example.com/ here')
     })
     test('from objects', () => {
-      expect(sanitizeGitPassword(JSON.stringify({ test: 'some string' }), '')).toEqual('{"test":"some string"}')
-      expect(sanitizeGitPassword(JSON.stringify({ test: `some string ${gitPassword}` }), gitPassword)).toEqual(
-        '{"test":"some string ****"}',
+      expect(sanitizeGitPassword(JSON.stringify({ test: 'some string' }))).toEqual('{"test":"some string"}')
+      expect(sanitizeGitPassword(JSON.stringify({ test: `some string ${authUrl1}` }))).toEqual(
+        '{"test":"some string http://***@example.com/"}',
+      )
+      expect(sanitizeGitPassword(JSON.stringify({ test: `some string ${authUrl2}` }))).toEqual(
+        '{"test":"some string https://***@example.com/"}',
       )
     })
     test('return empty string on empty or undefined input', () => {
-      expect(sanitizeGitPassword('', '')).toEqual('')
-      expect(sanitizeGitPassword(undefined, '')).toEqual('')
+      expect(sanitizeGitPassword('')).toEqual('')
+      expect(sanitizeGitPassword(undefined)).toEqual('')
     })
     test('extract message from exception', () => {
-      expect(getSanitizedErrorMessage(new Error('test error'), '')).toEqual('test error')
-      expect(getSanitizedErrorMessage(new Error(`test error ${gitPassword}`), gitPassword)).toEqual('test error ****')
+      expect(getSanitizedErrorMessage(new Error('test error'))).toEqual('test error')
+      expect(getSanitizedErrorMessage(new Error(`test error ${authUrl1}`))).toEqual(
+        'test error http://***@example.com/',
+      )
+      expect(getSanitizedErrorMessage(new Error(`test error ${authUrl2}`))).toEqual(
+        'test error https://***@example.com/',
+      )
     })
   })
 

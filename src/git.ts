@@ -216,7 +216,7 @@ export class Git {
       debug(`Pull summary: ${summJson}`)
       this.commitSha = await this.getCommitSha()
     } catch (e) {
-      const eMessage = getSanitizedErrorMessage(e, this.password)
+      const eMessage = getSanitizedErrorMessage(e)
       debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', eMessage)
       this.corrupt = true
       try {
@@ -244,7 +244,7 @@ export class Git {
           await this.git.raw(['rebase', `${this.remote}/${this.branch}`, '--strategy-option=ours'])
         }
       } catch (error) {
-        const errorMessage = getSanitizedErrorMessage(error, this.password)
+        const errorMessage = getSanitizedErrorMessage(error)
         debug('Failed to remove upstream commits: ', errorMessage)
         throw new GitPullError('Failed to remove upstream commits!')
       }
@@ -296,7 +296,7 @@ export class Git {
       try {
         await this.git.remote(['remove', 'migration-remote'])
       } catch (e) {
-        debug(`Could not remove migration-remote: ${getSanitizedErrorMessage(e, newGitConfig.password)}`)
+        debug(`Could not remove migration-remote: ${getSanitizedErrorMessage(e)}`)
       }
     }
   }
@@ -320,13 +320,13 @@ export class Git {
       await this.git.raw(['worktree', 'remove', worktreePath])
       debug(`Worktree removed successfully: ${worktreePath}`)
     } catch (error) {
-      const errorMessage = getSanitizedErrorMessage(error, this.password)
+      const errorMessage = getSanitizedErrorMessage(error)
       debug(`Error removing worktree: ${errorMessage}`)
       try {
         await this.git.raw(['worktree', 'remove', '--force', worktreePath])
         debug(`Worktree force removed: ${worktreePath}`)
       } catch (err) {
-        const errMessage = getSanitizedErrorMessage(err, this.password)
+        const errMessage = getSanitizedErrorMessage(err)
         debug(`Failed to force remove worktree: ${errMessage}`)
         if (await pathExists(worktreePath)) {
           rmSync(worktreePath, { recursive: true, force: true })
@@ -360,8 +360,8 @@ export class Git {
         }
       }
     } catch (e) {
-      const sanitizedMessage = getSanitizedErrorMessage(e, this.password)
-      const sanitizedCommands = sanitizeGitPassword(JSON.stringify(e.task?.commands), this.password)
+      const sanitizedMessage = getSanitizedErrorMessage(e)
+      const sanitizedCommands = sanitizeGitPassword(JSON.stringify(e.task?.commands))
       debug(`${sanitizedMessage} for command ${sanitizedCommands}`)
       debug('Git save error')
       throw new GitPullError()

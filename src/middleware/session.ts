@@ -75,7 +75,7 @@ export const cleanSession = async (sessionId: string): Promise<void> => {
     try {
       await readOnlyStack.git.removeWorktree(worktreePath)
     } catch (error) {
-      const errorMessage = getSanitizedErrorMessage(error, readOnlyStack.gitConfig.password)
+      const errorMessage = getSanitizedErrorMessage(error)
       debug(`Error removing worktree for session ${sessionId}: ${errorMessage}`)
       await remove(worktreePath)
     }
