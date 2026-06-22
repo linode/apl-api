@@ -2032,6 +2032,31 @@ paths:
           description: Successfully edited app values.
 
   /v2/git:
+    get:
+      operationId: getGitSettings
+      x-eov-operation-handler: v2/git
+      summary: Get Git settings
+      description: Get the current Git configuration.
+      x-aclSchema: AplGit
+      responses:
+        '200':
+          description: Current Git settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AplGit'
+        '401':
+          description: Unauthorized
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Internal Server Error
+        '503':
+          description: Service Unavailable (API locked or not ready)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtomiStackError'
     put:
       operationId: migrateGit
       x-eov-operation-handler: v2/git

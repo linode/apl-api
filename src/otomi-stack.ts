@@ -371,6 +371,8 @@ export default class OtomiStack {
       'aiEnabled',
       'git.repoUrl',
       'git.branch',
+      'git.username',
+      'git.email',
     ])
     if (otomiInfo.git?.repoUrl?.includes('gitea-http.gitea.svc.cluster.local')) {
       otomiInfo.git.repoUrl = `https://gitea.${settings.cluster?.domainSuffix}/otomi/values`
@@ -657,6 +659,23 @@ export default class OtomiStack {
 
     const { filePath, aplObject } = await this.persistOtomiSettings(updatedOtomi)
     await this.commitAndPushMigration({ ...params, filePath, aplObject, sealedSecretRecord })
+  }
+
+  async getGitSettings(): Promise<{
+    repoUrl?: string
+    branch?: string
+    username?: string
+    email?: string
+  }> {
+    const settingsInfo = await this.getSettingsInfo()
+    const git = settingsInfo.otomi?.git
+
+    return {
+      repoUrl: git?.repoUrl,
+      branch: git?.branch,
+      username: git?.username,
+      email: git?.email,
+    }
   }
 
   private async persistOtomiSettings(

@@ -59,6 +59,13 @@ SettingsInfo:
             branch:
               type: string
               description: The branch to use in the Git repository.
+            username:
+              type: string
+              description: The username used to authenticate with the Git repository.
+            email:
+              type: string
+              description: The email address used for Git commit author information.
+              format: email
     ingressClassNames:
       description: Ingress class names that are used by the cluster.
       items:
