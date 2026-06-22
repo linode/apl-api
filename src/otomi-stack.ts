@@ -372,7 +372,6 @@ export default class OtomiStack {
       'git.repoUrl',
       'git.branch',
       'git.username',
-      'git.password',
       'git.email',
     ])
     if (otomiInfo.git?.repoUrl?.includes('gitea-http.gitea.svc.cluster.local')) {
@@ -666,7 +665,6 @@ export default class OtomiStack {
     repoUrl?: string
     branch?: string
     username?: string
-    password?: string
     email?: string
   }> {
     const settingsInfo = await this.getSettingsInfo()
@@ -676,7 +674,6 @@ export default class OtomiStack {
       repoUrl: git?.repoUrl,
       branch: git?.branch,
       username: git?.username,
-      password: git?.password,
       email: git?.email,
     }
   }

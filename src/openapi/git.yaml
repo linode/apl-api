@@ -4,8 +4,6 @@ AplGit:
       - update-any
     teamAdmin:
       - read-any
-    teamMember:
-      - read-any
   type: object
   additionalProperties: false
   properties:

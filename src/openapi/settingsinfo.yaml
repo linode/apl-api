@@ -62,9 +62,6 @@ SettingsInfo:
             username:
               type: string
               description: The username used to authenticate with the Git repository.
-            password:
-              type: string
-              description: The password or personal access token used to authenticate with the Git repository.
             email:
               type: string
               description: The email address used for Git commit author information.
