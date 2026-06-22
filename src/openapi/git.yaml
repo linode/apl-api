@@ -1,6 +1,7 @@
 AplGit:
   x-acl:
     platformAdmin:
+      - read-any
       - update-any
     teamAdmin:
       - read-any
