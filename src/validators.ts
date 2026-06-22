@@ -51,9 +51,10 @@ export const GIT_LOCAL_PATH = str({
 export const GIT_PASSWORD = str({ desc: 'The git password', default: undefined })
 export const GIT_REPO_URL = str({
   desc: 'The git repo url',
+  default: undefined,
   devDefault: `file://${process.env.HOME}/workspace/linode/values-ofld1`,
 })
-export const GIT_USER = str({ desc: 'The git username' })
+export const GIT_USER = str({ desc: 'The git username', default: undefined })
 export const SSO_ISSUER = str({
   desc: 'Expected JWT issuer URL',
   example: 'https://keycloak.example.com/realms/otomi',
