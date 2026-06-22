@@ -1146,14 +1146,35 @@ describe('APL code repositories tests', () => {
     expect(otomiStack.doDeleteDeployment).toHaveBeenCalled()
   })
 
-  test('should create an external public code repository', async () => {
+  test.each([
+    {
+      input: 'github.com/github-samples/pets-workshop',
+      expected: 'https://github.com/github-samples/pets-workshop.git',
+    },
+    {
+      input: 'https://github.com/github-samples/pets-workshop',
+      expected: 'https://github.com/github-samples/pets-workshop.git',
+    },
+    {
+      input: 'https://github.com/github-samples/pets-workshop/',
+      expected: 'https://github.com/github-samples/pets-workshop.git',
+    },
+    {
+      input: 'https://github.com/github-samples/pets-workshop.git',
+      expected: 'https://github.com/github-samples/pets-workshop.git',
+    },
+    {
+      input: 'https://github.com/github-samples/pets-workshop.git/',
+      expected: 'https://github.com/github-samples/pets-workshop.git',
+    },
+  ])('should create an external public code repository and normalize url: $input', async ({ input, expected }) => {
     const codeRepo = await otomiStack.createAplCodeRepo('demo', {
       metadata: {
         name: 'ext-pub-1',
       },
       spec: {
         gitService: 'github',
-        repositoryUrl: 'https://github.test.com',
+        repositoryUrl: input,
       },
       kind: 'AplTeamCodeRepo',
     })
@@ -1161,18 +1182,37 @@ describe('APL code repositories tests', () => {
     expect(codeRepo.metadata.name).toBe('ext-pub-1')
     expect(codeRepo.metadata.labels['apl.io/teamId']).toBe('demo')
     expect(codeRepo.spec.gitService).toBe('github')
-    expect(codeRepo.spec.repositoryUrl).toBe('https://github.test.com')
+    expect(codeRepo.spec.repositoryUrl).toBe(expected)
     expect(codeRepo.spec.private).toBeFalsy()
     expect(codeRepo.spec.secret).toBeUndefined()
 
     const stored = otomiStack.fileStore.getTeamResource('AplTeamCodeRepo', 'demo', 'ext-pub-1')
+
     expect(stored).toBeDefined()
     expect(stored?.spec.gitService).toBe('github')
-    expect(stored?.spec.repositoryUrl).toBe('https://github.test.com')
+    expect(stored?.spec.repositoryUrl).toBe(expected)
     expect(stored?.spec.secret).toBeUndefined()
 
     expect(otomiStack.doDeployment).toHaveBeenCalled()
   })
+
+  test.each(['ssh://git@github.com/github-samples/pets-workshop.git'])(
+    'should reject unsupported ssh repository url: %s',
+    async (repositoryUrl) => {
+      await expect(
+        otomiStack.createAplCodeRepo('demo', {
+          metadata: {
+            name: 'ext-pub-1',
+          },
+          spec: {
+            gitService: 'github',
+            repositoryUrl,
+          },
+          kind: 'AplTeamCodeRepo',
+        }),
+      ).rejects.toThrow()
+    },
+  )
 
   test('should get an existing external public code repository', () => {
     const extPubRepo: AplCodeRepoResponse = {
@@ -1267,7 +1307,7 @@ describe('APL code repositories tests', () => {
       },
       spec: {
         gitService: 'github',
-        repositoryUrl: 'https://github.test.com',
+        repositoryUrl: 'https://github.com/github-samples/pets-workshop/',
         private: true,
         secret: 'test',
       },
@@ -1277,12 +1317,15 @@ describe('APL code repositories tests', () => {
     expect(codeRepo.metadata.name).toBe('ext-priv-1')
     expect(codeRepo.metadata.labels['apl.io/teamId']).toBe('demo')
     expect(codeRepo.spec.gitService).toBe('github')
-    expect(codeRepo.spec.repositoryUrl).toBe('https://github.test.com')
+    expect(codeRepo.spec.repositoryUrl).toBe('https://github.com/github-samples/pets-workshop.git')
     expect(codeRepo.spec.private).toBe(true)
     expect(codeRepo.spec.secret).toBe('test')
 
     const stored = otomiStack.fileStore.getTeamResource('AplTeamCodeRepo', 'demo', 'ext-priv-1')
+
     expect(stored).toBeDefined()
+    expect(stored?.spec.gitService).toBe('github')
+    expect(stored?.spec.repositoryUrl).toBe('https://github.com/github-samples/pets-workshop.git')
     expect(stored?.spec.private).toBe(true)
     expect(stored?.spec.secret).toBe('test')
 
