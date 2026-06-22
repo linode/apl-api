@@ -131,7 +131,6 @@ import {
 import { isKnativeSupported } from './utils/k8sUtils'
 import { getV1ObjectFromApl } from './utils/manifests'
 import {
-  createPlatformSealedSecretManifest,
   createUserSealedSecret,
   encryptAndMergeSecrets,
   ensureEncryptedData,
@@ -913,31 +912,6 @@ export default class OtomiStack {
     const teamName = data.metadata.name
     if (teamName.length < 3) throw new ValidationError('Team name must be at least 3 characters long')
     if (teamName.length > 9) throw new ValidationError('Team name must not exceed 9 characters')
-
-    let password = data.spec.password as string
-    if (isEmpty(password)) {
-      debug(`creating password for team '${teamName}'`)
-      password = generatePassword({
-        length: 16,
-        numbers: true,
-        symbols: false,
-        lowercase: true,
-        uppercase: true,
-        strict: true,
-      })
-    }
-
-    // Encrypt password into a SealedSecret manifest
-    const sealedSecretName = `team-${teamName}-settings-secrets`
-    const sealedSecretYaml = await createPlatformSealedSecretManifest(sealedSecretName, APL_SECRETS_NAMESPACE, {
-      settings_password: password,
-    })
-    const sealedSecretPath = getNamespaceSealedSecretsValuesFilePath(APL_SECRETS_NAMESPACE, sealedSecretName)
-    await this.git.writeTextFile(sealedSecretPath, sealedSecretYaml)
-
-    // Remove password from team spec before saving settings.yaml
-    // eslint-disable-next-line no-param-reassign
-    delete data.spec.password
 
     const teamObject = toTeamObject(teamName, data)
     const team = await this.saveTeam(teamObject)
