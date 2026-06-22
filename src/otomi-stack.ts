@@ -361,7 +361,7 @@ export default class OtomiStack {
     }
 
     const worktreePath = this.getRepoPath()
-    this.git = await getWorktreeRepo(mainRepo, worktreePath, this.gitConfig.branch)
+    this.git = await getWorktreeRepo(mainRepo, worktreePath, mainRepo.branch)
     this.fileStore = new FileStore()
 
     debug(`Worktree created for ${this.editor} in ${this.sessionId}`)
