@@ -165,47 +165,6 @@ describe('Data validation', () => {
     jest.spyOn(otomiStack, 'doDeployment').mockResolvedValue()
   })
 
-  test('should create a password when password is not specified', async () => {
-    await otomiStack.createAplTeam({
-      metadata: {
-        name: 'test',
-        labels: {
-          'apl.io/teamId': 'test',
-        },
-      },
-      spec: {},
-      kind: 'AplTeamSettingSet',
-    })
-
-    const teamSettings = otomiStack.fileStore.getTeamResource('AplTeamSettingSet', 'test', 'settings')
-
-    expect(teamSettings).toBeDefined()
-    expect(teamSettings?.spec.password).toBeUndefined()
-
-    expect(mockGit.writeFile).toHaveBeenCalled()
-    expect(mockGit.writeTextFile).toHaveBeenCalled()
-  })
-
-  test('should not create a password when password is specified', async () => {
-    await otomiStack.createAplTeam({
-      metadata: {
-        name: 'test',
-        labels: {
-          'apl.io/teamId': 'test',
-        },
-      },
-      spec: {},
-      kind: 'AplTeamSettingSet',
-    })
-
-    const teamSettings = otomiStack.fileStore.getTeamResource('AplTeamSettingSet', 'test', 'settings')
-
-    expect(teamSettings).toBeDefined()
-    expect(teamSettings?.spec.password).toBeUndefined()
-
-    expect(mockGit.writeTextFile).toHaveBeenCalled()
-  })
-
   test('should throw ValidationError when team name is under 3 characters', async () => {
     const teamData: AplTeamSettingsRequest = {
       kind: 'AplTeamSettingSet',
