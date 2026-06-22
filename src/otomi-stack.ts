@@ -7,7 +7,7 @@ import { readFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, isEmpty, map, merge, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema } from 'src/app'
-import { APL_SECRETS_NAMESPACE, APL_USERS_NAMESPACE, PLATFORM_SECRETS_NAME } from 'src/constants'
+import { APL_SECRETS_NAMESPACE, APL_USERS_NAMESPACE, GITEA_SECRETS_NAME, PLATFORM_SECRETS_NAME } from 'src/constants'
 import { AlreadyExists, ForbiddenError, HttpError, NotExistError, OtomiError, ValidationError } from 'src/error'
 import { getSettingsFileMaps } from 'src/fileStore/file-map'
 import { FileStore } from 'src/fileStore/file-store'
@@ -131,7 +131,6 @@ import {
 import { isKnativeSupported } from './utils/k8sUtils'
 import { getV1ObjectFromApl } from './utils/manifests'
 import {
-  createPlatformSealedSecretManifest,
   createUserSealedSecret,
   encryptAndMergeSecrets,
   ensureEncryptedData,
@@ -914,31 +913,6 @@ export default class OtomiStack {
     if (teamName.length < 3) throw new ValidationError('Team name must be at least 3 characters long')
     if (teamName.length > 9) throw new ValidationError('Team name must not exceed 9 characters')
 
-    let password = data.spec.password as string
-    if (isEmpty(password)) {
-      debug(`creating password for team '${teamName}'`)
-      password = generatePassword({
-        length: 16,
-        numbers: true,
-        symbols: false,
-        lowercase: true,
-        uppercase: true,
-        strict: true,
-      })
-    }
-
-    // Encrypt password into a SealedSecret manifest
-    const sealedSecretName = `team-${teamName}-settings-secrets`
-    const sealedSecretYaml = await createPlatformSealedSecretManifest(sealedSecretName, APL_SECRETS_NAMESPACE, {
-      settings_password: password,
-    })
-    const sealedSecretPath = getNamespaceSealedSecretsValuesFilePath(APL_SECRETS_NAMESPACE, sealedSecretName)
-    await this.git.writeTextFile(sealedSecretPath, sealedSecretYaml)
-
-    // Remove password from team spec before saving settings.yaml
-    // eslint-disable-next-line no-param-reassign
-    delete data.spec.password
-
     const teamObject = toTeamObject(teamName, data)
     const team = await this.saveTeam(teamObject)
     await this.doDeployment(team)
@@ -1218,9 +1192,9 @@ export default class OtomiStack {
     if (!existingData) {
       throw new NotExistError(`User ${id} not found`)
     }
+
     const existingUser = userSecretDataToUser(existingData)
 
-    // Merge updates, preserving initialPassword from existing secret
     const user: User = {
       ...existingUser,
       ...data,
@@ -1228,9 +1202,23 @@ export default class OtomiStack {
       initialPassword: existingUser.initialPassword,
     }
 
+    this.validateUserTeamsExist(user)
+
     const aplRecord = await this.saveUser(user)
     await this.doDeployment(aplRecord)
+
     return user
+  }
+
+  private validateUserTeamsExist(user: User): void {
+    const existingTeamIds = new Set(this.getTeamIds())
+    const userTeamIds = user.teams ?? []
+
+    const missingTeamIds = userTeamIds.filter((teamId) => !existingTeamIds.has(teamId))
+
+    if (missingTeamIds.length > 0) {
+      throw new NotExistError(`Team(s) not found: ${missingTeamIds.join(', ')}`)
+    }
   }
 
   async deleteUser(id: string): Promise<void> {
@@ -1458,8 +1446,8 @@ export default class OtomiStack {
     if (!gitea?.values?.enabled) return []
     const { cluster } = await this.getSettings(['cluster'])
     const username = (gitea.values?.adminUsername as string) || 'otomi-admin'
-    const platformSecrets = await getSecretValues(PLATFORM_SECRETS_NAME, APL_SECRETS_NAMESPACE)
-    const password = platformSecrets?.git_password
+    const giteaSecrets = await getSecretValues(GITEA_SECRETS_NAME, APL_SECRETS_NAMESPACE)
+    const password = giteaSecrets?.adminPassword
     const orgName = `team-${teamId}`
     const domainSuffix = cluster?.domainSuffix
     const internalRepoUrls = (await getGiteaRepoUrls(username, password, orgName, domainSuffix)) || []
