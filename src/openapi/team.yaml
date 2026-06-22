@@ -60,9 +60,6 @@ Team:
           type: string
       title: OIDC
       type: object
-    password:
-      type: string
-      writeOnly: true
     managedMonitoring:
       title: Managed monitoring
       description: 'Activate a platform managed Grafana or Alertmanager instance.'
@@ -120,9 +117,6 @@ AplTeamSpec:
           type: string
       title: OIDC
       type: object
-    password:
-      type: string
-      writeOnly: true
     managedMonitoring:
       title: Managed monitoring
       description: 'Activate a platform managed Grafana or Alertmanager instance.'
