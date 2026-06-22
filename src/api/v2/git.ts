@@ -6,6 +6,18 @@ import { OpenApiRequestExt } from 'src/otomi-models'
 const debug = Debug('otomi:api:v2:git')
 
 /**
+ * GET /v2/git
+ * Returns the configured external Git settings.
+ */
+export const getGitSettings = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
+  debug('getGitSettings')
+
+  const gitSettings = await req.otomi.getGitSettings()
+
+  res.json(gitSettings)
+}
+
+/**
  * PUT /v2/git
  * Migrate the values repository to a new git remote.
  * Flow:
