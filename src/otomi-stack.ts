@@ -606,10 +606,11 @@ export default class OtomiStack {
         }, {})
         updatedSettingsData.otomi.nodeSelector = nodeSelectorObject
       }
-      if (updatedSettingsData.otomi?.git) {
-        await this.storeGitConfig(updatedSettingsData.otomi?.git)
-        this.gitConfig = await this.getGitConfig(updatedSettingsData.otomi?.git)
-        unset(updatedSettingsData, 'otomi.git')
+      const updatedGitSettings = updatedSettingsData.otomi?.git as Partial<GitConfig>
+      if (updatedGitSettings) {
+        await this.storeGitConfig(updatedGitSettings)
+        this.gitConfig = await this.getGitConfig(updatedGitSettings)
+        unset(updatedSettingsData, 'otomi.git.password')
       }
     }
 
@@ -654,12 +655,11 @@ export default class OtomiStack {
     this.gitConfig = await this.getGitConfig(params)
   }
 
-  private async getClusterGitConfig(): Promise<GitConfig> {
+  private async getClusterGitConfig(): Promise<Partial<GitConfig>> {
     const api = this.getApiClient()
     const decodedData = {}
-    const defaults = {
+    const defaults: Partial<GitConfig> = {
       password: '',
-      ...GIT_DEFAULT_CONFIG,
     }
     try {
       const { data } = await api.readNamespacedSecret({
@@ -693,7 +693,10 @@ export default class OtomiStack {
     if (process.env.NODE_ENV === 'test') {
       gitConfig = { password: '', ...GIT_DEFAULT_CONFIG, repoUrl: '' }
     } else {
-      gitConfig = inputConfig || (await this.getClusterGitConfig())
+      gitConfig = {
+        ...GIT_DEFAULT_CONFIG,
+        ...(inputConfig || (await this.getClusterGitConfig())),
+      }
     }
     if ([GIT_DEFAULT_CONFIG.repoUrl, GIT_LEGACY_CONFIG.repoUrl].includes(gitConfig.repoUrl) && !gitConfig.username) {
       // On legacy (Gitea) and default configurations, assume otomi-admin login
