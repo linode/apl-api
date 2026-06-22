@@ -1216,7 +1216,7 @@ describe('API V2 authz tests', () => {
     })
   })
 
-  describe('V2 Git Migration Endpoint', () => {
+  describe('V2 Git Endpoint', () => {
     const gitBody = {
       repoUrl: 'https://new.example.com/repo.git',
       username: 'user',
@@ -1225,25 +1225,37 @@ describe('API V2 authz tests', () => {
       branch: 'main',
     }
 
-    describe('Platform Admin', () => {
+    describe('GET /v2/git', () => {
+      test('platform admin can read git settings', async () => {
+        await agent.get('/v2/git').set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
+      })
+
+      test('team admin can read git settings', async () => {
+        await agent.get('/v2/git').set('Authorization', `Bearer ${teamAdminToken}`).expect(200)
+      })
+
+      test('team member cannot read git settings', async () => {
+        await agent.get('/v2/git').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
+      })
+
+      test('anonymous user cannot read git settings', async () => {
+        await agent.get('/v2/git').expect(401)
+      })
+    })
+
+    describe('PUT /v2/git', () => {
       test('platform admin can migrate git', async () => {
         await agent.put('/v2/git').send(gitBody).set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
       })
-    })
 
-    describe('Team Admin', () => {
       test('team admin cannot migrate git', async () => {
         await agent.put('/v2/git').send(gitBody).set('Authorization', `Bearer ${teamAdminToken}`).expect(403)
       })
-    })
 
-    describe('Team Member', () => {
       test('team member cannot migrate git', async () => {
         await agent.put('/v2/git').send(gitBody).set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
       })
-    })
 
-    describe('Unauthenticated', () => {
       test('anonymous user cannot migrate git', async () => {
         await agent.put('/v2/git').send(gitBody).expect(401)
       })
