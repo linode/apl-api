@@ -48,7 +48,7 @@ export const GIT_LOCAL_PATH = str({
   desc: 'The local file path to the repo',
   default: '/tmp/otomi/values/main',
 })
-export const GIT_PASSWORD = str({ desc: 'The git password' })
+export const GIT_PASSWORD = str({ desc: 'The git password', default: undefined })
 export const GIT_REPO_URL = str({
   desc: 'The git repo url',
   devDefault: `file://${process.env.HOME}/workspace/linode/values-ofld1`,
