@@ -11,6 +11,7 @@ import { API_NAMESPACE, cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validato
 import { v4 as uuidv4 } from 'uuid'
 import { setApiStatusInConfigMap } from '../k8s-operations'
 import { getSanitizedErrorMessage } from '../utils'
+import { rm } from 'fs/promises'
 
 const debug = Debug('otomi:session')
 const env = cleanEnv({
@@ -60,8 +61,9 @@ export const lockApi = async (): Promise<void> => {
   }
 }
 
-export const cleanAllSessions = (): void => {
+export const cleanAllSessions = async (): Promise<void> => {
   debug(`Cleaning all editor sessions`)
+  await rm(rootPath, { recursive: true, force: true })
   sessions = {}
   // @ts-ignore
   readOnlyStack = undefined

@@ -23,6 +23,7 @@ jest.mock('./tty', () => ({
 jest.mock('src/middleware', () => ({
   ...jest.requireActual('src/middleware'),
   getSessionStack: jest.fn(),
+  setLocked: jest.fn(),
 }))
 
 jest.mock('src/utils', () => {
@@ -1323,9 +1324,9 @@ describe('OtomiStack.migrateGitSettings', () => {
   let stack: OtomiStack
   const mockCommit = jest.fn().mockResolvedValue(undefined)
   const mockPushToNewRemote = jest.fn().mockResolvedValue(undefined)
-  const mockPushWithRetry = jest.fn().mockResolvedValue(undefined)
   const mockRootPull = jest.fn().mockResolvedValue(undefined)
   const mockRootFileStoreSet = jest.fn()
+  const mockRefreshGitClient = jest.fn()
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -1342,7 +1343,6 @@ describe('OtomiStack.migrateGitSettings', () => {
     ;(stack as any).git = {
       commit: mockCommit,
       pushToNewRemote: mockPushToNewRemote,
-      pushWithRetry: mockPushWithRetry,
     }
     jest.spyOn(require('src/middleware/session'), 'getSessionStack').mockResolvedValue({
       git: { git: { pull: mockRootPull } },
@@ -1352,11 +1352,12 @@ describe('OtomiStack.migrateGitSettings', () => {
     ;(stack as any).getApiClient = jest.fn().mockReturnValue({
       createNamespacedSecret: jest.fn(),
     })
+    ;(stack as any).refreshGitClient = mockRefreshGitClient
   })
 
   afterEach(() => jest.restoreAllMocks())
 
-  it('calls saveSettings, commit, pushToNewRemote, pushWithRetry in order', async () => {
+  it('calls pushToNewRemote', async () => {
     await stack.migrateGitSettings({
       repoUrl: 'https://new.example.com/repo.git',
       username: 'user',
@@ -1365,7 +1366,9 @@ describe('OtomiStack.migrateGitSettings', () => {
       branch: 'main',
     })
 
+    expect(mockCommit).toHaveBeenCalled()
     expect(mockPushToNewRemote).toHaveBeenCalled()
+    expect(mockRefreshGitClient).toHaveBeenCalled()
   })
 })
 

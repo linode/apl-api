@@ -54,7 +54,8 @@ type OtomiSpec = {
 // get the latest commit from Git and checks it against the local values
 const checkAgainstGit = async () => {
   const otomiStack = await getSessionStack()
-  await otomiStack.refreshGitConfig()
+  await otomiStack.updateGitConfig()
+  await otomiStack.refreshGitClient()
   const latestOtomiVersion = await getLatestRemoteCommitSha(otomiStack.git)
   // check the local version against the latest online version
   // if the latest online is newer it will be pulled locally

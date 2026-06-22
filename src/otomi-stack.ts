@@ -27,7 +27,7 @@ import { AlreadyExists, ForbiddenError, HttpError, NotExistError, OtomiError, Va
 import { getSettingsFileMaps } from 'src/fileStore/file-map'
 import { FileStore } from 'src/fileStore/file-store'
 import getRepo, { getWorktreeRepo, Git } from 'src/git'
-import { cleanSession, getSessionStack } from 'src/middleware'
+import { cleanAllSessions, cleanSession, getSessionStack, lockApi } from 'src/middleware'
 import {
   AplAgentRequest,
   AplAgentResponse,
@@ -285,7 +285,7 @@ export default class OtomiStack {
     this.fileStore = await FileStore.load(this.getRepoPath())
   }
 
-  async refreshGitConfig() {
+  async updateGitConfig(): Promise<void> {
     try {
       this.gitConfig = await this.getGitConfig()
     } catch {
@@ -293,11 +293,31 @@ export default class OtomiStack {
     }
   }
 
+  async refreshGitClient(): Promise<void> {
+    const currentConfig: GitConfig | undefined = this.git
+      ? {
+          repoUrl: this.git.url || '',
+          email: this.git.email || '',
+          password: this.git.password || '',
+          username: this.git.user,
+          branch: this.git.branch,
+        }
+      : undefined
+    if (this.gitConfig !== currentConfig) {
+      await lockApi()
+      await cleanAllSessions()
+      this.isLoaded = false
+      await this.initGit()
+    }
+  }
+
   async initGit(inflateValues = true): Promise<void> {
     await this.init()
     // every editor gets their own folder to detect conflicts upon deploy
     const path = this.getRepoPath()
-    this.gitConfig = await this.getGitConfig()
+    if (!this.gitConfig) {
+      this.gitConfig = await this.getGitConfig()
+    }
 
     const maxRetries = env.GIT_INIT_MAX_RETRIES
     const timeoutMs = env.GIT_INIT_RETRY_INTERVAL_MS
@@ -611,7 +631,6 @@ export default class OtomiStack {
       const updatedGitSettings = updatedSettingsData.otomi?.git as Partial<GitConfig>
       if (updatedGitSettings) {
         await this.storeGitConfig(updatedGitSettings)
-        this.gitConfig = await this.getGitConfig(updatedGitSettings)
         unset(updatedSettingsData, 'otomi.git.password')
       }
     }
@@ -654,7 +673,6 @@ export default class OtomiStack {
   async migrateGitSettings(params: GitConfig): Promise<void> {
     await this.commitAndPushMigration({ ...GIT_DEFAULT_CONFIG, ...params })
     await this.storeGitConfig(params)
-    this.gitConfig = await this.getGitConfig(params)
   }
 
   private async getClusterGitConfig(): Promise<Partial<GitConfig>> {
@@ -757,6 +775,8 @@ export default class OtomiStack {
         throw error
       }
     }
+    this.gitConfig = await this.getGitConfig(gitConfig)
+    await this.refreshGitClient()
   }
 
   private async commitAndPushMigration(newGitConfig: GitConfig): Promise<void> {

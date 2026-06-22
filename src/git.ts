@@ -67,6 +67,22 @@ export class Git {
     }
   }
 
+  async updateRemote(
+    url: string | undefined,
+    user: string,
+    email: string,
+    urlAuth: string,
+    branch: string,
+  ): Promise<void> {
+    this.branch = branch
+    this.email = email
+    this.remote = 'origin'
+    this.remoteBranch = join(this.remote, this.branch)
+    this.urlAuth = urlAuth
+    this.user = user
+    this.url = url
+  }
+
   async init(bare = true): Promise<void> {
     await this.git.init(bare !== undefined ? bare : this.isRootClone())
     await this.git.addRemote(this.remote, this.url!)
