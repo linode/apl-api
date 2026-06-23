@@ -47,6 +47,7 @@ export const migrateGit = async (req: OpenApiRequestExt, res: Response): Promise
   }
   if (remoteHasContent) {
     res.json({ message: 'New repository is not empty', statusCode: 400 })
+    return
   }
 
   // Write config + commit locally → push to new remote (if empty) → push to current remote
