@@ -190,7 +190,7 @@ export class Git {
     const isRepo = await this.git.checkIsRepo(CheckRepoActions.IS_REPO_ROOT)
     if (!isRepo) {
       debug(`Initializing repo...`)
-      if (!this.hasRemote() && this.isRootClone()) {
+      if (process.env.NODE_ENV === 'development' && !this.hasRemote() && this.isRootClone()) {
         return await this.initFromTestFolder()
       }
       debug(`Cloning from '${this.url}' to '${this.path}'`)
