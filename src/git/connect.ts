@@ -5,7 +5,7 @@ import { Git } from '../git'
 const debug = Debug('otomi:git-connect')
 
 export function getProtocol(url: string | undefined): string {
-  return url && url.includes('://') ? url.split('://')[0] : 'file'
+  return url && url.includes('://') ? url.split('://')[0] : 'http'
 }
 
 export function getAuthenticatedUrl(gitConfig: GitConfig): string {
