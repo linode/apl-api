@@ -1173,6 +1173,32 @@ describe('APL code repositories tests', () => {
     },
   )
 
+  test('should reject duplicate external repository url after normalization', async () => {
+    await otomiStack.createAplCodeRepo('demo', {
+      metadata: {
+        name: 'ext-pub-1',
+      },
+      spec: {
+        gitService: 'github',
+        repositoryUrl: 'https://github.com/github-samples/pets-workshop/',
+      },
+      kind: 'AplTeamCodeRepo',
+    })
+
+    await expect(
+      otomiStack.createAplCodeRepo('demo', {
+        metadata: {
+          name: 'ext-pub-2',
+        },
+        spec: {
+          gitService: 'github',
+          repositoryUrl: 'https://github.com/github-samples/pets-workshop',
+        },
+        kind: 'AplTeamCodeRepo',
+      }),
+    ).rejects.toThrow('Code repository URL already exists')
+  })
+
   test('should get an existing external public code repository', () => {
     const extPubRepo: AplCodeRepoResponse = {
       kind: 'AplTeamCodeRepo',
