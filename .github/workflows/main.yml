@@ -34,7 +34,7 @@ jobs:
           echo "Creating tag: $tag"
           echo "TAG=$tag" >> $GITHUB_ENV
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Fetch values-schema.yaml from apl-core
         run: |
           # Try matching branch first, fall back to main
