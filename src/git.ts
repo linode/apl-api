@@ -12,7 +12,7 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { GitPullError } from './error'
 import { Core, GitConfig } from './otomi-models'
 import { getSanitizedErrorMessage, removeBlankAttributes, sanitizeGitPassword } from './utils'
-import { getAuthenticatedUrl, getProtocol } from './git/connect'
+import { getAuthenticatedUrl, getProtocol, getUrl } from './git/connect'
 
 const debug = Debug('otomi:repo')
 
@@ -21,8 +21,6 @@ const env = cleanEnv({
   GIT_PASSWORD,
   GIT_PUSH_RETRIES,
 })
-
-const getUrl = (url): string => (!url || url.includes('://') ? url : `${getProtocol(url)}://${url}`)
 
 export class Git {
   branch: string
