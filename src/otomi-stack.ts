@@ -12,7 +12,7 @@ import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@lino
 import { existsSync, rmSync } from 'fs'
 import { readFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
-import { cloneDeep, isEmpty, map, merge, omit, pick, set, unset } from 'lodash'
+import { cloneDeep, isEmpty, isEqual, map, merge, omit, pick, set, unset } from 'lodash'
 import { getAppList, getAppSchema } from 'src/app'
 import {
   APL_SECRETS_NAMESPACE,
@@ -294,16 +294,16 @@ export default class OtomiStack {
   }
 
   async refreshGitClient(): Promise<void> {
-    const currentConfig: GitConfig | undefined = this.git
+    const currentConfig: Partial<GitConfig> | undefined = this.git
       ? {
-          repoUrl: this.git.url || '',
-          email: this.git.email || '',
-          password: this.git.password || '',
+          repoUrl: this.git.url,
+          email: this.git.email,
+          password: this.git.password,
           username: this.git.user,
           branch: this.git.branch,
         }
       : undefined
-    if (this.gitConfig !== currentConfig) {
+    if (!isEqual(this.gitConfig, currentConfig)) {
       await lockApi()
       await cleanAllSessions()
       this.isLoaded = false
