@@ -30,7 +30,6 @@ export class Git {
   corrupt = false
   email: string
   git: SimpleGit
-  password: string
   path: string
   remote: string
   remoteBranch: string

@@ -167,6 +167,7 @@ import {
 } from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
 import { fetchWorkloadCatalog, isInteralGiteaURL } from './utils/workloadUtils'
+import { getAuthenticatedUrl } from './git/connect'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -294,16 +295,19 @@ export default class OtomiStack {
   }
 
   async refreshGitClient(): Promise<void> {
-    const currentConfig: Partial<GitConfig> | undefined = this.git
+    const updatedConfig = {
+      url: getAuthenticatedUrl(this.gitConfig),
+      email: this.gitConfig.email,
+      branch: this.gitConfig.branch,
+    }
+    const currentConfig = this.git
       ? {
-          repoUrl: this.git.url,
+          url: this.git.urlAuth,
           email: this.git.email,
-          password: this.git.password,
-          username: this.git.user,
           branch: this.git.branch,
         }
       : undefined
-    if (!isEqual(this.gitConfig, currentConfig)) {
+    if (!isEqual(updatedConfig, currentConfig)) {
       await lockApi()
       await cleanAllSessions()
       this.isLoaded = false
