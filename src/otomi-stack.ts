@@ -780,7 +780,11 @@ export default class OtomiStack {
       }
     }
     this.gitConfig = await this.getGitConfig(gitConfig)
-    await this.refreshGitClient()
+
+    // validate the root stack instead of this one, which resets all sessions only if necessary
+    const rootStack = await getSessionStack()
+    rootStack.gitConfig = this.gitConfig
+    await rootStack.refreshGitClient()
   }
 
   private async commitAndPushMigration(newGitConfig: GitConfig): Promise<void> {

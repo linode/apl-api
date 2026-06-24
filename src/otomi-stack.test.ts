@@ -23,7 +23,6 @@ jest.mock('./tty', () => ({
 jest.mock('src/middleware', () => ({
   ...jest.requireActual('src/middleware'),
   getSessionStack: jest.fn(),
-  setLocked: jest.fn(),
 }))
 
 jest.mock('src/utils', () => {
@@ -1344,15 +1343,15 @@ describe('OtomiStack.migrateGitSettings', () => {
       commit: mockCommit,
       pushToNewRemote: mockPushToNewRemote,
     }
-    jest.spyOn(require('src/middleware/session'), 'getSessionStack').mockResolvedValue({
+    jest.spyOn(require('src/middleware'), 'getSessionStack').mockResolvedValue({
       git: { git: { pull: mockRootPull } },
       fileStore: { set: mockRootFileStoreSet },
+      refreshGitClient: mockRefreshGitClient,
     })
     jest.spyOn(require('src/middleware/session'), 'cleanSession').mockResolvedValue(undefined)
     ;(stack as any).getApiClient = jest.fn().mockReturnValue({
       createNamespacedSecret: jest.fn(),
     })
-    ;(stack as any).refreshGitClient = mockRefreshGitClient
   })
 
   afterEach(() => jest.restoreAllMocks())
