@@ -65,8 +65,6 @@ export const cleanAllSessions = async (): Promise<void> => {
   debug(`Cleaning all editor sessions`)
   await rm(rootPath, { recursive: true, force: true })
   sessions = {}
-  // @ts-ignore
-  readOnlyStack = undefined
 }
 
 export const cleanSession = async (sessionId: string): Promise<void> => {
