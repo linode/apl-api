@@ -8,7 +8,7 @@ export function getProtocol(url: string | undefined): string {
   return url && url.includes('://') ? url.split('://')[0] : 'http'
 }
 
-export function getUrl(url: string | undefined): string | undefined {
+export function getUrl(url: string): string {
   return !url || url.includes('://') ? url : `${getProtocol(url)}://${url}`
 }
 
@@ -19,7 +19,7 @@ export function getAuthenticatedUrl(gitConfig: GitConfig): string {
   }
   const { repoUrl, username, password } = gitConfig
   const urlNormalized = getUrl(repoUrl)
-  const url = new URL(urlNormalized || '')
+  const url = new URL(urlNormalized)
   if (username) {
     url.username = username
     url.password = password
