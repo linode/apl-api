@@ -1,6 +1,5 @@
 import Debug from 'debug'
 import { Response } from 'express'
-import { lockApi } from 'src/middleware'
 import { GitConfig, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:git')
@@ -52,8 +51,6 @@ export const migrateGit = async (req: OpenApiRequestExt, res: Response): Promise
 
   // Write config and push to new remote
   await req.otomi.migrateGitSettings(newGitConfig)
-
-  await lockApi()
 
   res.json({})
 }
