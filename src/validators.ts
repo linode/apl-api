@@ -38,12 +38,12 @@ export const EDITOR_INACTIVITY_TIMEOUT = num({
   desc: 'Inactivity timeout in days after which editor session is removed to clean mem',
   default: 1,
 })
-export const GIT_BRANCH = str({ desc: 'The git repo branch', default: 'main' })
+export const GIT_BRANCH = str({ desc: 'The git repo branch', default: undefined })
 export const CHECK_LATEST_COMMIT_INTERVAL = num({
   desc: 'Interval in minutes for how much time in between each git latest commit check',
   default: 2,
 })
-export const GIT_EMAIL = str({ desc: 'The git user email', default: 'not@us.ed' })
+export const GIT_EMAIL = str({ desc: 'The git user email', default: undefined })
 export const GIT_LOCAL_PATH = str({
   desc: 'The local file path to the repo',
   default: '/tmp/otomi/values/main',
