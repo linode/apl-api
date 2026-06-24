@@ -23,7 +23,15 @@ import {
   GITEA_SECRETS_NAME,
   PLATFORM_SECRETS_NAME,
 } from 'src/constants'
-import { AlreadyExists, ForbiddenError, HttpError, NotExistError, OtomiError, ValidationError } from 'src/error'
+import {
+  AlreadyExists,
+  BadRequestError,
+  ForbiddenError,
+  HttpError,
+  NotExistError,
+  OtomiError,
+  ValidationError,
+} from 'src/error'
 import { getSettingsFileMaps } from 'src/fileStore/file-map'
 import { FileStore } from 'src/fileStore/file-store'
 import getRepo, { getWorktreeRepo, Git } from 'src/git'
@@ -634,6 +642,9 @@ export default class OtomiStack {
       }
       const updatedGitSettings = updatedSettingsData.otomi?.git as GitConfig
       if (updatedGitSettings) {
+        if (!updatedGitSettings.password) {
+          throw new BadRequestError('Git credentials may not be provided without a password')
+        }
         await this.storeGitConfig(updatedGitSettings)
         unset(updatedSettingsData, 'otomi.git.password')
       }
