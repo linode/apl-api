@@ -632,7 +632,7 @@ export default class OtomiStack {
         }, {})
         updatedSettingsData.otomi.nodeSelector = nodeSelectorObject
       }
-      const updatedGitSettings = updatedSettingsData.otomi?.git as Partial<GitConfig>
+      const updatedGitSettings = updatedSettingsData.otomi?.git as GitConfig
       if (updatedGitSettings) {
         await this.storeGitConfig(updatedGitSettings)
         unset(updatedSettingsData, 'otomi.git.password')
@@ -675,7 +675,7 @@ export default class OtomiStack {
   }
 
   async migrateGitSettings(params: GitConfig): Promise<void> {
-    await this.commitAndPushMigration({ ...GIT_DEFAULT_CONFIG, ...params })
+    await this.commitAndPushMigration(params)
     await this.storeGitConfig(params)
   }
 
@@ -752,7 +752,7 @@ export default class OtomiStack {
     return omit(gitConfig, ['password'])
   }
 
-  private async storeGitConfig(gitConfig: Partial<GitConfig>): Promise<void> {
+  private async storeGitConfig(gitConfig: GitConfig): Promise<void> {
     const api = this.getApiClient()
     const encodedData = {}
     Object.entries(gitConfig).forEach(([key, value]) => {
