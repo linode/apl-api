@@ -694,7 +694,7 @@ export default class OtomiStack {
         decodedData[key] = Buffer.from(value, 'base64').toString('utf-8')
       })
     } catch (error) {
-      if (process.env.NODE_ENV !== 'development') {
+      if (process.env.NODE_ENV === 'development') {
         debug('Could not read Git config from cluster, continuing with development defaults')
         defaults.repoUrl = ''
       } else if (!(error instanceof ApiException && error.code === 404)) {
