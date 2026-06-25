@@ -38,22 +38,23 @@ export const EDITOR_INACTIVITY_TIMEOUT = num({
   desc: 'Inactivity timeout in days after which editor session is removed to clean mem',
   default: 1,
 })
-export const GIT_BRANCH = str({ desc: 'The git repo branch', default: 'main' })
+export const GIT_BRANCH = str({ desc: 'The git repo branch', default: undefined })
 export const CHECK_LATEST_COMMIT_INTERVAL = num({
   desc: 'Interval in minutes for how much time in between each git latest commit check',
   default: 2,
 })
-export const GIT_EMAIL = str({ desc: 'The git user email', default: 'not@us.ed' })
+export const GIT_EMAIL = str({ desc: 'The git user email', default: undefined })
 export const GIT_LOCAL_PATH = str({
   desc: 'The local file path to the repo',
   default: '/tmp/otomi/values/main',
 })
-export const GIT_PASSWORD = str({ desc: 'The git password' })
+export const GIT_PASSWORD = str({ desc: 'The git password', default: undefined })
 export const GIT_REPO_URL = str({
   desc: 'The git repo url',
+  default: undefined,
   devDefault: `file://${process.env.HOME}/workspace/linode/values-ofld1`,
 })
-export const GIT_USER = str({ desc: 'The git username' })
+export const GIT_USER = str({ desc: 'The git username', default: undefined })
 export const SSO_ISSUER = str({
   desc: 'Expected JWT issuer URL',
   example: 'https://keycloak.example.com/realms/otomi',
@@ -81,8 +82,6 @@ export const GIT_PROVIDER_URL_PATTERNS = json({
     bitbucket: 'bitbucket\\.org\\/([^\\/]+)\\/([^\\/]+)\\/(?:src|raw)\\/([^\\/]+)\\/(.+)',
   },
 })
-export const REGION = str({ desc: 'The cloud region' })
-export const ROARR_LOG = bool({ desc: 'To enable Lightship logs', default: false })
 export const PREINSTALLED_EXCLUDED_APPS = json({
   desc: 'Applications that are managed by Linode, so they should be excluded from the apps page',
   default: {
@@ -199,6 +198,14 @@ export const MIN_KNATIVE_K8S_VERSION = str({
 export const API_NAMESPACE = str({
   desc: 'The Kubernetes namespace where apl-api status resources are stored',
   default: 'otomi',
+})
+export const GIT_CONFIG_SECRET_NAME = str({
+  desc: 'Name of Secret resource with access credentials to the Git values store',
+  default: 'apl-git-config',
+})
+export const GIT_CONFIG_SECRET_NAMESPACE = str({
+  desc: 'Namespace of Secret resource with access credentials to the Git values store',
+  default: 'apl-secrets',
 })
 const { env } = process
 export function cleanEnv<T>(validators: { [K in keyof T]: ValidatorSpec<T[K]> }, options: CleanOptions<T> = {}) {
