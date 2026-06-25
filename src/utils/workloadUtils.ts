@@ -380,6 +380,7 @@ export class chartRepo {
 function encodeGitCredentials(url: string, clusterDomainSuffix?: string): string {
   if (!isInteralGiteaURL(url, clusterDomainSuffix)) return url
 
+  // FIXME: When Gitea is present and hosting charts, but the Values repo is somewhere else, this breaks
   const [protocol, bareUrl] = url.split('://')
   const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
   const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
