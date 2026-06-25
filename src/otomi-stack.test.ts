@@ -520,6 +520,36 @@ describe('Users tests', () => {
           publicMessage: 'Invalid username (the part of the email before "@") format.',
         })
       })
+
+      it('should not allow creating a user in a team that does not exist', async () => {
+        createTestTeam(otomiStack, 'team1')
+
+        await expect(
+          otomiStack.createUser({
+            ...teamMember1,
+            email: 'new-missing-team-user@dev.linode-apl.net',
+            teams: ['team1', 'team-does-not-exist'],
+          }),
+        ).rejects.toThrow(new NotExistError('Team(s) not found: team-does-not-exist'))
+
+        expect(mockGit.writeTextFile).not.toHaveBeenCalled()
+        expect(otomiStack.doDeployment).not.toHaveBeenCalled()
+      })
+
+      it('should allow creating a user in existing teams', async () => {
+        createTestTeam(otomiStack, 'team1')
+        createTestTeam(otomiStack, 'team2')
+
+        const result = await otomiStack.createUser({
+          ...teamMember1,
+          email: 'new-existing-team-user@dev.linode-apl.net',
+          teams: ['team1', 'team2'],
+        })
+
+        expect(result.teams).toEqual(['team1', 'team2'])
+        expect(mockGit.writeTextFile).toHaveBeenCalled()
+        expect(otomiStack.doDeployment).toHaveBeenCalled()
+      })
     })
 
     describe('Reserved Username Validation', () => {
