@@ -22,15 +22,7 @@ import {
   GITEA_SECRETS_NAME,
   PLATFORM_SECRETS_NAME,
 } from 'src/constants'
-import {
-  AlreadyExists,
-  BadRequestError,
-  ForbiddenError,
-  HttpError,
-  NotExistError,
-  OtomiError,
-  ValidationError,
-} from 'src/error'
+import { AlreadyExists, ForbiddenError, HttpError, NotExistError, OtomiError, ValidationError } from 'src/error'
 import { getSettingsFileMaps } from 'src/fileStore/file-map'
 import { FileStore } from 'src/fileStore/file-store'
 import getRepo, { getWorktreeRepo, Git } from 'src/git'
@@ -687,7 +679,11 @@ export default class OtomiStack {
   }
 
   async migrateGitSettings(params: GitConfig): Promise<void> {
-    await this.commitAndPushMigration(params)
+    const { repoUrl, branch } = this.gitConfig
+    if (repoUrl !== params.repoUrl || branch !== params.branch) {
+      // Do not migrate only on credential or identity change
+      await this.commitAndPushMigration(params)
+    }
     await this.storeGitConfig(params)
   }
 

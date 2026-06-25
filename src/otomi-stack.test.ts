@@ -1362,6 +1362,13 @@ describe('OtomiStack.migrateGitSettings', () => {
     stack = new OtomiStack()
     stack.editor = 'test@example.com'
     ;(stack as any).sessionId = 'test-session-id'
+    ;(stack as any).gitConfig = {
+      repoUrl: 'https://old.example.com/repo.git',
+      branch: 'main',
+      username: 'user',
+      password: 'pass',
+      email: 'old@example.com',
+    }
     jest.spyOn(stack as any, 'getSettings').mockReturnValue({
       otomi: { git: { repoUrl: 'https://old.example.com/repo.git', branch: 'main', email: 'old@example.com' } },
     })
@@ -1386,7 +1393,7 @@ describe('OtomiStack.migrateGitSettings', () => {
 
   afterEach(() => jest.restoreAllMocks())
 
-  it('calls pushToNewRemote', async () => {
+  it('commits and pushes to new remote when repoUrl changes', async () => {
     await stack.migrateGitSettings({
       repoUrl: 'https://new.example.com/repo.git',
       username: 'user',
@@ -1397,6 +1404,34 @@ describe('OtomiStack.migrateGitSettings', () => {
 
     expect(mockCommit).toHaveBeenCalled()
     expect(mockPushToNewRemote).toHaveBeenCalled()
+    expect(mockRefreshGitClient).toHaveBeenCalled()
+  })
+
+  it('commits and pushes to new remote when branch changes', async () => {
+    await stack.migrateGitSettings({
+      repoUrl: 'https://old.example.com/repo.git',
+      username: 'user',
+      password: 'pass',
+      email: 'old@example.com',
+      branch: 'new-branch',
+    })
+
+    expect(mockCommit).toHaveBeenCalled()
+    expect(mockPushToNewRemote).toHaveBeenCalled()
+    expect(mockRefreshGitClient).toHaveBeenCalled()
+  })
+
+  it('only stores config without migration when only credentials change', async () => {
+    await stack.migrateGitSettings({
+      repoUrl: 'https://old.example.com/repo.git',
+      username: 'new-user',
+      password: 'new-pass',
+      email: 'new@example.com',
+      branch: 'main',
+    })
+
+    expect(mockCommit).not.toHaveBeenCalled()
+    expect(mockPushToNewRemote).not.toHaveBeenCalled()
     expect(mockRefreshGitClient).toHaveBeenCalled()
   })
 })
