@@ -692,7 +692,7 @@ export default class OtomiStack {
     const isDifferentRepo = repoUrl !== params.repoUrl || branch !== params.branch
     if (isDifferentRepo) {
       if (remoteHasContent) {
-        throw new BadRequestError(`Branch ${branch} in repository is not empty`)
+        throw new BadRequestError(`Branch ${params.branch} in repository is not empty`)
       }
       // Do not migrate only on credential or identity change
       await this.commitAndPushMigration(params)
