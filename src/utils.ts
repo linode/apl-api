@@ -234,8 +234,15 @@ export const objectToYaml = (obj: Record<string, any>, indent = 4, lineWidth = 2
   return isEmpty(obj) ? '' : stringify(obj, { indent, lineWidth })
 }
 
-export function sanitizeGitPassword(str?: string) {
-  return str ? str.replaceAll(env.GIT_PASSWORD, '****') : ''
+function maskRepoUrl(url: string): string {
+  return url.replace(/(https?:\/\/)([^@]+)(@.+)/g, '$1***$3')
+}
+
+export function sanitizeGitPassword(str: string | undefined) {
+  if (!str) {
+    return ''
+  }
+  return maskRepoUrl(str)
 }
 
 export function getSanitizedErrorMessage(error) {
