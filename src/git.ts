@@ -56,6 +56,7 @@ export class Git {
   path: string
   remote: string
   remoteBranch: string
+  sshKeyPath: string | undefined
   url: string | undefined
   urlAuth: string | undefined
   user: string
@@ -67,18 +68,27 @@ export class Git {
     email: string,
     urlAuth: string | undefined,
     branch: string | undefined,
+    sshKeyPath?: string,
   ) {
     this.branch = branch || 'main'
     this.email = email
     this.path = path
     this.remote = 'origin'
     this.remoteBranch = join(this.remote, this.branch)
+    this.sshKeyPath = sshKeyPath
     this.urlAuth = urlAuth
     this.user = user
     this.url = url
 
-    const gitSSLNoVerify = getProtocol(url) === 'http'
-    this.git = simpleGit(this.path).env('GIT_SSL_NO_VERIFY', String(gitSSLNoVerify))
+    if (url?.startsWith('git@') && sshKeyPath) {
+      this.git = simpleGit(this.path).env(
+        'GIT_SSH_COMMAND',
+        `ssh -i ${sshKeyPath} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null`,
+      )
+    } else {
+      const gitSSLNoVerify = getProtocol(url) === 'http'
+      this.git = simpleGit(this.path).env('GIT_SSL_NO_VERIFY', String(gitSSLNoVerify))
+    }
   }
 
   getProtocol() {
@@ -423,7 +433,7 @@ export async function getWorktreeRepo(
 
   await mainRepo.createWorktree(worktreePath, branch)
 
-  const worktreeRepo = new Git(worktreePath, mainRepo.url, mainRepo.user, mainRepo.email, mainRepo.urlAuth, branch)
+  const worktreeRepo = new Git(worktreePath, mainRepo.url, mainRepo.user, mainRepo.email, mainRepo.urlAuth, branch, mainRepo.sshKeyPath)
 
   await worktreeRepo.addConfig()
 
@@ -437,12 +447,23 @@ export default async function getRepo(
   email: string,
   password: string,
   branch: string,
+  sshKeyPath?: string,
   method: 'clone' | 'init' = 'clone',
 ): Promise<Git> {
+  if (url?.startsWith('git@') && !sshKeyPath) {
+    throw new Error('GIT_REPO_URL is an SSH URL but GIT_SSH_KEY_PATH is not set')
+  }
   await ensureDir(path, { mode: 0o744 })
-  const urlNormalized = getUrl(url)
-  const urlAuth = getUrlAuth(urlNormalized, user, password)
-  const repo = new Git(path, urlNormalized, user, email, urlAuth, branch)
+  let urlNormalized: string
+  let urlAuth: string | undefined
+  if (url?.startsWith('git@')) {
+    urlNormalized = url
+    urlAuth = undefined
+  } else {
+    urlNormalized = getUrl(url)
+    urlAuth = getUrlAuth(urlNormalized, user, password)
+  }
+  const repo = new Git(path, urlNormalized, user, email, urlAuth, branch, sshKeyPath)
   await repo[method]()
   return repo
 }
