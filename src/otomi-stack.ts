@@ -17,7 +17,6 @@ import { getAppList, getAppSchema } from 'src/app'
 import {
   APL_SECRETS_NAMESPACE,
   APL_USERS_NAMESPACE,
-  GIT_CONFIG_SECRET_NAME,
   GIT_DEFAULT_CONFIG,
   GIT_LEGACY_CONFIG,
   GITEA_SECRETS_NAME,
@@ -111,6 +110,8 @@ import {
   DEFAULT_PLATFORM_ADMIN_EMAIL,
   EDITOR_INACTIVITY_TIMEOUT,
   GIT_BRANCH,
+  GIT_CONFIG_SECRET_NAME,
+  GIT_CONFIG_SECRET_NAMESPACE,
   GIT_EMAIL,
   GIT_INIT_MAX_RETRIES,
   GIT_INIT_RETRY_INTERVAL_MS,
@@ -190,6 +191,8 @@ const env = cleanEnv({
   DEFAULT_PLATFORM_ADMIN_EMAIL,
   EDITOR_INACTIVITY_TIMEOUT,
   GIT_BRANCH,
+  GIT_CONFIG_SECRET_NAME,
+  GIT_CONFIG_SECRET_NAMESPACE,
   GIT_EMAIL,
   GIT_INIT_MAX_RETRIES,
   GIT_INIT_RETRY_INTERVAL_MS,
@@ -698,8 +701,8 @@ export default class OtomiStack {
     }
     try {
       const { data } = await api.readNamespacedSecret({
-        name: GIT_CONFIG_SECRET_NAME,
-        namespace: APL_SECRETS_NAMESPACE,
+        name: env.GIT_CONFIG_SECRET_NAME,
+        namespace: env.GIT_CONFIG_SECRET_NAMESPACE,
       })
       Object.entries(data || {}).forEach(([key, value]) => {
         decodedData[key] = Buffer.from(value, 'base64').toString('utf-8')
@@ -771,8 +774,8 @@ export default class OtomiStack {
         encodedData[key] = Buffer.from(value).toString('base64')
       }
     })
-    const name = GIT_CONFIG_SECRET_NAME
-    const namespace = APL_SECRETS_NAMESPACE
+    const name = env.GIT_CONFIG_SECRET_NAME
+    const namespace = env.GIT_CONFIG_SECRET_NAMESPACE
     const secret: V1Secret = {
       metadata: {
         name,

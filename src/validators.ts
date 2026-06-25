@@ -82,8 +82,6 @@ export const GIT_PROVIDER_URL_PATTERNS = json({
     bitbucket: 'bitbucket\\.org\\/([^\\/]+)\\/([^\\/]+)\\/(?:src|raw)\\/([^\\/]+)\\/(.+)',
   },
 })
-export const REGION = str({ desc: 'The cloud region' })
-export const ROARR_LOG = bool({ desc: 'To enable Lightship logs', default: false })
 export const PREINSTALLED_EXCLUDED_APPS = json({
   desc: 'Applications that are managed by Linode, so they should be excluded from the apps page',
   default: {
@@ -200,6 +198,14 @@ export const MIN_KNATIVE_K8S_VERSION = str({
 export const API_NAMESPACE = str({
   desc: 'The Kubernetes namespace where apl-api status resources are stored',
   default: 'otomi',
+})
+export const GIT_CONFIG_SECRET_NAME = str({
+  desc: 'Name of Secret resource with access credentials to the Git values store',
+  default: 'apl-git-config',
+})
+export const GIT_CONFIG_SECRET_NAMESPACE = str({
+  desc: 'Namespace of Secret resource with access credentials to the Git values store',
+  default: 'apl-secrets',
 })
 const { env } = process
 export function cleanEnv<T>(validators: { [K in keyof T]: ValidatorSpec<T[K]> }, options: CleanOptions<T> = {}) {
