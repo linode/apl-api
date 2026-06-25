@@ -644,10 +644,8 @@ export default class OtomiStack {
         updatedSettingsData.otomi.nodeSelector = nodeSelectorObject
       }
       const updatedGitSettings = updatedSettingsData.otomi?.git as GitConfig
-      if (updatedGitSettings) {
-        if (!updatedGitSettings.password) {
-          throw new BadRequestError('Git credentials may not be provided without a password')
-        }
+      if (updatedGitSettings?.repoUrl && updatedGitSettings?.password) {
+        // For backwards compatibility, update only if provided data is sufficient, but do not raise an error
         await this.storeGitConfig(updatedGitSettings)
         unset(updatedSettingsData, 'otomi.git.password')
       }
