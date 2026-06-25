@@ -22,7 +22,15 @@ import {
   GITEA_SECRETS_NAME,
   PLATFORM_SECRETS_NAME,
 } from 'src/constants'
-import { AlreadyExists, ForbiddenError, HttpError, NotExistError, OtomiError, ValidationError } from 'src/error'
+import {
+  AlreadyExists,
+  BadRequestError,
+  ForbiddenError,
+  HttpError,
+  NotExistError,
+  OtomiError,
+  ValidationError,
+} from 'src/error'
 import { getSettingsFileMaps } from 'src/fileStore/file-map'
 import { FileStore } from 'src/fileStore/file-store'
 import getRepo, { getWorktreeRepo, Git } from 'src/git'
@@ -678,9 +686,14 @@ export default class OtomiStack {
     return settings
   }
 
-  async migrateGitSettings(params: GitConfig): Promise<void> {
-    const { repoUrl, branch } = this.gitConfig
-    if (repoUrl !== params.repoUrl || branch !== params.branch) {
+  async migrateGitSettings(params: GitConfig, remoteHasContent: boolean): Promise<void> {
+    const rootStack = await getSessionStack()
+    const { repoUrl, branch } = rootStack.gitConfig
+    const isDifferentRepo = repoUrl !== params.repoUrl || branch !== params.branch
+    if (isDifferentRepo) {
+      if (remoteHasContent) {
+        throw new BadRequestError(`Branch ${branch} in repository is not empty`)
+      }
       // Do not migrate only on credential or identity change
       await this.commitAndPushMigration(params)
     }
