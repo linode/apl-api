@@ -647,8 +647,8 @@ export default class OtomiStack {
       if (updatedGitSettings?.repoUrl && updatedGitSettings?.password) {
         // For backwards compatibility, update only if provided data is sufficient, but do not raise an error
         await this.storeGitConfig(updatedGitSettings)
-        unset(updatedSettingsData, 'otomi.git.password')
       }
+      unset(updatedSettingsData, 'otomi.git')
     }
 
     const sealedSecretRecord = await this.extractAndStoreSettingsSecrets(settingId, updatedSettingsData)
