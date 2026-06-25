@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [5.0.2](https://github.com/redkubes/otomi-api/compare/v5.0.1...v5.0.2) (2026-06-25)
+
+
+### Features
+
+* do not generate team password ([#1019](https://github.com/redkubes/otomi-api/issues/1019)) ([cd19aaa](https://github.com/redkubes/otomi-api/commit/cd19aaa679043858b2987b26a483902598dbd729))
+* Git configure edit modal ([#1017](https://github.com/redkubes/otomi-api/issues/1017)) ([0269726](https://github.com/redkubes/otomi-api/commit/0269726c68e2844801b0c41d15d1895deed6d8c1))
+
+
+### Bug Fixes
+
+* authz test rework ([#1010](https://github.com/redkubes/otomi-api/issues/1010)) ([c05ce59](https://github.com/redkubes/otomi-api/commit/c05ce596dd578cef9766b6db61ae652ddd12456b))
+* create user test team ([#1023](https://github.com/redkubes/otomi-api/issues/1023)) ([5e6e849](https://github.com/redkubes/otomi-api/commit/5e6e849290c546569c555795ed42956a99c1527d))
+* remove git settings from values ([#1018](https://github.com/redkubes/otomi-api/issues/1018)) ([c076b69](https://github.com/redkubes/otomi-api/commit/c076b6953df9da2824cea5b11c7eb7530de03622))
+* team check in edit user ([#1013](https://github.com/redkubes/otomi-api/issues/1013)) ([96442cc](https://github.com/redkubes/otomi-api/commit/96442ccb089afb033ac1133ff7a52ca7ac5bcb29))
+
+
+### Others
+
+* add reoccurring package lock changes ([#1016](https://github.com/redkubes/otomi-api/issues/1016)) ([ef8016e](https://github.com/redkubes/otomi-api/commit/ef8016e1a2df1fe7f2f4967c288b89ff2bf5ee9f))
+* **deps:** bump actions/checkout from 6 to 7 ([#1021](https://github.com/redkubes/otomi-api/issues/1021)) ([17831b4](https://github.com/redkubes/otomi-api/commit/17831b45c9d449277a25a38a5448d21460df2714))
+
 ### [5.0.1](https://github.com/redkubes/otomi-api/compare/v4.18.0...v5.0.1) (2026-06-16)
 
 
