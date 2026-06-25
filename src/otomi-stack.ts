@@ -1232,6 +1232,7 @@ export default class OtomiStack {
     if (!valid) {
       throw new HttpError(400, error as string)
     }
+
     const initialPassword = generatePassword({
       length: 16,
       numbers: true,
@@ -1240,10 +1241,12 @@ export default class OtomiStack {
       uppercase: true,
       strict: true,
     })
+
     const userId = uuidv4()
     const user: User = { ...data, id: userId, initialPassword }
 
-    // Check for existing users
+    this.validateUserTeamsExist(user)
+
     const existingUsers = await listUserSecretData(this.getAplNamespaceSealedSecrets.bind(this))
     const existingUsersEmail = existingUsers.map((u) => u.email)
 
