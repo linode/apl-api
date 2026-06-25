@@ -290,36 +290,12 @@ export interface Core {
   version: number
 }
 
-export interface Repo {
-  apps: App[]
-  alerts: Alerts
-  cluster: Cluster
-  databases: Record<string, any>
-  dns: Dns
-  ingress: Ingress
-  kms: Kms
-  obj: Record<string, any>
-  oidc: Oidc
-  otomi: Otomi
-  platformBackups: Record<string, any>
-  users: User[]
-  versions: Versions
-  teamConfig: Record<string, TeamConfig>
-  files: Record<string, string>
-}
-
-export interface TeamConfig {
-  apps: App[]
-  builds: AplBuildResponse[]
-  codeRepos: AplCodeRepoResponse[]
-  knowledgeBases: AplKnowledgeBaseResponse[]
-  agents: AplAgentResponse[]
-  netpols: AplNetpolResponse[]
-  policies: AplPolicyResponse[]
-  sealedsecrets: SealedSecretManifestResponse[]
-  services: AplServiceResponse[]
-  settings: AplTeamSettingsResponse
-  workloads: AplWorkloadResponse[]
+export interface GitConfig {
+  repoUrl: string
+  branch: string
+  email: string
+  username?: string
+  password: string
 }
 
 export function toTeamObject(teamId: string, request: AplRequestObject): AplTeamObject {
