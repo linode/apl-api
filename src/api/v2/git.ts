@@ -44,13 +44,9 @@ export const migrateGit = async (req: OpenApiRequestExt, res: Response): Promise
       return
     }
   }
-  if (remoteHasContent) {
-    res.json({ message: 'New repository is not empty', statusCode: 400 })
-    return
-  }
 
   // Write config and push to new remote
-  await req.otomi.migrateGitSettings(newGitConfig)
+  await req.otomi.migrateGitSettings(newGitConfig, remoteHasContent)
 
   res.json({})
 }
