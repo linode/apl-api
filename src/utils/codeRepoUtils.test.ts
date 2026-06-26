@@ -1,20 +1,15 @@
 import axios from 'axios'
-import { pathExists, unlink } from 'fs-extra'
-import { chmod, writeFile } from 'fs/promises'
+import { writeFile } from 'fs/promises'
 import simpleGit, { SimpleGit } from 'simple-git'
 import { OtomiError } from 'src/error'
 import { v4 as uuidv4 } from 'uuid'
-import * as codeRepoUtils from './codeRepoUtils'
+import { getSecretValues } from '../k8s-operations'
 import {
   extractRepositoryRefs,
+  getAuthenticatedGitClient,
   getGiteaRepoUrls,
-  getPrivateRepoBranches,
-  getPublicRepoBranches,
   normalizeRepoUrl,
   normalizeSSHKey,
-  setupGitAuthentication,
-  testPrivateRepoConnect,
-  testPublicRepoConnect,
 } from './codeRepoUtils'
 
 jest.mock('simple-git', () => ({
@@ -26,7 +21,6 @@ jest.mock('simple-git', () => ({
 }))
 
 jest.mock('axios')
-jest.mock('fs-extra')
 jest.mock('fs/promises')
 jest.mock('uuid')
 jest.mock('src/error', () => ({
@@ -37,79 +31,13 @@ jest.mock('src/error', () => ({
     return error
   }),
 }))
+jest.mock('../k8s-operations', () => ({
+  getSecretValues: jest.fn(),
+}))
 
 describe('codeRepoUtils', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-  })
-
-  describe('testPrivateRepoConnect', () => {
-    it('should connect to private repo with SSH key', async () => {
-      const mockGit: Partial<SimpleGit> = {
-        env: jest.fn(),
-        listRemote: jest.fn().mockResolvedValueOnce('success'),
-      }
-      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-      ;(uuidv4 as jest.Mock).mockReturnValue('test-uuid')
-      ;(pathExists as jest.Mock).mockResolvedValueOnce(true)
-
-      const sshKey = '-----BEGIN OPENSSH PRIVATE KEY-----\nkey\n-----END OPENSSH PRIVATE KEY-----'
-
-      const result = await testPrivateRepoConnect('git@github.com:user/repo.git', sshKey)
-
-      expect(writeFile).toHaveBeenCalledWith('/tmp/otomi/sshKey-test-uuid', `${sshKey}\n`, { mode: 0o600 })
-      expect(chmod).toHaveBeenCalledWith('/tmp/otomi/sshKey-test-uuid', 0o600)
-      expect(mockGit.env).toHaveBeenCalledWith(
-        'GIT_SSH_COMMAND',
-        'ssh -i /tmp/otomi/sshKey-test-uuid -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null',
-      )
-      expect(mockGit.listRemote).toHaveBeenCalledWith(['git@github.com:user/repo.git'])
-      expect(result).toEqual({ status: 'success' })
-      expect(unlink).toHaveBeenCalledWith('/tmp/otomi/sshKey-test-uuid')
-    })
-
-    it('should connect to private repo with HTTPS authentication', async () => {
-      const mockGit: Partial<SimpleGit> = {
-        listRemote: jest.fn().mockResolvedValueOnce('success'),
-      }
-      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-
-      const result = await testPrivateRepoConnect('https://github.com/user/repo.git', undefined, 'username', 'token')
-
-      expect(mockGit.listRemote).toHaveBeenCalledWith(['https://username:token@github.com/user/repo.git'])
-      expect(result).toEqual({ status: 'success' })
-    })
-
-    it('should fail to connect with invalid URL', async () => {
-      const result = await testPrivateRepoConnect('invalid-url')
-      expect(result).toEqual({ status: 'failed' })
-    })
-  })
-
-  describe('testPublicRepoConnect', () => {
-    it('should connect to public repo', async () => {
-      const mockGit: Partial<SimpleGit> = {
-        listRemote: jest.fn().mockResolvedValueOnce('success'),
-      }
-      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-
-      const result = await testPublicRepoConnect('https://github.com/user/repo.git')
-
-      expect(mockGit.listRemote).toHaveBeenCalledWith(['https://github.com/user/repo.git'])
-      expect(result).toEqual({ status: 'success' })
-    })
-
-    it('should fail to connect to invalid public repo', async () => {
-      const mockGit: Partial<SimpleGit> = {
-        listRemote: jest.fn().mockRejectedValueOnce(new Error('failed')),
-      }
-      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-
-      const result = await testPublicRepoConnect('https://github.com/user/repo.git')
-
-      expect(mockGit.listRemote).toHaveBeenCalledWith(['https://github.com/user/repo.git'])
-      expect(result).toEqual({ status: 'failed' })
-    })
   })
 
   describe('normalizeRepoUrl', () => {
@@ -189,10 +117,6 @@ describe('codeRepoUtils', () => {
   })
 
   describe('extractRepositoryRefs', () => {
-    beforeEach(() => {
-      jest.clearAllMocks()
-    })
-
     it('should extract branches and tags correctly', async () => {
       const mockGit: Partial<SimpleGit> = {
         listRemote: jest.fn().mockResolvedValueOnce(`
@@ -202,9 +126,8 @@ describe('codeRepoUtils', () => {
           mnop3456	refs/tags/v1.1.0
         `),
       }
-      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
 
-      const result = await extractRepositoryRefs('https://github.com/user/repo.git')
+      const result = await extractRepositoryRefs('https://github.com/user/repo.git', mockGit as SimpleGit)
 
       expect(result).toEqual(['main', 'develop', 'v1.0.0', 'v1.1.0'])
       expect(mockGit.listRemote).toHaveBeenCalledWith(['--refs', 'https://github.com/user/repo.git'])
@@ -214,9 +137,8 @@ describe('codeRepoUtils', () => {
       const mockGit: Partial<SimpleGit> = {
         listRemote: jest.fn().mockResolvedValueOnce(''),
       }
-      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
 
-      const result = await extractRepositoryRefs('https://github.com/user/repo.git')
+      const result = await extractRepositoryRefs('https://github.com/user/repo.git', mockGit as SimpleGit)
 
       expect(result).toEqual([])
     })
@@ -229,22 +151,20 @@ describe('codeRepoUtils', () => {
           efgh5678	refs/tags/v1.0.0
         `),
       }
-      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
 
-      const result = await extractRepositoryRefs('https://github.com/user/repo.git')
+      const result = await extractRepositoryRefs('https://github.com/user/repo.git', mockGit as SimpleGit)
 
       expect(result).toEqual(['main', 'v1.0.0'])
     })
 
-    it('should return empty array on listRemote error', async () => {
+    it('should propagate errors from listRemote', async () => {
       const mockGit: Partial<SimpleGit> = {
         listRemote: jest.fn().mockRejectedValueOnce(new Error('Network error')),
       }
-      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
 
-      const result = await extractRepositoryRefs('https://github.com/user/repo.git')
-
-      expect(result).toEqual([])
+      await expect(extractRepositoryRefs('https://github.com/user/repo.git', mockGit as SimpleGit)).rejects.toThrow(
+        'Network error',
+      )
     })
   })
 
@@ -273,21 +193,22 @@ whitespaces
   })
 
   describe('setupGitAuthentication', () => {
-    it('should setup SSH authentication with private key', async () => {
+    it('should setup SSH authentication with private key from secret', async () => {
       const sshKey = '-----BEGIN OPENSSH PRIVATE KEY-----\nkey\n-----END OPENSSH PRIVATE KEY-----'
       const repoUrl = 'git@github.com:user/repo.git'
+      const teamId = 'team1'
+      const secretName = 'my-ssh-secret'
 
-      const mockGit: Partial<SimpleGit> = {
-        env: jest.fn(),
-      }
-      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+      const mockGitInstance = { env: jest.fn(), listRemote: jest.fn() }
+      mockGitInstance.env.mockReturnValue(mockGitInstance)
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGitInstance)
       ;(uuidv4 as jest.Mock).mockReturnValue('test-uuid')
       ;(writeFile as jest.Mock).mockResolvedValue(undefined)
-      ;(chmod as jest.Mock).mockResolvedValue(undefined)
+      ;(getSecretValues as jest.Mock).mockResolvedValue({ 'ssh-privatekey': sshKey })
 
-      const result = await setupGitAuthentication(repoUrl, sshKey)
+      const result = await getAuthenticatedGitClient(repoUrl, teamId, undefined, undefined, secretName)
 
-      expect(mockGit.env).toHaveBeenCalledWith(
+      expect(mockGitInstance.env).toHaveBeenCalledWith(
         'GIT_SSH_COMMAND',
         'ssh -i /tmp/otomi/sshKey-test-uuid -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null',
       )
@@ -295,120 +216,56 @@ whitespaces
       expect(result.keyPath).toBe('/tmp/otomi/sshKey-test-uuid')
     })
 
-    it('should setup HTTPS authentication with username and token', async () => {
+    it('should setup HTTPS authentication with credentials from secret', async () => {
       const repoUrl = 'https://github.com/user/repo.git'
+      const teamId = 'team1'
+      const secretName = 'my-https-secret'
       const username = 'testuser'
       const accessToken = 'test-token'
 
-      const result = await setupGitAuthentication(repoUrl, undefined, username, accessToken)
+      const mockGitInstance = { env: jest.fn() }
+      mockGitInstance.env.mockReturnValue(mockGitInstance)
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGitInstance)
+      ;(getSecretValues as jest.Mock).mockResolvedValue({ username, password: accessToken })
 
-      expect(result.url).toBe(
-        `https://${encodeURIComponent(username)}:${encodeURIComponent(accessToken)}@github.com/user/repo.git`,
-      )
+      const result = await getAuthenticatedGitClient(repoUrl, teamId, undefined, undefined, secretName)
+
+      expect(result.url).toBe(`https://${username}:${accessToken}@github.com/user/repo.git`)
     })
 
-    it('should throw error for missing HTTPS credentials', async () => {
+    it('should return unauthenticated URL when no secret provided for public HTTPS repo', async () => {
       const repoUrl = 'https://github.com/user/repo.git'
+      const teamId = 'team1'
 
-      await expect(setupGitAuthentication(repoUrl)).rejects.toThrow(
-        'Username and access token are required for HTTPS authentication',
-      )
+      const mockGitInstance = { env: jest.fn() }
+      mockGitInstance.env.mockReturnValue(mockGitInstance)
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGitInstance)
+
+      const result = await getAuthenticatedGitClient(repoUrl, teamId)
+
+      expect(result.url).toBe('https://github.com/user/repo.git')
+    })
+
+    it('should throw error for SSH repo without secret', async () => {
+      const repoUrl = 'git@github.com:user/repo.git'
+      const teamId = 'team1'
+
+      const mockGitInstance = { env: jest.fn() }
+      mockGitInstance.env.mockReturnValue(mockGitInstance)
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGitInstance)
+
+      await expect(getAuthenticatedGitClient(repoUrl, teamId)).rejects.toThrow('SSH requires a secret with private key')
     })
 
     it('should throw error for invalid repository URL', async () => {
       const repoUrl = 'invalid-url'
+      const teamId = 'team1'
 
-      await expect(setupGitAuthentication(repoUrl)).rejects.toThrow('Invalid repository URL format')
-    })
-  })
+      const mockGitInstance = { env: jest.fn() }
+      mockGitInstance.env.mockReturnValue(mockGitInstance)
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGitInstance)
 
-  describe('getPrivateRepoBranches', () => {
-    it('should get branches from private repo using SSH', async () => {
-      const repoUrl = 'git@github.com:user/repo.git'
-      const sshKey = '-----BEGIN OPENSSH PRIVATE KEY-----\nkey\n-----END OPENSSH PRIVATE KEY-----'
-
-      const mockRefs = ['main', 'develop', 'feature/test']
-      const mockGit: Partial<SimpleGit> = {
-        listRemote: jest.fn().mockResolvedValueOnce(`
-          abcd1234\trefs/heads/main
-          efgh5678\trefs/heads/develop
-          ijkl9012\trefs/heads/feature/test
-        `),
-      }
-
-      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-      ;(uuidv4 as jest.Mock).mockReturnValue('test-uuid')
-      ;(pathExists as jest.Mock).mockResolvedValue(true)
-
-      const mockSetupGitAuthentication = {
-        url: repoUrl,
-        sshKey,
-        git: mockGit as SimpleGit,
-        keyPath: '/mock/path/test-uuid',
-      }
-      jest.spyOn(codeRepoUtils, 'setupGitAuthentication').mockResolvedValueOnce(mockSetupGitAuthentication)
-      const result = await getPrivateRepoBranches(repoUrl)
-
-      expect(result).toEqual(mockRefs)
-    })
-
-    it('should return empty array for failed private repo connection', async () => {
-      const repoUrl = 'git@github.com:user/repo.git'
-      const sshKey = '-----BEGIN OPENSSH PRIVATE KEY-----\nkey\n-----END OPENSSH PRIVATE KEY-----'
-
-      ;(simpleGit as jest.Mock).mockImplementation(() => ({
-        listRemote: jest.fn().mockRejectedValue(new Error('Connection failed')),
-      }))
-
-      const result = await getPrivateRepoBranches(repoUrl, sshKey)
-
-      expect(result).toEqual([])
-    })
-  })
-
-  describe('getPublicRepoBranches', () => {
-    it('should retrieve branches from a public repository', async () => {
-      const repoUrl = 'https://github.com/user/repo.git'
-
-      const mockGit: Partial<SimpleGit> = {
-        listRemote: jest.fn().mockResolvedValueOnce(`
-          abcd1234	refs/heads/main
-          efgh5678	refs/heads/develop
-          ijkl9012	refs/tags/v1.0.0
-        `),
-      }
-      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-
-      const result = await getPublicRepoBranches(repoUrl)
-
-      expect(result).toEqual(['main', 'develop', 'v1.0.0'])
-      expect(mockGit.listRemote).toHaveBeenCalledWith(['--refs', repoUrl])
-    })
-
-    it('should return empty array when retrieving refs fails', async () => {
-      const repoUrl = 'https://github.com/user/repo.git'
-
-      const mockGit: Partial<SimpleGit> = {
-        listRemote: jest.fn().mockRejectedValueOnce(new Error('Network error')),
-      }
-      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-
-      const result = await getPublicRepoBranches(repoUrl)
-
-      expect(result).toEqual([])
-    })
-
-    it('should handle an empty repository with no refs', async () => {
-      const repoUrl = 'https://github.com/user/repo.git'
-
-      const mockGit: Partial<SimpleGit> = {
-        listRemote: jest.fn().mockResolvedValueOnce(''),
-      }
-      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-
-      const result = await getPublicRepoBranches(repoUrl)
-
-      expect(result).toEqual([])
+      await expect(getAuthenticatedGitClient(repoUrl, teamId)).rejects.toThrow('Invalid repository URL format')
     })
   })
 })

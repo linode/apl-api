@@ -145,14 +145,7 @@ import {
   watchPodUntilRunning,
 } from './k8s-operations'
 import CloudTty from './tty'
-import {
-  getGiteaRepoUrls,
-  getPrivateRepoBranches,
-  getPublicRepoBranches,
-  normalizeRepoUrl,
-  testPrivateRepoConnect,
-  testPublicRepoConnect,
-} from './utils/codeRepoUtils'
+import { extractRepositoryRefs, getAuthenticatedGitClient, getGiteaRepoUrls } from './utils/codeRepoUtils'
 import { isKnativeSupported } from './utils/k8sUtils'
 import { getV1ObjectFromApl } from './utils/manifests'
 import {
@@ -175,8 +168,9 @@ import {
   userSecretDataToUser,
 } from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
-import { fetchWorkloadCatalog, isInteralGiteaURL } from './utils/workloadUtils'
+import { fetchWorkloadCatalog } from './utils/workloadUtils'
 import { getAuthenticatedUrl } from './git/connect'
+import { pathExists, unlink } from 'fs-extra'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -1486,69 +1480,60 @@ export default class OtomiStack {
 
     const coderepo = this.getAplCodeRepo(teamId, codeRepoName)
     const { repositoryUrl, secret: secretName } = coderepo.spec
-
+    if (!repositoryUrl) return ['HEAD']
+    const giteaValues = this.getApp('gitea').values
     const { cluster } = await this.getSettings(['cluster'])
 
     try {
-      let sshPrivateKey = ''
-      let username = ''
-      let accessToken = ''
-
-      if (secretName) {
-        const secret = await getSecretValues(secretName, `team-${teamId}`)
-        sshPrivateKey = secret?.['ssh-privatekey'] || ''
-        username = secret?.username || ''
-        accessToken = secret?.password || ''
+      const { git, url, keyPath } = await getAuthenticatedGitClient(
+        repositoryUrl,
+        teamId,
+        cluster?.domainSuffix,
+        giteaValues,
+        secretName,
+      )
+      try {
+        return await extractRepositoryRefs(url, git)
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || error?.message || 'Failed to get repo branches'
+        debug('Error getting branches:', errorMessage)
+        return []
+      } finally {
+        if (keyPath && (await pathExists(keyPath))) {
+          await unlink(keyPath)
+        }
       }
-
-      const isPrivate = !!secretName
-      const isSSH = !!sshPrivateKey
-
-      const repoUrl = isInteralGiteaURL(repositoryUrl, cluster?.domainSuffix)
-        ? repositoryUrl
-        : normalizeRepoUrl(repositoryUrl, isPrivate, isSSH)
-
-      if (!repoUrl) return ['HEAD']
-
-      if (isPrivate) {
-        return await getPrivateRepoBranches(repoUrl, sshPrivateKey, username, accessToken)
-      }
-
-      return await getPublicRepoBranches(repoUrl)
     } catch (error) {
-      const errorMessage = error.response?.data?.message || error?.message || 'Failed to get repo branches'
-      debug('Error getting branches:', errorMessage)
+      debug('Error getting branches:', error.message)
       return []
     }
   }
 
-  async getTestRepoConnect(url: string, teamId: string, secretName: string): Promise<TestRepoConnect> {
+  async getTestRepoConnect(repositoryUrl: string, teamId: string, secretName: string): Promise<TestRepoConnect> {
+    const giteaValues = this.getApp('gitea').values
+    const { cluster } = await this.getSettings(['cluster'])
+
     try {
-      let sshPrivateKey = '',
-        username = '',
-        accessToken = ''
-
-      const isPrivate = !!secretName
-
-      if (isPrivate) {
-        const secret = await getSecretValues(secretName, `team-${teamId}`)
-        sshPrivateKey = secret?.['ssh-privatekey'] || ''
-        username = secret?.username || ''
-        accessToken = secret?.password || ''
+      const { git, url, keyPath } = await getAuthenticatedGitClient(
+        repositoryUrl,
+        teamId,
+        cluster?.domainSuffix,
+        giteaValues,
+        secretName,
+      )
+      try {
+        await git.listRemote([url])
+        return { status: 'success' }
+      } catch (error) {
+        const message = error.response?.data?.message || error?.message
+        return { status: 'failed', message }
+      } finally {
+        if (keyPath && (await pathExists(keyPath))) {
+          await unlink(keyPath)
+        }
       }
-
-      const isSSH = !!sshPrivateKey
-      const repoUrl = normalizeRepoUrl(url, isPrivate, isSSH)
-
-      if (!repoUrl) return { status: 'failed' }
-
-      if (isPrivate) {
-        return (await testPrivateRepoConnect(repoUrl, sshPrivateKey, username, accessToken)) as TestRepoConnect
-      }
-
-      return (await testPublicRepoConnect(repoUrl)) as TestRepoConnect
     } catch (error) {
-      return { status: 'failed' }
+      return { status: 'failed', message: error.message }
     }
   }
 
