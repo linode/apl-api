@@ -9,7 +9,7 @@ import {
 } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { loadSpec } from './app'
-import { NotExistError, ValidationError } from './error'
+import { BadRequestError, NotExistError, ValidationError } from './error'
 import { Git } from './git'
 
 jest.mock('./tty', () => ({
@@ -1362,6 +1362,13 @@ describe('OtomiStack.migrateGitSettings', () => {
     stack = new OtomiStack()
     stack.editor = 'test@example.com'
     ;(stack as any).sessionId = 'test-session-id'
+    ;(stack as any).gitConfig = {
+      repoUrl: 'https://old.example.com/repo.git',
+      branch: 'main',
+      username: 'user',
+      password: 'pass',
+      email: 'old@example.com',
+    }
     jest.spyOn(stack as any, 'getSettings').mockReturnValue({
       otomi: { git: { repoUrl: 'https://old.example.com/repo.git', branch: 'main', email: 'old@example.com' } },
     })
@@ -1377,6 +1384,7 @@ describe('OtomiStack.migrateGitSettings', () => {
       git: { git: { pull: mockRootPull } },
       fileStore: { set: mockRootFileStoreSet },
       refreshGitClient: mockRefreshGitClient,
+      gitConfig: stack.gitConfig,
     })
     jest.spyOn(require('src/middleware/session'), 'cleanSession').mockResolvedValue(undefined)
     ;(stack as any).getApiClient = jest.fn().mockReturnValue({
@@ -1386,17 +1394,73 @@ describe('OtomiStack.migrateGitSettings', () => {
 
   afterEach(() => jest.restoreAllMocks())
 
-  it('calls pushToNewRemote', async () => {
-    await stack.migrateGitSettings({
-      repoUrl: 'https://new.example.com/repo.git',
-      username: 'user',
-      password: 'pass',
-      email: 'new@example.com',
-      branch: 'main',
-    })
+  it('commits and pushes to new remote when repoUrl changes and remote is empty', async () => {
+    await stack.migrateGitSettings(
+      {
+        repoUrl: 'https://new.example.com/repo.git',
+        username: 'user',
+        password: 'pass',
+        email: 'new@example.com',
+        branch: 'main',
+      },
+      false,
+    )
 
     expect(mockCommit).toHaveBeenCalled()
     expect(mockPushToNewRemote).toHaveBeenCalled()
+    expect(mockRefreshGitClient).toHaveBeenCalled()
+  })
+
+  it('commits and pushes to new remote when branch changes and remote is empty', async () => {
+    await stack.migrateGitSettings(
+      {
+        repoUrl: 'https://old.example.com/repo.git',
+        username: 'user',
+        password: 'pass',
+        email: 'old@example.com',
+        branch: 'new-branch',
+      },
+      false,
+    )
+
+    expect(mockCommit).toHaveBeenCalled()
+    expect(mockPushToNewRemote).toHaveBeenCalled()
+    expect(mockRefreshGitClient).toHaveBeenCalled()
+  })
+
+  it('throws BadRequestError when repoUrl changes and remote already has content', async () => {
+    await expect(
+      stack.migrateGitSettings(
+        {
+          repoUrl: 'https://new.example.com/repo.git',
+          username: 'user',
+          password: 'pass',
+          email: 'new@example.com',
+          branch: 'main',
+        },
+        true,
+      ),
+    ).rejects.toThrow(new BadRequestError('Branch main in repository is not empty'))
+
+    expect(mockCommit).not.toHaveBeenCalled()
+    expect(mockPushToNewRemote).not.toHaveBeenCalled()
+    expect(mockRefreshGitClient).not.toHaveBeenCalled()
+  })
+
+  it('only stores config without migration when only credentials change', async () => {
+    await stack.migrateGitSettings(
+      {
+        repoUrl: 'https://old.example.com/repo.git',
+        username: 'new-user',
+        password: 'new-pass',
+        email: 'new@example.com',
+        branch: 'main',
+      },
+      false,
+    )
+
+    expect(mockCommit).not.toHaveBeenCalled()
+    expect(mockPushToNewRemote).not.toHaveBeenCalled()
     expect(mockRefreshGitClient).toHaveBeenCalled()
   })
 })
