@@ -46,7 +46,7 @@ export class Git {
     this.url = url
 
     const gitSSLNoVerify = getProtocol(url) === 'http'
-    this.git = simpleGit(this.path).env('GIT_SSL_NO_VERIFY', String(gitSSLNoVerify))
+    this.git = simpleGit(this.path).env('GIT_TERMINAL_PROMPT', '0').env('GIT_SSL_NO_VERIFY', String(gitSSLNoVerify))
   }
 
   async addConfig(): Promise<void> {
