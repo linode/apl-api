@@ -153,13 +153,13 @@ export async function getAuthenticatedGitClient(
   if (!isSSH && !isHTTPS) {
     throw new Error('Invalid repository URL format. Must be SSH or HTTPS.')
   }
-  const normalizedUrl = normalizeRepoUrl(repoUrl, isPrivate, isSSH)
 
-  if (!normalizedUrl) {
-    throw new Error('Invalid URL provided')
-  }
   if (isSSH && !secretName) {
     throw new Error('SSH requires a secret with private key')
+  }
+  const normalizedUrl = normalizeRepoUrl(repoUrl, isPrivate, isSSH)
+  if (!normalizedUrl) {
+    throw new Error('Invalid URL provided')
   }
 
   if (secretName) {
