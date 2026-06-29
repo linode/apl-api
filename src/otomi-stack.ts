@@ -1532,7 +1532,7 @@ export default class OtomiStack {
         await git.listRemote([url])
         return { status: 'success' }
       } catch (error) {
-        const message = error.response?.data?.message || error?.message
+        const message = error?.response?.data?.message || error?.message
         return { status: 'failed', message }
       } finally {
         if (keyPath && (await pathExists(keyPath))) {
@@ -1540,7 +1540,7 @@ export default class OtomiStack {
         }
       }
     } catch (error) {
-      return { status: 'failed', message: error.message }
+      return { status: 'failed', message: error?.message }
     }
   }
 
