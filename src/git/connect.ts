@@ -21,10 +21,10 @@ export function getAuthenticatedUrl(gitConfig: GitConfig): string {
   const urlNormalized = getUrl(repoUrl)
   const url = new URL(urlNormalized)
   if (username) {
-    url.username = username
-    url.password = password
+    url.username = encodeURIComponent(username)
+    url.password = encodeURIComponent(password)
   } else {
-    url.username = password
+    url.username = encodeURIComponent(password)
     url.password = ''
   }
   return url.toString()
