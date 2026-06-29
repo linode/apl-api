@@ -56,7 +56,7 @@ export function normalizeRepoUrl(inputUrl: string, isPrivate: boolean, isSSH: bo
     let hostname: string
     let repoPath: string
 
-    if (cleanUrl.startsWith('git@')) {
+    if (isSSH) {
       const match = cleanUrl
         .replace(/\.git$/, '')
         .match(/^git@([A-Za-z0-9.-]+\.[A-Za-z]{2,}):([A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)+)$/)
