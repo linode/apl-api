@@ -1502,7 +1502,7 @@ export default class OtomiStack {
       try {
         return await extractRepositoryRefs(url, git)
       } catch (error) {
-        const errorMessage = error.response?.data?.message || error?.message || 'Failed to get repo branches'
+        const errorMessage = error?.response?.data?.message || error?.message || 'Failed to get repo branches'
         debug('Error getting branches:', errorMessage)
         return []
       } finally {
