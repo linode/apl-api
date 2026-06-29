@@ -173,7 +173,7 @@ export async function getAuthenticatedGitClient(
       if (normalizedKey) {
         const keyId = uuidv4()
         const keyPath = `/tmp/otomi/sshKey-${keyId}`
-        await writeFile(keyPath, `${normalizedKey}\n`, { mode: 0o600 })
+        await writeFile(keyPath, `${normalizedKey}\n`, { mode: 0o600, flag: 'wx' })
         const GIT_SSH_COMMAND = `ssh -i ${keyPath} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null`
         git.env('GIT_SSH_COMMAND', GIT_SSH_COMMAND)
         return { git, url: normalizedUrl, keyPath }
