@@ -13,7 +13,6 @@ import {
   GIT_PROVIDER_URL_PATTERNS,
 } from 'src/validators'
 import YAML from 'yaml'
-import { BadRequestError } from '../error'
 
 const debug = Debug('apl:workloadUtils')
 
@@ -22,33 +21,6 @@ const env = cleanEnv({
   CATALOG_CACHE_SYNC_MARKER,
   GIT_PROVIDER_URL_PATTERNS,
 })
-
-export async function validateGitUrl(url: string): Promise<void> {
-  let parsed: URL
-  try {
-    parsed = new URL(url)
-  } catch {
-    throw new BadRequestError(`Invalid URL: ${url}`)
-  }
-
-  if (parsed.protocol !== 'https:') {
-    throw new BadRequestError('Only HTTPS URLs are allowed for git repositories')
-  }
-}
-
-export function isGiteaURL(url: string) {
-  let hostname = ''
-  if (url) {
-    try {
-      hostname = new URL(url).hostname
-    } catch (e) {
-      // ignore
-      return false
-    }
-  }
-  const giteaPattern = /^gitea\..+/i
-  return giteaPattern.test(hostname)
-}
 
 export function isInteralGiteaURL(repositoryUrl: string, clusterDomainSuffix?: string) {
   if (!clusterDomainSuffix) return false
