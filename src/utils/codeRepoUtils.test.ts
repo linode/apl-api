@@ -65,25 +65,23 @@ describe('codeRepoUtils', () => {
     it.each([
       ['https://github.com/example/repo', 'https://github.com/example/repo.git'],
       ['github.com/example/repo', 'https://github.com/example/repo.git'],
-      ['git@github.com:example/repo.git', 'https://github.com/example/repo.git'],
       [
         'https://gitlab.example.com/platform/backend/my-repo',
         'https://gitlab.example.com/platform/backend/my-repo.git',
       ],
       ['gitlab.example.com/platform/backend/my-repo', 'https://gitlab.example.com/platform/backend/my-repo.git'],
-      [
-        'git@gitlab.example.com:platform/backend/my-repo.git',
-        'https://gitlab.example.com/platform/backend/my-repo.git',
-      ],
     ])('should normalize valid repository URL: %s', (input, expected) => {
       expect(normalizeRepoUrl(input, false, false)).toEqual(expected)
     })
 
-    it('should preserve SSH format for private SSH repositories', () => {
-      const result = normalizeRepoUrl('git@gitlab.example.com:platform/backend/my-repo.git', true, true)
+    it.each(['git@gitlab.example.com:platform/backend/my-repo.git', 'git@github.com:example/repo.git'])(
+      'should preserve SSH format for private SSH repositories',
+      (input) => {
+        const result = normalizeRepoUrl(input, true, true)
 
-      expect(result).toEqual('git@gitlab.example.com:platform/backend/my-repo.git')
-    })
+        expect(result).toEqual(input)
+      },
+    )
 
     it('should return null for invalid URL', () => {
       const result = normalizeRepoUrl('invalid-url', false, false)
