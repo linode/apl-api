@@ -195,7 +195,7 @@ export async function getAuthenticatedGitClient(
       })
       return { git, url: authUrl }
     }
-  } else if (giteaInternalUrl && giteaAppValues && normalizedUrl === giteaInternalUrl) {
+  } else if (giteaInternalUrl && giteaAppValues && normalizedUrl.startsWith(giteaInternalUrl)) {
     // For internal Gitea, use internal credentials if nothing else was provided
     const giteaAuth = await getGiteaAuth(giteaAppValues)
     if (!giteaAuth) {
