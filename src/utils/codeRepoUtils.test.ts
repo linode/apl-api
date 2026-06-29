@@ -298,5 +298,52 @@ whitespaces
 
       await expect(getAuthenticatedGitClient(repoUrl, teamId)).rejects.toThrow('Invalid repository URL format')
     })
+
+    it('should use internal Gitea credentials when HTTPS internal URL is provided without a secret', async () => {
+      const repoUrl = 'https://gitea.mycluster.com/org/repo.git'
+      const teamId = 'team1'
+      const domainSuffix = 'mycluster.com'
+      const giteaAppValues = { enabled: true, adminUsername: 'otomi-admin' }
+
+      const mockGitInstance = { env: jest.fn() }
+      mockGitInstance.env.mockReturnValue(mockGitInstance)
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGitInstance)
+      ;(getSecretValues as jest.Mock).mockResolvedValue({ adminPassword: 'gitea-password' })
+
+      const result = await getAuthenticatedGitClient(repoUrl, teamId, domainSuffix, giteaAppValues)
+
+      expect(result.url).toBe('https://otomi-admin:gitea-password@gitea.mycluster.com/org/repo.git')
+    })
+
+    it('should throw when internal Gitea URL is provided but Gitea app is not enabled', async () => {
+      const repoUrl = 'https://gitea.mycluster.com/org/repo.git'
+      const teamId = 'team1'
+      const domainSuffix = 'mycluster.com'
+      const giteaAppValues = { enabled: false }
+
+      const mockGitInstance = { env: jest.fn() }
+      mockGitInstance.env.mockReturnValue(mockGitInstance)
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGitInstance)
+
+      await expect(getAuthenticatedGitClient(repoUrl, teamId, domainSuffix, giteaAppValues)).rejects.toThrow(
+        'Internal Gitea URL provided, but app not configured or no credentials found',
+      )
+    })
+
+    it('should throw when internal Gitea URL is provided but credentials are not available', async () => {
+      const repoUrl = 'https://gitea.mycluster.com/org/repo.git'
+      const teamId = 'team1'
+      const domainSuffix = 'mycluster.com'
+      const giteaAppValues = { enabled: true }
+
+      const mockGitInstance = { env: jest.fn() }
+      mockGitInstance.env.mockReturnValue(mockGitInstance)
+      ;(simpleGit as jest.Mock).mockReturnValue(mockGitInstance)
+      ;(getSecretValues as jest.Mock).mockResolvedValue(undefined)
+
+      await expect(getAuthenticatedGitClient(repoUrl, teamId, domainSuffix, giteaAppValues)).rejects.toThrow(
+        'Internal Gitea URL provided, but app not configured or no credentials found',
+      )
+    })
   })
 })
