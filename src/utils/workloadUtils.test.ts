@@ -14,7 +14,7 @@ import {
   fetchWorkloadCatalog,
   findRevision,
   getBranchesAndTags,
-  getGitCloneUrl
+  getGitCloneUrl,
 } from './workloadUtils'
 
 jest.mock('axios')
