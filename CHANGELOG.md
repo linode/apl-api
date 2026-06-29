@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [5.0.4](https://github.com/redkubes/otomi-api/compare/v5.0.3...v5.0.4) (2026-06-29)
+
+
+### Bug Fixes
+
+* make sure to encode credentials separately ([#1026](https://github.com/redkubes/otomi-api/issues/1026)) ([0ad638e](https://github.com/redkubes/otomi-api/commit/0ad638e737a9b427997668c279f5a3d74a0bf23d))
+
 ### [5.0.3](https://github.com/redkubes/otomi-api/compare/v5.0.2...v5.0.3) (2026-06-26)
 
 
