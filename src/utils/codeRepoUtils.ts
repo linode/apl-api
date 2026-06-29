@@ -108,9 +108,14 @@ export function normalizeSSHKey(sshPrivateKey) {
   return `-----BEGIN OPENSSH PRIVATE KEY-----\n${basePrivateKey}\n-----END OPENSSH PRIVATE KEY-----`
 }
 
-export function getInternalGiteaUrl(domainSuffix: string | undefined): string {
-  if (!domainSuffix) return ''
-  return `https://gitea.${domainSuffix}`
+export function isInteralGiteaURL(repositoryUrl: string, clusterDomainSuffix?: string) {
+  if (!clusterDomainSuffix) return false
+  try {
+    const url = new URL(repositoryUrl)
+    return url.hostname === `gitea.${clusterDomainSuffix}`
+  } catch {
+    return false
+  }
 }
 
 export async function getGiteaAuth(appValues: Record<string, any>): Promise<
@@ -149,7 +154,6 @@ export async function getAuthenticatedGitClient(
     throw new Error('Invalid repository URL format. Must be SSH or HTTPS.')
   }
   const normalizedUrl = normalizeRepoUrl(repoUrl, isPrivate, isSSH)
-  const giteaInternalUrl = getInternalGiteaUrl(domainSuffix)
 
   if (!normalizedUrl) {
     throw new Error('Invalid URL provided')
@@ -195,7 +199,7 @@ export async function getAuthenticatedGitClient(
       })
       return { git, url: authUrl }
     }
-  } else if (giteaInternalUrl && giteaAppValues && normalizedUrl.startsWith(giteaInternalUrl)) {
+  } else if (isHTTPS && giteaAppValues && isInteralGiteaURL(normalizedUrl, domainSuffix)) {
     // For internal Gitea, use internal credentials if nothing else was provided
     const giteaAuth = await getGiteaAuth(giteaAppValues)
     if (!giteaAuth) {

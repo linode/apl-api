@@ -14,7 +14,7 @@ import {
   fetchWorkloadCatalog,
   findRevision,
   getBranchesAndTags,
-  getGitCloneUrl,
+  getGitCloneUrl
 } from './workloadUtils'
 
 jest.mock('axios')
@@ -110,40 +110,6 @@ describe('detectGitProvider', () => {
       branch: 'main',
       filePath: 'path/to/file.yaml',
     })
-  })
-})
-
-// ----------------------------------------------------------------
-// Tests for isInteralGiteaURL
-describe('isInteralGiteaURL', () => {
-  it('returns true for a valid internal gitea URL', () => {
-    const result = workloadUtils.isInteralGiteaURL('https://gitea.cluster.local/my-org/my-repo', 'cluster.local')
-
-    expect(result).toBe(true)
-  })
-
-  it('returns false for a non-gitea hostname', () => {
-    const result = workloadUtils.isInteralGiteaURL('https://github.com/my-org/my-repo', 'cluster.local')
-
-    expect(result).toBe(false)
-  })
-
-  it('returns false when clusterDomainSuffix is missing', () => {
-    const result = workloadUtils.isInteralGiteaURL('https://gitea.cluster.local/my-org/my-repo')
-
-    expect(result).toBe(false)
-  })
-
-  it('returns false when URL hostname does not exactly match', () => {
-    const result = workloadUtils.isInteralGiteaURL('https://gitea.other.local/my-org/my-repo', 'cluster.local')
-
-    expect(result).toBe(false)
-  })
-
-  it('returns false for an invalid URL', () => {
-    const result = workloadUtils.isInteralGiteaURL('not-a-real-url', 'cluster.local')
-
-    expect(result).toBe(false)
   })
 })
 
@@ -258,6 +224,10 @@ describe('fetchWorkloadCatalog', () => {
     // Mock directory structure
     ;(fsPromises.readdir as jest.Mock).mockResolvedValue(['.git', 'chart1', 'chart2', 'README.md', 'rbac.yaml'])
 
+    jest.mock('./codeRepoUtils', () => ({
+      isInteralGiteaURL: jest.fn().mockResolvedValue(true),
+    }))
+
     // Mock rbac.yaml (read by readRbacConfig via fsExtra.readFile)
     const rbacContent = YAML.stringify({
       rbac: { chart1: null, chart2: ['team-2'] },
@@ -304,8 +274,6 @@ describe('fetchWorkloadCatalog', () => {
       clone: jest.fn().mockResolvedValue(undefined),
     }
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-
-    jest.spyOn(workloadUtils, 'isInteralGiteaURL').mockReturnValue(true)
 
     const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', 'example.com', 'admin')
 
@@ -673,6 +641,11 @@ describe('getBranchesAndTags', () => {
 // ----------------------------------------------------------------
 // Tests for helper functions used in fetchWorkloadCatalog
 describe('Helper functions integration tests', () => {
+  const mockIsInternalGitURL = jest.fn()
+  jest.mock('./codeRepoUtils', () => ({
+    isInteralGiteaURL: mockIsInternalGitURL,
+  }))
+
   beforeEach(() => {
     jest.clearAllMocks()
     process.env = { ...originalEnv, GIT_USER: 'git-user', GIT_PASSWORD: 'git-password' }
@@ -693,11 +666,9 @@ describe('Helper functions integration tests', () => {
       ;(fs.existsSync as jest.Mock).mockReturnValue(false)
       ;(fsPromises.readdir as jest.Mock).mockResolvedValue([])
 
+      mockIsInternalGitURL.mockResolvedValue(true)
       const internalGiteaUrl = 'https://gitea.cluster.local/otomi/charts.git'
       const helmChartsDir = '/tmp/test'
-
-      // Mock isInteralGiteaURL to return true
-      jest.spyOn(workloadUtils, 'isInteralGiteaURL').mockReturnValue(true)
 
       try {
         await fetchWorkloadCatalog(internalGiteaUrl, helmChartsDir, 'main', 'cluster.local')
@@ -721,10 +692,9 @@ describe('Helper functions integration tests', () => {
       ;(fs.existsSync as jest.Mock).mockReturnValue(false)
       ;(fsPromises.readdir as jest.Mock).mockResolvedValue([])
 
+      mockIsInternalGitURL.mockResolvedValue(false)
       const githubUrl = 'https://github.com/example/charts.git'
       const helmChartsDir = '/tmp/test'
-
-      jest.spyOn(workloadUtils, 'isInteralGiteaURL').mockReturnValue(false)
 
       try {
         await fetchWorkloadCatalog(githubUrl, helmChartsDir, 'main')

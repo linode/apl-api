@@ -13,6 +13,7 @@ import {
   GIT_PROVIDER_URL_PATTERNS,
 } from 'src/validators'
 import YAML from 'yaml'
+import { isInteralGiteaURL } from './codeRepoUtils'
 
 const debug = Debug('apl:workloadUtils')
 
@@ -21,16 +22,6 @@ const env = cleanEnv({
   CATALOG_CACHE_SYNC_MARKER,
   GIT_PROVIDER_URL_PATTERNS,
 })
-
-export function isInteralGiteaURL(repositoryUrl: string, clusterDomainSuffix?: string) {
-  if (!clusterDomainSuffix) return false
-  try {
-    const url = new URL(repositoryUrl)
-    return url.hostname === `gitea.${clusterDomainSuffix}`
-  } catch {
-    return false
-  }
-}
 
 export function detectGitProvider(url) {
   if (!url || typeof url !== 'string') return null
