@@ -52,7 +52,7 @@ GetGitSettings:
       description: Email address to use for git commits.
     branch:
       type: string
-      description: Git branch to push to on the new remote.
+      description: Current configured git branch for the values repository.
   required:
     - repoUrl
     - email
