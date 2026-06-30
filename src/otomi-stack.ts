@@ -1441,18 +1441,65 @@ export default class OtomiStack {
   }
 
   async createAplCodeRepo(teamId: string, data: AplCodeRepoRequest): Promise<AplCodeRepoResponse> {
-    // Check if URL already exists
     const existingRepos = this.getTeamAplCodeRepos(teamId)
-    const allRepoUrls = existingRepos.map((repo) => repo.spec.repositoryUrl) || []
-    if (allRepoUrls.includes(data.spec.repositoryUrl)) throw new AlreadyExists('Code repository URL already exists')
-    const allNames = existingRepos.map((repo) => repo.metadata.name) || []
-    if (allNames.includes(data.metadata.name)) throw new AlreadyExists('Code repo name already exists')
-    if (!data.spec.private) unset(data.spec, 'secret')
-    if (data.spec.gitService === 'gitea') unset(data.spec, 'private')
 
-    const teamObject = toTeamObject(teamId, data)
+    const isExternalRepo = data.spec.gitService !== 'gitea'
+
+    const repositoryUrl = isExternalRepo
+      ? normalizeRepoUrl(
+          data.spec.repositoryUrl,
+          data.spec.private ?? false,
+          false, // SSH is not allowed
+        )
+      : data.spec.repositoryUrl.trim().replace(/\/$/, '')
+
+    if (!repositoryUrl) {
+      throw new Error('Invalid repository URL')
+    }
+
+    const normalizeForComparison = (repo: AplCodeRepoResponse) => {
+      if (repo.spec.gitService === 'gitea') {
+        return repo.spec.repositoryUrl.trim().replace(/\/$/, '')
+      }
+
+      return normalizeRepoUrl(repo.spec.repositoryUrl, repo.spec.private ?? false, false)
+    }
+
+    const allRepoUrls = existingRepos
+      .map(normalizeForComparison)
+      .filter((repoUrl): repoUrl is string => Boolean(repoUrl))
+
+    if (allRepoUrls.includes(repositoryUrl)) {
+      throw new AlreadyExists('Code repository URL already exists')
+    }
+
+    const allNames = existingRepos.map((repo) => repo.metadata.name)
+
+    if (allNames.includes(data.metadata.name)) {
+      throw new AlreadyExists('Code repo name already exists')
+    }
+
+    const sanitizedData: AplCodeRepoRequest = {
+      ...data,
+      spec: {
+        ...data.spec,
+        repositoryUrl,
+      },
+    }
+
+    if (!sanitizedData.spec.private) {
+      unset(sanitizedData.spec, 'secret')
+    }
+
+    if (sanitizedData.spec.gitService === 'gitea') {
+      unset(sanitizedData.spec, 'private')
+    }
+
+    const teamObject = toTeamObject(teamId, sanitizedData)
     const aplRecord = await this.saveTeamConfigItem(teamObject)
+
     await this.doDeployment(aplRecord)
+
     return aplRecord.content as AplCodeRepoResponse
   }
 
