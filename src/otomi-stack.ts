@@ -1511,7 +1511,7 @@ export default class OtomiStack {
         }
       }
     } catch (error) {
-      debug('Error getting branches:', error.message)
+      debug('Error getting branches:', error?.message)
       return []
     }
   }
