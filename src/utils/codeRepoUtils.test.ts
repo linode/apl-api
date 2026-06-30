@@ -223,7 +223,7 @@ whitespaces
     })
   })
 
-  describe('setupGitAuthentication', () => {
+  describe('getAuthenticatedGitClient', () => {
     it('should setup SSH authentication with private key from secret', async () => {
       const sshKey = '-----BEGIN OPENSSH PRIVATE KEY-----\nkey\n-----END OPENSSH PRIVATE KEY-----'
       const repoUrl = 'git@github.com:user/repo.git'
