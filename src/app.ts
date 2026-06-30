@@ -287,7 +287,9 @@ export async function initApp(inOtomiStack?: OtomiStack) {
         allowUnknownQueryParameters: false,
         coerceTypes: 'array', // coerce scalar data to an array with one element and vice versa (as required by the schema).
       },
-      validateResponses: false, // Start with false, can enable later for debugging
+      validateResponses: {
+        removeAdditional: true, // Remove properties not defined in the schema from responses
+      },
       validateSecurity: {
         handlers: { groupAuthz: groupAuthzSecurityHandler },
       },
