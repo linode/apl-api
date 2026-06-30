@@ -3,8 +3,6 @@ AplGit:
     platformAdmin:
       - read-any
       - update-any
-    teamAdmin:
-      - read-any
   type: object
   additionalProperties: false
   properties:
@@ -30,6 +28,35 @@ AplGit:
     - email
     - branch
     - password
+
+GetGitSettings:
+  x-acl:
+    platformAdmin:
+      - read-any
+      - update-any
+    teamAdmin:
+      - read-any
+  type: object
+  additionalProperties: false
+  properties:
+    repoUrl:
+      type: string
+      pattern: '^https?://.+'
+      description: URL of the new git remote to migrate the values repository to.
+    username:
+      type: string
+      description: Optional git username for authentication.
+    email:
+      type: string
+      format: email
+      description: Email address to use for git commits.
+    branch:
+      type: string
+      description: Git branch to push to on the new remote.
+  required:
+    - repoUrl
+    - email
+    - branch
 
 AplApiStatus:
   x-acl:
