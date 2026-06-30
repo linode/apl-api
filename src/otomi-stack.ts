@@ -145,7 +145,12 @@ import {
   watchPodUntilRunning,
 } from './k8s-operations'
 import CloudTty from './tty'
-import { extractRepositoryRefs, getAuthenticatedGitClient, getGiteaRepoUrls } from './utils/codeRepoUtils'
+import {
+  extractRepositoryRefs,
+  getAuthenticatedGitClient,
+  getGiteaRepoUrls,
+  normalizeRepoUrl,
+} from './utils/codeRepoUtils'
 import { isKnativeSupported } from './utils/k8sUtils'
 import { getV1ObjectFromApl } from './utils/manifests'
 import {
