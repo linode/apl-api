@@ -42,7 +42,7 @@ GetGitSettings:
     repoUrl:
       type: string
       pattern: '^https?://.+'
-      description: URL of the new git remote to migrate the values repository to.
+      description: Current git remote URL for the values repository.
     username:
       type: string
       description: Optional git username for authentication.
