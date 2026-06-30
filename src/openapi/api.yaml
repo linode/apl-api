@@ -2037,14 +2037,14 @@ paths:
       x-eov-operation-handler: v2/git
       summary: Get Git settings
       description: Get the current Git configuration.
-      x-aclSchema: AplGit
+      x-aclSchema: GetGitSettings
       responses:
         '200':
           description: Current Git settings
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AplGit'
+                $ref: '#/components/schemas/GetGitSettings'
         '401':
           description: Unauthorized
         '403':
@@ -2626,6 +2626,8 @@ components:
       $ref: 'git.yaml#/AplApiStatus'
     AplGit:
       $ref: 'git.yaml#/AplGit'
+    GetGitSettings:
+      $ref: 'git.yaml#/GetGitSettings'
     Build:
       $ref: 'build.yaml#/Build'
     Cloudtty:
