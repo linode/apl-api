@@ -1823,12 +1823,14 @@ export default class OtomiStack {
     keepLocalClone: boolean = false,
     forceRefresh: boolean = false,
   ): Promise<{ url: string; helmCharts: any; catalog: any; chartsPath?: string }> {
+    const giteaValues = this.getApp('gitea').values
     const { cluster } = await this.getSettings(['cluster'])
     try {
       const { helmCharts, catalog } = await fetchWorkloadCatalog(
         url,
         helmChartsDir,
         branch,
+        giteaValues,
         cluster?.domainSuffix,
         teamId,
         chartsPath,
@@ -1950,6 +1952,7 @@ export default class OtomiStack {
   async getAplCatalogChart(name: string, chartName: string): Promise<AplCatalogChartResponse> {
     const catalog = this.getAplCatalog(name)
     const { repositoryUrl, branch, chartsPath } = catalog.spec
+    const giteaValues = this.getApp('gitea').values
     const { cluster } = await this.getSettings(['cluster'])
     const encodedCatalogName = encodeURIComponent(catalog.spec.name)
     const encodedBranch = encodeURIComponent(branch)
@@ -1958,7 +1961,15 @@ export default class OtomiStack {
     try {
       const singleChart =
         (
-          await fetchWorkloadCatalog(repositoryUrl, helmChartsDir, branch, cluster?.domainSuffix, undefined, chartsPath)
+          await fetchWorkloadCatalog(
+            repositoryUrl,
+            helmChartsDir,
+            branch,
+            giteaValues,
+            cluster?.domainSuffix,
+            undefined,
+            chartsPath,
+          )
         ).catalog.find((c) => c.name === chartName) || null
 
       return toPlatformObject(
