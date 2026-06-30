@@ -225,7 +225,7 @@ describe('fetchWorkloadCatalog', () => {
     ;(fsPromises.readdir as jest.Mock).mockResolvedValue(['.git', 'chart1', 'chart2', 'README.md', 'rbac.yaml'])
 
     jest.mock('./codeRepoUtils', () => ({
-      isInteralGiteaURL: jest.fn().mockResolvedValue(true),
+      isInteralGiteaURL: jest.fn().mockReturnValue(true),
     }))
 
     // Mock rbac.yaml (read by readRbacConfig via fsExtra.readFile)
@@ -666,7 +666,7 @@ describe('Helper functions integration tests', () => {
       ;(fs.existsSync as jest.Mock).mockReturnValue(false)
       ;(fsPromises.readdir as jest.Mock).mockResolvedValue([])
 
-      mockIsInternalGitURL.mockResolvedValue(true)
+      mockIsInternalGitURL.mockReturnValue(true)
       const internalGiteaUrl = 'https://gitea.cluster.local/otomi/charts.git'
       const helmChartsDir = '/tmp/test'
 
@@ -692,7 +692,7 @@ describe('Helper functions integration tests', () => {
       ;(fs.existsSync as jest.Mock).mockReturnValue(false)
       ;(fsPromises.readdir as jest.Mock).mockResolvedValue([])
 
-      mockIsInternalGitURL.mockResolvedValue(false)
+      mockIsInternalGitURL.mockReturnValue(false)
       const githubUrl = 'https://github.com/example/charts.git'
       const helmChartsDir = '/tmp/test'
 
