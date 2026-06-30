@@ -1,8 +1,8 @@
 import {
   ApiException,
   CoreV1Api,
-  KubeConfig,
   User as k8sUser,
+  KubeConfig,
   V1ObjectReference,
   V1Secret,
 } from '@kubernetes/client-node'
@@ -132,6 +132,7 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { getAIModels } from './ai/aiModelHandler'
 import { DatabaseCR } from './ai/DatabaseCR'
 import { getResourceFilePath } from './fileStore/file-map'
+import { getAuthenticatedUrl } from './git/connect'
 import {
   checkPodExists,
   getCloudttyActiveTime,
@@ -176,7 +177,6 @@ import {
 } from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
 import { fetchWorkloadCatalog, isInteralGiteaURL } from './utils/workloadUtils'
-import { getAuthenticatedUrl } from './git/connect'
 
 interface ExcludedApp extends App {
   managed: boolean
