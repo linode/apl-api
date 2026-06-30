@@ -770,7 +770,7 @@ export default class OtomiStack {
     email?: string
   }> {
     const gitConfig = await this.getGitConfig()
-    return omit(gitConfig, ['password'])
+    return pick(gitConfig, ['repoUrl', 'branch', 'username', 'email'])
   }
 
   private async storeGitConfig(gitConfig: GitConfig): Promise<void> {
