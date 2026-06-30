@@ -54,5 +54,5 @@ export const deleteAplSealedSecret = async (req: OpenApiRequestExt, res: Respons
   const { teamId, sealedSecretName } = req.params
   debug(`deleteSealedSecret(${sealedSecretName})`)
   await req.otomi.deleteAplSealedSecret(decodeURIComponent(teamId), decodeURIComponent(sealedSecretName))
-  res.json({})
+  res.status(200).end()
 }

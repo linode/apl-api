@@ -45,5 +45,5 @@ export const deleteAplTeam = async (req: OpenApiRequestExt, res: Response): Prom
   const { teamId } = req.params
   debug(`deleteTeam(${teamId})`)
   await req.otomi.deleteAplTeam(teamId)
-  res.json({})
+  res.status(200).end()
 }

@@ -54,5 +54,5 @@ export const deleteAplCodeRepo = async (req: OpenApiRequestExt, res: Response): 
   const { teamId, codeRepositoryName } = req.params
   debug(`deleteCodeRepo(${codeRepositoryName})`)
   await req.otomi.deleteAplCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
-  res.json({})
+  res.status(200).end()
 }

@@ -57,5 +57,5 @@ export const deleteAplNamespaceSealedSecret = async (req: OpenApiRequestExt, res
   const { namespace, sealedSecretName } = req.params
   debug(`deleteSealedSecret(${sealedSecretName}) for namespace(${namespace})`)
   await req.otomi.deleteAplNamespaceSealedSecret(decodeURIComponent(namespace), decodeURIComponent(sealedSecretName))
-  res.json({})
+  res.status(200).end()
 }

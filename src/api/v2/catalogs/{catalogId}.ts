@@ -45,5 +45,5 @@ export const deleteAplCatalog = async (req: OpenApiRequestExt, res: Response): P
   const { catalogId } = req.params
   debug(`deleteAplCatalog(${catalogId})`)
   await req.otomi.deleteAplCatalog(decodeURIComponent(catalogId))
-  res.json({})
+  res.status(200).end()
 }

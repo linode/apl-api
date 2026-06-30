@@ -19,10 +19,10 @@ export const getAplBuild = (req: OpenApiRequestExt, res: Response): void => {
  * PUT /v2/teams/{teamId}/builds/{buildName}
  * Edit a build (APL format)
  */
-export const editAplBuild = (req: OpenApiRequestExt, res: Response): void => {
+export const editAplBuild = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, buildName } = req.params
   debug(`editBuild(${buildName})`)
-  const data = req.otomi.editAplBuild(
+  const data = await req.otomi.editAplBuild(
     decodeURIComponent(teamId),
     decodeURIComponent(buildName),
     req.body as AplBuildRequest,
@@ -34,10 +34,10 @@ export const editAplBuild = (req: OpenApiRequestExt, res: Response): void => {
  * PATCH /v2/teams/{teamId}/builds/{buildName}
  * Partially update a build (APL format)
  */
-export const patchAplBuild = (req: OpenApiRequestExt, res: Response): void => {
+export const patchAplBuild = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, buildName } = req.params
   debug(`editBuild(${buildName}, patch)`)
-  const data = req.otomi.editAplBuild(
+  const data = await req.otomi.editAplBuild(
     decodeURIComponent(teamId),
     decodeURIComponent(buildName),
     req.body as DeepPartial<AplBuildRequest>,
@@ -54,5 +54,5 @@ export const deleteAplBuild = async (req: OpenApiRequestExt, res: Response): Pro
   const { teamId, buildName } = req.params
   debug(`deleteBuild(${buildName})`)
   await req.otomi.deleteAplBuild(decodeURIComponent(teamId), decodeURIComponent(buildName))
-  res.json({})
+  res.status(200).end()
 }

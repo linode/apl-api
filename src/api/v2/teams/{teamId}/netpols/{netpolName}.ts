@@ -54,5 +54,5 @@ export const deleteAplNetpol = async (req: OpenApiRequestExt, res: Response): Pr
   const { teamId, netpolName } = req.params
   debug(`deleteNetpol(${netpolName})`)
   await req.otomi.deleteAplNetpol(decodeURIComponent(teamId), decodeURIComponent(netpolName))
-  res.json({})
+  res.status(200).end()
 }

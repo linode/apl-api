@@ -54,5 +54,5 @@ export const deleteAplWorkload = async (req: OpenApiRequestExt, res: Response): 
   const { teamId, workloadName } = req.params
   debug(`deleteWorkload(${workloadName})`)
   await req.otomi.deleteAplWorkload(decodeURIComponent(teamId), decodeURIComponent(workloadName))
-  res.json({})
+  res.status(200).end()
 }

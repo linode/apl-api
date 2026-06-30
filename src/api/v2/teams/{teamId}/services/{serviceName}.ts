@@ -54,5 +54,5 @@ export const deleteAplService = async (req: OpenApiRequestExt, res: Response): P
   const { teamId, serviceName } = req.params
   debug(`deleteService(${serviceName})`)
   await req.otomi.deleteAplService(decodeURIComponent(teamId), decodeURIComponent(serviceName))
-  res.json({})
+  res.status(200).end()
 }
