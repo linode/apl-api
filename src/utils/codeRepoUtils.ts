@@ -1,7 +1,7 @@
 /* eslint-disable prefer-destructuring */
 import axios from 'axios'
 import { writeFile } from 'fs/promises'
-import simpleGit, { SimpleGit } from 'simple-git'
+import simpleGit, { SimpleGit, SimpleGitOptions } from 'simple-git'
 import { OtomiError } from 'src/error'
 import { v4 as uuidv4 } from 'uuid'
 import { getAuthenticatedUrl } from '../git/connect'
@@ -145,8 +145,6 @@ export async function getAuthenticatedGitClient(
   giteaAppValues?: Record<string, any>,
   secretName?: string,
 ): Promise<{ git: SimpleGit; url: string; keyPath?: string }> {
-  const git: SimpleGit = simpleGit().env('GIT_TERMINAL_PROMPT', '0')
-
   const isPrivate = !!secretName
   const isSSH = repoUrl.startsWith('git@')
   const isHTTPS = repoUrl.startsWith('https://')
@@ -162,6 +160,8 @@ export async function getAuthenticatedGitClient(
     throw new Error('Invalid URL provided')
   }
 
+  const gitOptions: Partial<SimpleGitOptions> = isSSH ? { unsafe: { allowUnsafeSshCommand: true } } : {}
+  const git: SimpleGit = simpleGit(gitOptions).env('GIT_TERMINAL_PROMPT', '0')
   if (secretName) {
     // Prefer to use provided credentials, even if internal Git repo is used
     const secret = await getSecretValues(secretName, `team-${teamId}`)
