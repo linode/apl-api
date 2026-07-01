@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [5.0.5](https://github.com/redkubes/otomi-api/compare/v5.0.4...v5.0.5) (2026-07-01)
+
+
+### Bug Fixes
+
+* only include specific fields in git config ([#1029](https://github.com/redkubes/otomi-api/issues/1029)) ([6edbf54](https://github.com/redkubes/otomi-api/commit/6edbf54be66ebb75bcf5d32a7f5c281dbdd9366c))
+* remove password field from git get request ([#1028](https://github.com/redkubes/otomi-api/issues/1028)) ([d42fb7f](https://github.com/redkubes/otomi-api/commit/d42fb7feb853ac86d0c8dfd770badfe1095912d2))
+
 ### [5.0.4](https://github.com/redkubes/otomi-api/compare/v5.0.3...v5.0.4) (2026-06-29)
 
 
