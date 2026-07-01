@@ -348,7 +348,7 @@ describe('API V2 authz tests', () => {
       email: 'admin@example.com',
       branch: 'main',
     })
-    jest.spyOn(otomiStack, 'getDashboard').mockResolvedValue({})
+    jest.spyOn(otomiStack, 'getDashboard').mockResolvedValue([])
 
     const team1 = mockTeam1Resource
 
