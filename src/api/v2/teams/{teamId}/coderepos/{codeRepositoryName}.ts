@@ -1,5 +1,6 @@
 import Debug from 'debug'
 import { Response } from 'express'
+import { ensureStatus } from 'src/api/response-utils'
 import { AplCodeRepoRequest, DeepPartial, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:codeRepos')
@@ -12,7 +13,7 @@ export const getAplCodeRepo = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId, codeRepositoryName } = req.params
   debug(`getCodeRepo(${codeRepositoryName})`)
   const data = req.otomi.getAplCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -27,7 +28,7 @@ export const editAplCodeRepo = async (req: OpenApiRequestExt, res: Response): Pr
     decodeURIComponent(codeRepositoryName),
     req.body as AplCodeRepoRequest,
   )
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -43,7 +44,7 @@ export const patchAplCodeRepo = async (req: OpenApiRequestExt, res: Response): P
     req.body as DeepPartial<AplCodeRepoRequest>,
     true,
   )
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**

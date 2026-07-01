@@ -1,5 +1,6 @@
 import Debug from 'debug'
 import { Response } from 'express'
+import { ensureStatus } from 'src/api/response-utils'
 import { DeepPartial, OpenApiRequestExt, SealedSecretManifestRequest } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:sealedsecrets')
@@ -15,7 +16,7 @@ export const getAplNamespaceSealedSecret = async (req: OpenApiRequestExt, res: R
     decodeURIComponent(namespace),
     decodeURIComponent(sealedSecretName),
   )
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -30,7 +31,7 @@ export const editAplNamespaceSealedSecret = async (req: OpenApiRequestExt, res: 
     decodeURIComponent(sealedSecretName),
     req.body as SealedSecretManifestRequest,
   )
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -46,7 +47,7 @@ export const patchAplNamespaceSealedSecret = async (req: OpenApiRequestExt, res:
     req.body as DeepPartial<SealedSecretManifestRequest>,
     true,
   )
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**

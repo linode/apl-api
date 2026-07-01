@@ -1,5 +1,6 @@
 import Debug from 'debug'
 import { Response } from 'express'
+import { ensureStatus } from 'src/api/response-utils'
 import { AplCatalogRequest, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:catalogs')
@@ -12,7 +13,7 @@ export const getAplCatalog = (req: OpenApiRequestExt, res: Response): void => {
   const { catalogId } = req.params
   debug(`getAplCatalog(${catalogId})`)
   const data = req.otomi.getAplCatalog(decodeURIComponent(catalogId))
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -23,7 +24,7 @@ export const editAplCatalog = async (req: OpenApiRequestExt, res: Response): Pro
   const { catalogId } = req.params
   debug(`editAplCatalog(${catalogId})`)
   const data = await req.otomi.editAplCatalog(decodeURIComponent(catalogId), req.body as AplCatalogRequest)
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -34,7 +35,7 @@ export const patchAplCatalog = async (req: OpenApiRequestExt, res: Response): Pr
   const { catalogId } = req.params
   debug(`patchAplCatalog(${catalogId})`)
   const data = await req.otomi.editAplCatalog(decodeURIComponent(catalogId), req.body as AplCatalogRequest, true)
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**

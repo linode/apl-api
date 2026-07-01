@@ -1,5 +1,6 @@
 import Debug from 'debug'
 import { Response } from 'express'
+import { ensureStatus } from 'src/api/response-utils'
 import { AplServiceRequest, DeepPartial, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:services')
@@ -12,7 +13,7 @@ export const getAplService = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId, serviceName } = req.params
   debug(`getService(${serviceName})`)
   const data = req.otomi.getAplService(decodeURIComponent(teamId), decodeURIComponent(serviceName))
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -27,7 +28,7 @@ export const editAplService = async (req: OpenApiRequestExt, res: Response): Pro
     decodeURIComponent(serviceName),
     req.body as AplServiceRequest,
   )
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -43,7 +44,7 @@ export const patchAplService = async (req: OpenApiRequestExt, res: Response): Pr
     req.body as DeepPartial<AplServiceRequest>,
     true,
   )
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**

@@ -1,5 +1,6 @@
 import Debug from 'debug'
 import { Response } from 'express'
+import { ensureStatus } from 'src/api/response-utils'
 import { AplNetpolRequest, DeepPartial, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:netpols')
@@ -12,7 +13,7 @@ export const getAplNetpol = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId, netpolName } = req.params
   debug(`getNetpol(${netpolName})`)
   const data = req.otomi.getAplNetpol(decodeURIComponent(teamId), decodeURIComponent(netpolName))
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -27,7 +28,7 @@ export const editAplNetpol = async (req: OpenApiRequestExt, res: Response): Prom
     decodeURIComponent(netpolName),
     req.body as AplNetpolRequest,
   )
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -43,7 +44,7 @@ export const patchAplNetpol = async (req: OpenApiRequestExt, res: Response): Pro
     req.body as DeepPartial<AplNetpolRequest>,
     true,
   )
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**

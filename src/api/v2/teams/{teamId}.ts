@@ -1,5 +1,6 @@
 import Debug from 'debug'
 import { Response } from 'express'
+import { ensureStatus } from 'src/api/response-utils'
 import { AplTeamSettingsRequest, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams')
@@ -12,7 +13,7 @@ export const getAplTeam = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId } = req.params
   debug(`getTeam(${teamId})`)
   const data = req.otomi.getAplTeam(teamId)
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -23,7 +24,7 @@ export const editAplTeam = async (req: OpenApiRequestExt, res: Response): Promis
   const { teamId } = req.params
   debug(`editTeam(${teamId})`)
   const data = await req.otomi.editAplTeam(teamId, req.body as AplTeamSettingsRequest)
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -34,7 +35,7 @@ export const patchAplTeam = async (req: OpenApiRequestExt, res: Response): Promi
   const { teamId } = req.params
   debug(`editTeam(${teamId}, patch)`)
   const data = await req.otomi.editAplTeam(teamId, req.body as AplTeamSettingsRequest, true)
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**

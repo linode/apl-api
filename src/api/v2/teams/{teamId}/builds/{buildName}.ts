@@ -1,5 +1,6 @@
 import Debug from 'debug'
 import { Response } from 'express'
+import { ensureStatus } from 'src/api/response-utils'
 import { AplBuildRequest, DeepPartial, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:builds')
@@ -12,7 +13,7 @@ export const getAplBuild = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId, buildName } = req.params
   debug(`getBuild(${buildName})`)
   const data = req.otomi.getAplBuild(decodeURIComponent(teamId), decodeURIComponent(buildName))
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -27,7 +28,7 @@ export const editAplBuild = async (req: OpenApiRequestExt, res: Response): Promi
     decodeURIComponent(buildName),
     req.body as AplBuildRequest,
   )
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -43,7 +44,7 @@ export const patchAplBuild = async (req: OpenApiRequestExt, res: Response): Prom
     req.body as DeepPartial<AplBuildRequest>,
     true,
   )
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**

@@ -1,5 +1,6 @@
 import Debug from 'debug'
 import { Response } from 'express'
+import { ensureStatus } from 'src/api/response-utils'
 import { AplWorkloadRequest, DeepPartial, OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:workloads')
@@ -12,7 +13,7 @@ export const getAplWorkload = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId, workloadName } = req.params
   debug(`getWorkload(${workloadName})`)
   const data = req.otomi.getAplWorkload(decodeURIComponent(teamId), decodeURIComponent(workloadName))
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -27,7 +28,7 @@ export const editAplWorkload = async (req: OpenApiRequestExt, res: Response): Pr
     decodeURIComponent(workloadName),
     req.body as AplWorkloadRequest,
   )
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -43,7 +44,7 @@ export const patchAplWorkload = async (req: OpenApiRequestExt, res: Response): P
     req.body as DeepPartial<AplWorkloadRequest>,
     true,
   )
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
