@@ -703,7 +703,17 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                type: array
+                items:
+                  type: object
+                  required:
+                    - name
+                    - count
+                  properties:
+                    name:
+                      type: string
+                    count:
+                      type: integer
 
   '/v2/builds':
     get:
