@@ -218,7 +218,13 @@ describe('API V2 authz tests', () => {
     }
 
     jest.spyOn(otomiStack, 'getAplTeams').mockReturnValue([team1, team2] as any)
-
+    jest.spyOn(otomiStack, 'getGitSettings').mockResolvedValue({
+      repoUrl: 'https://github.com/example/repo.git',
+      username: 'user',
+      email: 'admin@example.com',
+      branch: 'main',
+    })
+    jest.spyOn(otomiStack, 'getDashboard').mockResolvedValue([])
     jest.spyOn(otomiStack, 'getAplTeam').mockImplementation((teamId: string) => {
       if (teamId === 'team1') return team1 as any
       if (teamId === 'team2') return team2 as any
