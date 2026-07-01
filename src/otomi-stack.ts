@@ -1,8 +1,8 @@
 import {
   ApiException,
   CoreV1Api,
-  KubeConfig,
   User as k8sUser,
+  KubeConfig,
   V1ObjectReference,
   V1Secret,
 } from '@kubernetes/client-node'
@@ -10,6 +10,7 @@ import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
 import { existsSync, rmSync } from 'fs'
+import { pathExists, unlink } from 'fs-extra'
 import { readFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, isEmpty, isEqual, map, merge, omit, pick, set, unset } from 'lodash'
@@ -132,6 +133,7 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { getAIModels } from './ai/aiModelHandler'
 import { DatabaseCR } from './ai/DatabaseCR'
 import { getResourceFilePath } from './fileStore/file-map'
+import { getAuthenticatedUrl } from './git/connect'
 import {
   checkPodExists,
   getCloudttyActiveTime,
@@ -174,8 +176,6 @@ import {
 } from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
-import { getAuthenticatedUrl } from './git/connect'
-import { pathExists, unlink } from 'fs-extra'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -769,7 +769,7 @@ export default class OtomiStack {
     email?: string
   }> {
     const gitConfig = await this.getGitConfig()
-    return omit(gitConfig, ['password'])
+    return pick(gitConfig, ['repoUrl', 'branch', 'username', 'email'])
   }
 
   private async storeGitConfig(gitConfig: GitConfig): Promise<void> {
