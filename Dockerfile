@@ -8,10 +8,14 @@ ARG CI=true
 RUN mkdir /app
 WORKDIR /app
 
-COPY . .* ./
-
+# Install dependencies before copying the full source code to take advantage of Docker layer caching
+COPY package*.json ./
+# Needed for postinstall (build:models) during npm ci
+COPY src/build-spec.ts ./src/build-spec.ts
+COPY src/openapi ./src/openapi
 RUN npm ci
 
+COPY . .* ./
 RUN npm run build
 RUN npm run lint
 RUN npm run test
