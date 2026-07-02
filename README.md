@@ -71,6 +71,10 @@ npm run build:spec   # Build OpenAPI specification
 | `src/openapi/`       | OpenAPI specifications              |
 | `src/middleware/`    | JWT, session, authz middleware      |
 
+### Operational Docs
+
+- [Docs](docs/)
+
 ## Authentication & Authorization
 
 ### Authentication
