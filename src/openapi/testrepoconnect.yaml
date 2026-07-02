@@ -11,4 +11,6 @@ TestRepoConnect:
         - unknown
         - success
         - failed
+    message:
+      type: string
   type: object

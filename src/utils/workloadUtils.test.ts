@@ -46,9 +46,12 @@ jest.mock('simple-git', () => ({
     push: jest.fn().mockResolvedValue(undefined),
   })),
 }))
-
-// Save the original environment variables
-const originalEnv = process.env
+const mockGetSecretValues = jest.fn()
+jest.mock('../k8s-operations', () => ({
+  getSecretValues: async (...args) => {
+    return await mockGetSecretValues(...args)
+  },
+}))
 
 // ----------------------------------------------------------------
 // Tests for detectGitProvider
@@ -110,40 +113,6 @@ describe('detectGitProvider', () => {
       branch: 'main',
       filePath: 'path/to/file.yaml',
     })
-  })
-})
-
-// ----------------------------------------------------------------
-// Tests for isInteralGiteaURL
-describe('isInteralGiteaURL', () => {
-  it('returns true for a valid internal gitea URL', () => {
-    const result = workloadUtils.isInteralGiteaURL('https://gitea.cluster.local/my-org/my-repo', 'cluster.local')
-
-    expect(result).toBe(true)
-  })
-
-  it('returns false for a non-gitea hostname', () => {
-    const result = workloadUtils.isInteralGiteaURL('https://github.com/my-org/my-repo', 'cluster.local')
-
-    expect(result).toBe(false)
-  })
-
-  it('returns false when clusterDomainSuffix is missing', () => {
-    const result = workloadUtils.isInteralGiteaURL('https://gitea.cluster.local/my-org/my-repo')
-
-    expect(result).toBe(false)
-  })
-
-  it('returns false when URL hostname does not exactly match', () => {
-    const result = workloadUtils.isInteralGiteaURL('https://gitea.other.local/my-org/my-repo', 'cluster.local')
-
-    expect(result).toBe(false)
-  })
-
-  it('returns false for an invalid URL', () => {
-    const result = workloadUtils.isInteralGiteaURL('not-a-real-url', 'cluster.local')
-
-    expect(result).toBe(false)
   })
 })
 
@@ -249,14 +218,22 @@ describe('fetchWorkloadCatalog', () => {
   const url = 'https://gitea.example.com/otomi/charts.git'
   const helmChartsDir = '/tmp/otomi/charts/uuid'
 
+  const GITEA_ENABLED_VALUES = {
+    enabled: true,
+    adminUsername: 'git-user',
+  }
+
   beforeEach(() => {
     jest.clearAllMocks()
-    process.env = { ...originalEnv, GIT_USER: 'git-user', GIT_PASSWORD: 'git-password' }
     ;(fs.existsSync as jest.Mock).mockReturnValue(false)
     ;(fs.lstatSync as jest.Mock).mockReturnValue({ isDirectory: () => true })
 
     // Mock directory structure
     ;(fsPromises.readdir as jest.Mock).mockResolvedValue(['.git', 'chart1', 'chart2', 'README.md', 'rbac.yaml'])
+
+    jest.mock('./codeRepoUtils', () => ({
+      isInteralGiteaURL: jest.fn().mockReturnValue(true),
+    }))
 
     // Mock rbac.yaml (read by readRbacConfig via fsExtra.readFile)
     const rbacContent = YAML.stringify({
@@ -294,10 +271,6 @@ describe('fetchWorkloadCatalog', () => {
     })
   })
 
-  afterEach(() => {
-    process.env = originalEnv
-  })
-
   test('clones repository and builds catalog for admin team', async () => {
     // Setup mock git instance
     const mockGit = {
@@ -305,9 +278,8 @@ describe('fetchWorkloadCatalog', () => {
     }
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
 
-    jest.spyOn(workloadUtils, 'isInteralGiteaURL').mockReturnValue(true)
-
-    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', 'example.com', 'admin')
+    mockGetSecretValues.mockResolvedValue({ adminPassword: 'git-password' })
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', GITEA_ENABLED_VALUES, 'example.com', 'admin')
 
     expect(fs.mkdirSync).toHaveBeenCalledWith(helmChartsDir, { recursive: true })
     expect(mockGit.clone).toHaveBeenCalledWith(
@@ -349,7 +321,7 @@ describe('fetchWorkloadCatalog', () => {
     }
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
 
-    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, '1')
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, undefined, '1')
 
     // Only chart1 should be accessible to team-1
     expect(result).toEqual({
@@ -384,7 +356,7 @@ describe('fetchWorkloadCatalog', () => {
       return baseImpl(_baseDir, filePath)
     })
 
-    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, 'admin')
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, undefined, 'admin')
 
     // Should include chart1 with default README message
     expect(result.catalog[0].readme).toBe('There is no `README` for this chart.')
@@ -399,7 +371,7 @@ describe('fetchWorkloadCatalog', () => {
       return Promise.reject(new Error(`File not found: ${filePath}`))
     })
 
-    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', 'example.com', 'admin')
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, 'example.com', 'admin')
 
     // Should include charts in the catalog
     expect(result.helmCharts).toEqual(['chart1'])
@@ -413,7 +385,7 @@ describe('fetchWorkloadCatalog', () => {
     ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
     ;(fs.existsSync as jest.Mock).mockReturnValue(true)
 
-    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, 'admin', '../outside')
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, undefined, 'admin', '../outside')
 
     expect(result).toEqual({ helmCharts: [], catalog: [] })
     expect(fsPromises.readdir).not.toHaveBeenCalled()
@@ -427,7 +399,7 @@ describe('fetchWorkloadCatalog', () => {
     ;(fs.existsSync as jest.Mock).mockReturnValue(true)
     ;(fs.lstatSync as jest.Mock).mockReturnValue({ isDirectory: () => false })
 
-    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, 'admin', 'Chart.yaml')
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, undefined, 'admin', 'Chart.yaml')
 
     expect(result).toEqual({ helmCharts: [], catalog: [] })
     expect(fsPromises.readdir).not.toHaveBeenCalled()
@@ -448,7 +420,7 @@ describe('fetchWorkloadCatalog', () => {
       return baseImpl(_baseDir, filePath)
     })
 
-    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, 'admin')
+    const result = await fetchWorkloadCatalog(url, helmChartsDir, 'main', undefined, undefined, 'admin')
 
     expect(result.helmCharts).toEqual(['chart1'])
     expect(result.helmCharts).not.toContain('chart2')
@@ -673,74 +645,15 @@ describe('getBranchesAndTags', () => {
 // ----------------------------------------------------------------
 // Tests for helper functions used in fetchWorkloadCatalog
 describe('Helper functions integration tests', () => {
+  const mockIsInternalGitURL = jest.fn()
+  jest.mock('./codeRepoUtils', () => ({
+    isInteralGiteaURL: mockIsInternalGitURL,
+  }))
+
   beforeEach(() => {
     jest.clearAllMocks()
-    process.env = { ...originalEnv, GIT_USER: 'git-user', GIT_PASSWORD: 'git-password' }
     ;(fs.lstatSync as jest.Mock).mockReturnValue({ isDirectory: () => true })
     jest.spyOn(utils, 'safeReadTextFile').mockResolvedValue('# README')
-  })
-
-  afterEach(() => {
-    process.env = originalEnv
-  })
-
-  describe('encodeGitCredentials (tested via fetchWorkloadCatalog)', () => {
-    test('encodes credentials for internal Gitea URLs', async () => {
-      const mockGit = {
-        clone: jest.fn().mockResolvedValue(undefined),
-      }
-      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
-      ;(fsPromises.readdir as jest.Mock).mockResolvedValue([])
-
-      const internalGiteaUrl = 'https://gitea.cluster.local/otomi/charts.git'
-      const helmChartsDir = '/tmp/test'
-
-      // Mock isInteralGiteaURL to return true
-      jest.spyOn(workloadUtils, 'isInteralGiteaURL').mockReturnValue(true)
-
-      try {
-        await fetchWorkloadCatalog(internalGiteaUrl, helmChartsDir, 'main', 'cluster.local')
-      } catch (error) {
-        // Expected to throw because no charts found
-      }
-
-      // Verify that clone was called with encoded credentials
-      expect(mockGit.clone).toHaveBeenCalledWith(
-        'https://git-user:git-password@gitea.cluster.local/otomi/charts.git',
-        helmChartsDir,
-        ['--branch', 'main', '--single-branch', '--depth', '1'],
-      )
-    })
-
-    test('does not encode credentials for non-Gitea URLs', async () => {
-      const mockGit = {
-        clone: jest.fn().mockResolvedValue(undefined),
-      }
-      ;(simpleGit as jest.Mock).mockReturnValue(mockGit)
-      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
-      ;(fsPromises.readdir as jest.Mock).mockResolvedValue([])
-
-      const githubUrl = 'https://github.com/example/charts.git'
-      const helmChartsDir = '/tmp/test'
-
-      jest.spyOn(workloadUtils, 'isInteralGiteaURL').mockReturnValue(false)
-
-      try {
-        await fetchWorkloadCatalog(githubUrl, helmChartsDir, 'main')
-      } catch (error) {
-        // Expected to throw because no charts found
-      }
-
-      // Verify that clone was called with original URL
-      expect(mockGit.clone).toHaveBeenCalledWith(githubUrl, helmChartsDir, [
-        '--branch',
-        'main',
-        '--single-branch',
-        '--depth',
-        '1',
-      ])
-    })
   })
 
   describe('readRbacConfig (tested via fetchWorkloadCatalog)', () => {
@@ -755,7 +668,14 @@ describe('Helper functions integration tests', () => {
         return Promise.reject(new Error('File not found'))
       })
 
-      const result = await fetchWorkloadCatalog('https://example.com/charts.git', '/tmp/test', 'main', undefined, '1')
+      const result = await fetchWorkloadCatalog(
+        'https://example.com/charts.git',
+        '/tmp/test',
+        'main',
+        undefined,
+        undefined,
+        '1',
+      )
 
       // Should include chart1 and it should be marked as beta
       expect(result.catalog[0].isBeta).toBe(true)
@@ -807,7 +727,14 @@ describe('Helper functions integration tests', () => {
         return Promise.reject(new Error('File not found'))
       })
 
-      const result = await fetchWorkloadCatalog('https://example.com/charts.git', '/tmp/test', 'main', undefined, '1')
+      const result = await fetchWorkloadCatalog(
+        'https://example.com/charts.git',
+        '/tmp/test',
+        'main',
+        undefined,
+        undefined,
+        '1',
+      )
 
       // Should only include chart1 for team-1
       expect(result.helmCharts).toEqual(['chart1'])
