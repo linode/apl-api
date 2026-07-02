@@ -19,6 +19,16 @@ const userToken = getToken([])
 const teamId = 'team1'
 const otherTeamId = 'team2'
 
+const mockUser = {
+  id: 'user1',
+  email: 'user@one.com',
+  firstName: 'user',
+  lastName: 'one',
+  isPlatformAdmin: false,
+  isTeamAdmin: false,
+  teams: ['team1'],
+}
+
 jest.mock('./k8s-operations', () => {
   const original = jest.requireActual('./k8s-operations')
   return {
@@ -83,6 +93,7 @@ describe('API authz tests', () => {
             downloadDockerLogin: true,
             createServices: true,
             editSecurityPolicies: true,
+            useCloudShell: true,
           },
         },
       },
@@ -101,6 +112,8 @@ describe('API authz tests', () => {
             downloadKubeconfig: true,
             downloadDockerLogin: true,
             createServices: false,
+            editSecurityPolicies: false,
+            useCloudShell: false,
           },
         },
       },
@@ -121,6 +134,8 @@ describe('API authz tests', () => {
 
   describe('Platform Admin /settings endpoint tests', () => {
     test('platform admin can get /settings/alerts', async () => {
+      jest.spyOn(otomiStack, 'getSettings').mockResolvedValue({ otomi: { version: 'latest' } } as any)
+
       await agent
         .get('/v1/settings')
         .set('Authorization', `Bearer ${platformAdminToken}`)
@@ -190,7 +205,11 @@ describe('API authz tests', () => {
     }
 
     test('platform admin can create platform admin users', async () => {
-      jest.spyOn(otomiStack, 'createUser').mockResolvedValue({} as any)
+      jest.spyOn(otomiStack, 'createUser').mockResolvedValue({
+        ...mockUser,
+        isPlatformAdmin: true,
+        isTeamAdmin: false,
+      } as any)
       await agent
         .post('/v1/users')
         .send({ ...userData, isPlatformAdmin: true, isTeamAdmin: false })
@@ -199,7 +218,11 @@ describe('API authz tests', () => {
     })
 
     test('platform admin can create team admin users', async () => {
-      jest.spyOn(otomiStack, 'createUser').mockResolvedValue({} as any)
+      jest.spyOn(otomiStack, 'createUser').mockResolvedValue({
+        ...mockUser,
+        isPlatformAdmin: false,
+        isTeamAdmin: true,
+      } as any)
 
       await agent
         .post('/v1/users')
@@ -209,7 +232,7 @@ describe('API authz tests', () => {
     })
 
     test('platform admin can create team member users', async () => {
-      jest.spyOn(otomiStack, 'createUser').mockResolvedValue({} as any)
+      jest.spyOn(otomiStack, 'createUser').mockResolvedValue(mockUser as any)
 
       await agent
         .post('/v1/users')
@@ -223,7 +246,7 @@ describe('API authz tests', () => {
     })
 
     test('platform admin can update users', async () => {
-      jest.spyOn(otomiStack, 'editUser').mockResolvedValue({} as any)
+      jest.spyOn(otomiStack, 'editUser').mockResolvedValue(mockUser as any)
 
       await agent
         .put('/v1/users/user1')
@@ -265,7 +288,7 @@ describe('API authz tests', () => {
     })
 
     test('team admin can update all users teams field', async () => {
-      jest.spyOn(otomiStack, 'editTeamUsers').mockResolvedValue({} as any)
+      jest.spyOn(otomiStack, 'editTeamUsers').mockResolvedValue([{ id: 'user1', teams: ['team1'] }] as any)
 
       await agent
         .put(`/v1/teams/${teamId}/users`)
@@ -337,7 +360,7 @@ describe('API authz tests', () => {
     })
 
     test('platform admin can update policies', async () => {
-      jest.spyOn(otomiStack, 'editAplPolicy').mockReturnValue({} as any)
+      jest.spyOn(otomiStack, 'editPolicy').mockResolvedValue(data as any)
       await agent
         .put('/v1/teams/team1/policies/disallow-selinux')
         .send(data)
