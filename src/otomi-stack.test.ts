@@ -1673,6 +1673,23 @@ describe('getRepoBranches', () => {
     expect(pathExists).toHaveBeenCalledWith(keyPath)
     expect(unlink).toHaveBeenCalledWith(keyPath)
   })
+
+  it('should clean up the SSH key file if an error is thrown while fetching branches', async () => {
+    const keyPath = '/tmp/otomi/sshKey-test'
+    const mockGitInstance = { listRemote: jest.fn() }
+    ;(getAuthenticatedGitClient as jest.Mock).mockResolvedValue({
+      git: mockGitInstance,
+      url: 'https://gitea.test.com',
+      keyPath,
+    })
+    ;(extractRepositoryRefs as jest.Mock).mockRejectedValue(new Error('test error'))
+    ;(pathExists as jest.Mock).mockResolvedValue(true)
+
+    await otomiStack.getRepoBranches('code-1', 'demo')
+
+    expect(pathExists).toHaveBeenCalledWith(keyPath)
+    expect(unlink).toHaveBeenCalledWith(keyPath)
+  })
 })
 
 describe('getTestRepoConnect', () => {
