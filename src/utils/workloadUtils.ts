@@ -13,7 +13,8 @@ import {
   GIT_PROVIDER_URL_PATTERNS,
 } from 'src/validators'
 import YAML from 'yaml'
-import { BadRequestError } from '../error'
+import { getGiteaAuth, isInternalGiteaUrl } from './codeRepoUtils'
+import { getAuthenticatedUrl } from '../git/connect'
 
 const debug = Debug('apl:workloadUtils')
 
@@ -22,43 +23,6 @@ const env = cleanEnv({
   CATALOG_CACHE_SYNC_MARKER,
   GIT_PROVIDER_URL_PATTERNS,
 })
-
-export async function validateGitUrl(url: string): Promise<void> {
-  let parsed: URL
-  try {
-    parsed = new URL(url)
-  } catch {
-    throw new BadRequestError(`Invalid URL: ${url}`)
-  }
-
-  if (parsed.protocol !== 'https:') {
-    throw new BadRequestError('Only HTTPS URLs are allowed for git repositories')
-  }
-}
-
-export function isGiteaURL(url: string) {
-  let hostname = ''
-  if (url) {
-    try {
-      hostname = new URL(url).hostname
-    } catch (e) {
-      // ignore
-      return false
-    }
-  }
-  const giteaPattern = /^gitea\..+/i
-  return giteaPattern.test(hostname)
-}
-
-export function isInteralGiteaURL(repositoryUrl: string, clusterDomainSuffix?: string) {
-  if (!clusterDomainSuffix) return false
-  try {
-    const url = new URL(repositoryUrl)
-    return url.hostname === `gitea.${clusterDomainSuffix}`
-  } catch {
-    return false
-  }
-}
 
 export function detectGitProvider(url) {
   if (!url || typeof url !== 'string') return null
@@ -375,19 +339,6 @@ export class chartRepo {
 }
 
 /**
- * Encodes Git credentials into the URL for internal Gitea repositories
- */
-function encodeGitCredentials(url: string, clusterDomainSuffix?: string): string {
-  if (!isInteralGiteaURL(url, clusterDomainSuffix)) return url
-
-  // FIXME: When Gitea is present and hosting charts, but the Values repo is somewhere else, this breaks
-  const [protocol, bareUrl] = url.split('://')
-  const encodedUser = encodeURIComponent(process.env.GIT_USER as string)
-  const encodedPassword = encodeURIComponent(process.env.GIT_PASSWORD as string)
-  return `${protocol}://${encodedUser}:${encodedPassword}@${bareUrl}`
-}
-
-/**
  * Fetches workload catalog from a Git repository
  *
  * @param url - Git repository URL
@@ -401,6 +352,7 @@ export async function fetchWorkloadCatalog(
   url: string,
   helmChartsDir: string,
   branch: string = 'main',
+  giteaValues?: Record<string, any>,
   clusterDomainSuffix?: string,
   teamId?: string,
   chartsPath?: string,
@@ -412,7 +364,14 @@ export async function fetchWorkloadCatalog(
   if (!existsSync(resolvedHelmChartsDir)) mkdirSync(resolvedHelmChartsDir, { recursive: true })
 
   // Clone repository
-  const gitUrl = encodeGitCredentials(url, clusterDomainSuffix)
+  // TODO: refactor chartRepo (ChartRepo!) to use getAuthenticatedGitClient for supporting SSH
+  let gitUrl = url // Assume unauthenticated url, unless hosted on internal Gitea
+  if (giteaValues && isInternalGiteaUrl(url, clusterDomainSuffix)) {
+    const giteaAuth = await getGiteaAuth(giteaValues)
+    if (giteaAuth) {
+      gitUrl = getAuthenticatedUrl({ repoUrl: url, ...giteaAuth })
+    }
+  }
   const gitRepo = new chartRepo(resolvedHelmChartsDir, gitUrl)
   await gitRepo.ensureLatest(branch, forceRefresh)
 

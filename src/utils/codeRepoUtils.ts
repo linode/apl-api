@@ -1,10 +1,12 @@
 /* eslint-disable prefer-destructuring */
 import axios from 'axios'
-import { pathExists, unlink } from 'fs-extra'
-import { chmod, writeFile } from 'fs/promises'
-import simpleGit, { SimpleGit } from 'simple-git'
+import { writeFile } from 'fs/promises'
+import simpleGit, { SimpleGit, SimpleGitOptions } from 'simple-git'
 import { OtomiError } from 'src/error'
 import { v4 as uuidv4 } from 'uuid'
+import { getAuthenticatedUrl } from '../git/connect'
+import { getSecretValues } from '../k8s-operations'
+import { APL_SECRETS_NAMESPACE, GITEA_SECRETS_NAME } from '../constants'
 
 const axiosInstance = (adminUsername, adminPassword, domainSuffix) =>
   axios.create({
@@ -54,7 +56,7 @@ export function normalizeRepoUrl(inputUrl: string, isPrivate: boolean, isSSH: bo
     let hostname: string
     let repoPath: string
 
-    if (cleanUrl.startsWith('git@')) {
+    if (isSSH) {
       const match = cleanUrl
         .replace(/\.git$/, '')
         .match(/^git@([A-Za-z0-9.-]+\.[A-Za-z]{2,}):([A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)+)$/)
@@ -106,117 +108,123 @@ export function normalizeSSHKey(sshPrivateKey) {
   return `-----BEGIN OPENSSH PRIVATE KEY-----\n${basePrivateKey}\n-----END OPENSSH PRIVATE KEY-----`
 }
 
-export async function setupGitAuthentication(
+export function isInternalGiteaUrl(repositoryUrl: string, clusterDomainSuffix?: string) {
+  if (!clusterDomainSuffix) return false
+  try {
+    const url = new URL(repositoryUrl)
+    return url.hostname === `gitea.${clusterDomainSuffix}`
+  } catch {
+    return false
+  }
+}
+
+export async function getGiteaAuth(appValues: Record<string, any>): Promise<
+  | {
+      username: string
+      password: string
+    }
+  | undefined
+> {
+  if (!appValues?.enabled) {
+    return undefined
+  }
+  const giteaSecrets = await getSecretValues(GITEA_SECRETS_NAME, APL_SECRETS_NAMESPACE)
+  if (!giteaSecrets?.adminPassword) {
+    return undefined
+  }
+  return {
+    username: (appValues?.adminUsername as string) || 'otomi-admin',
+    password: giteaSecrets?.adminPassword,
+  }
+}
+
+export async function getAuthenticatedGitClient(
   repoUrl: string,
-  sshPrivateKey?: string,
-  username?: string,
-  accessToken?: string,
+  teamId: string,
+  domainSuffix?: string,
+  giteaAppValues?: Record<string, any>,
+  secretName?: string,
 ): Promise<{ git: SimpleGit; url: string; keyPath?: string }> {
-  let keyPath: string | undefined
-  const git: SimpleGit = simpleGit()
-  let url = repoUrl
+  const isPrivate = !!secretName
+  const isSSH = repoUrl.startsWith('git@')
+  const isHTTPS = repoUrl.startsWith('https://')
+  if (!isSSH && !isHTTPS) {
+    throw new Error('Invalid repository URL format. Must be SSH or HTTPS.')
+  }
 
-  if (url.startsWith('git@')) {
-    const normalizedKey: string = sshPrivateKey ? normalizeSSHKey(sshPrivateKey) : ''
-    if (normalizedKey) {
-      const keyId = uuidv4() as string
-      keyPath = `/tmp/otomi/sshKey-${keyId}`
-      await writeFile(keyPath, `${normalizedKey}\n`, { mode: 0o600 })
-      await chmod(keyPath, 0o600)
-      const GIT_SSH_COMMAND = `ssh -i ${keyPath} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null`
-      git.env('GIT_SSH_COMMAND', GIT_SSH_COMMAND)
+  if (isSSH && !secretName) {
+    throw new Error('SSH requires a secret with private key')
+  }
+  const normalizedUrl = normalizeRepoUrl(repoUrl, isPrivate, isSSH)
+  if (!normalizedUrl) {
+    throw new Error('Invalid URL provided')
+  }
+
+  const gitOptions: Partial<SimpleGitOptions> = isSSH ? { unsafe: { allowUnsafeSshCommand: true } } : {}
+  const git: SimpleGit = simpleGit(gitOptions).env('GIT_TERMINAL_PROMPT', '0')
+  if (secretName) {
+    // Prefer to use provided credentials, even if internal Git repo is used
+    const secret = await getSecretValues(secretName, `team-${teamId}`)
+    if (!secret) {
+      throw new Error(`Secret ${secretName} not found in namespace team-${teamId}`)
     }
-  } else if (url.startsWith('https://')) {
-    if (!username || !accessToken) throw new Error('Username and access token are required for HTTPS authentication')
-    url = repoUrl.replace('https://', `https://${encodeURIComponent(username)}:${encodeURIComponent(accessToken)}@`)
-  } else throw new Error('Invalid repository URL format. Must be SSH or HTTPS.')
-
-  return { git, url, keyPath }
-}
-
-export async function testPrivateRepoConnect(
-  repoUrl: string,
-  sshPrivateKey?: string,
-  username?: string,
-  accessToken?: string,
-) {
-  let keyPath: string | undefined
-  try {
-    const authResult = await setupGitAuthentication(repoUrl, sshPrivateKey, username, accessToken)
-    keyPath = authResult.keyPath
-    await authResult.git.listRemote([authResult.url])
-    return { status: 'success' }
-  } catch (error) {
-    return { status: 'failed' }
-  } finally {
-    if (repoUrl.startsWith('git@') && keyPath && (await pathExists(keyPath))) await unlink(keyPath)
-  }
-}
-
-export async function testPublicRepoConnect(repoUrl: string) {
-  const git = simpleGit()
-  try {
-    await git.listRemote([repoUrl])
-    return { status: 'success' }
-  } catch (error) {
-    return { status: 'failed' }
-  }
-}
-
-export async function extractRepositoryRefs(repoUrl: string, git: SimpleGit = simpleGit()): Promise<string[]> {
-  try {
-    let formattedRepoUrl = repoUrl
-    if (repoUrl.startsWith('https://gitea')) {
-      git.env({
-        GIT_TERMINAL_PROMPT: '0',
-        GIT_SSL_NO_VERIFY: 'true',
+    if (isSSH) {
+      const sshKey = secret?.['ssh-privatekey']
+      if (!sshKey) {
+        throw new Error(`No value found for "ssh-privatekey" in secret ${secretName}`)
+      }
+      const normalizedKey = normalizeSSHKey(sshKey)
+      if (normalizedKey) {
+        const keyId = uuidv4()
+        const keyPath = `/tmp/otomi/sshKey-${keyId}`
+        await writeFile(keyPath, `${normalizedKey}\n`, { mode: 0o600, flag: 'wx' })
+        const GIT_SSH_COMMAND = `ssh -i ${keyPath} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null`
+        git.env('GIT_SSH_COMMAND', GIT_SSH_COMMAND)
+        return { git, url: normalizedUrl, keyPath }
+      } else {
+        throw new Error(
+          `Value found in "ssh-privatekey" in secret ${secretName} found, but invalid or not a private key`,
+        )
+      }
+    } else {
+      if (!secret?.password) {
+        throw new Error(
+          `Access token (or password) is required for HTTPS authentication in value "password" in secret ${secretName}`,
+        )
+      }
+      const authUrl = getAuthenticatedUrl({
+        repoUrl: normalizedUrl,
+        username: secret.username,
+        password: secret.password,
       })
-      // FIXME: When values is not on Gitea, this is broken
-      const username = process.env.GIT_USER as string
-      const accessToken = process.env.GIT_PASSWORD as string
-      formattedRepoUrl = repoUrl.replace(
-        'https://',
-        `https://${encodeURIComponent(username)}:${encodeURIComponent(accessToken)}@`,
-      )
+      return { git, url: authUrl }
     }
-
-    const rawData = await git.listRemote(['--refs', formattedRepoUrl])
-    const branches: string[] = []
-    const tags: string[] = []
-
-    rawData.split('\n').forEach((line) => {
-      const parts = line.split('\t')
-      if (parts.length !== 2) return
-      const ref = parts[1]
-      if (ref.startsWith('refs/heads/')) branches.push(ref.replace('refs/heads/', ''))
-      else if (ref.startsWith('refs/tags/')) tags.push(ref.replace('refs/tags/', ''))
-    })
-
-    return [...branches, ...tags]
-  } catch (error) {
-    return []
+  } else if (isHTTPS && giteaAppValues && isInternalGiteaUrl(normalizedUrl, domainSuffix)) {
+    // For internal Gitea, use internal credentials if nothing else was provided
+    const giteaAuth = await getGiteaAuth(giteaAppValues)
+    if (!giteaAuth) {
+      throw new Error('Internal Gitea URL provided, but app not configured or no credentials found')
+    }
+    const authUrl = getAuthenticatedUrl({ repoUrl: normalizedUrl, ...giteaAuth })
+    return { git, url: authUrl }
+  } else {
+    // Default to unauthenticated HTTPS
+    return { git, url: normalizedUrl }
   }
 }
 
-export async function getPrivateRepoBranches(
-  repoUrl: string,
-  sshPrivateKey?: string,
-  username?: string,
-  accessToken?: string,
-) {
-  let keyPath: string | undefined
-  try {
-    const authResult = await setupGitAuthentication(repoUrl, sshPrivateKey, username, accessToken)
-    keyPath = authResult.keyPath
-    return await extractRepositoryRefs(authResult.url, authResult.git)
-  } catch (error) {
-    return []
-  } finally {
-    if (repoUrl.startsWith('git@') && keyPath && (await pathExists(keyPath))) await unlink(keyPath)
-  }
-}
+export async function extractRepositoryRefs(url: string, git: SimpleGit): Promise<string[]> {
+  const rawData = await git.listRemote(['--refs', url])
+  const branches: string[] = []
+  const tags: string[] = []
 
-export async function getPublicRepoBranches(repoUrl: string) {
-  const branches = await extractRepositoryRefs(repoUrl)
-  return branches
+  rawData.split('\n').forEach((line) => {
+    const parts = line.split('\t')
+    if (parts.length !== 2) return
+    const ref = parts[1]
+    if (ref.startsWith('refs/heads/')) branches.push(ref.replace('refs/heads/', ''))
+    else if (ref.startsWith('refs/tags/')) tags.push(ref.replace('refs/tags/', ''))
+  })
+
+  return [...branches, ...tags]
 }

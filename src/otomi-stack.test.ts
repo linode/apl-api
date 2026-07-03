@@ -10,7 +10,9 @@ import {
 import OtomiStack from 'src/otomi-stack'
 import { loadSpec } from './app'
 import { BadRequestError, NotExistError, ValidationError } from './error'
+import { pathExists, unlink } from 'fs-extra'
 import { Git } from './git'
+import { extractRepositoryRefs, getAuthenticatedGitClient } from './utils/codeRepoUtils'
 
 jest.mock('./tty', () => ({
   __esModule: true,
@@ -68,6 +70,18 @@ jest.mock('./utils/sealedSecretUtils', () => {
     createUserSealedSecret: jest.fn().mockResolvedValue('mock-user-sealed-secret-yaml'),
   }
 })
+
+jest.mock('./utils/codeRepoUtils', () => ({
+  ...jest.requireActual('./utils/codeRepoUtils'),
+  getAuthenticatedGitClient: jest.fn(),
+  extractRepositoryRefs: jest.fn(),
+}))
+
+jest.mock('fs-extra', () => ({
+  ...jest.requireActual('fs-extra'),
+  pathExists: jest.fn().mockResolvedValue(false),
+  unlink: jest.fn().mockResolvedValue(undefined),
+}))
 
 beforeAll(async () => {
   jest.spyOn(console, 'log').mockImplementation(() => {})
@@ -1558,5 +1572,192 @@ describe('OtomiStack locked state', () => {
     stack.setLocked(true)
     stack.setLocked(false)
     expect(stack.getApiStatus()).toEqual({ locked: false })
+  })
+})
+
+describe('getRepoBranches', () => {
+  let otomiStack: OtomiStack
+
+  beforeEach(async () => {
+    otomiStack = new OtomiStack()
+    await otomiStack.init()
+
+    const { FileStore } = require('./fileStore/file-store')
+    otomiStack.fileStore = new FileStore()
+
+    createTestTeam(otomiStack, 'demo', {})
+
+    const codeRepo: AplCodeRepoResponse = {
+      kind: 'AplTeamCodeRepo',
+      metadata: { name: 'code-1', labels: { 'apl.io/teamId': 'demo' } },
+      spec: { gitService: 'gitea', repositoryUrl: 'https://gitea.test.com' },
+      status: {},
+    }
+    otomiStack.fileStore.setTeamResource(codeRepo)
+
+    jest.spyOn(otomiStack, 'getApp').mockReturnValue({ id: 'gitea', values: { enabled: true } } as App)
+    jest
+      .spyOn(otomiStack, 'getSettings')
+      .mockResolvedValue({ cluster: { name: '', provider: 'custom', domainSuffix: 'test.example.com' } })
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  it('should return ["HEAD"] when no codeRepoName is provided', async () => {
+    const result = await otomiStack.getRepoBranches('', 'demo')
+    expect(result).toEqual(['HEAD'])
+  })
+
+  it('should return ["HEAD"] when repo has no repositoryUrl', async () => {
+    const codeRepoNoUrl: AplCodeRepoResponse = {
+      kind: 'AplTeamCodeRepo',
+      metadata: { name: 'no-url-repo', labels: { 'apl.io/teamId': 'demo' } },
+      spec: { gitService: 'gitea' } as any,
+      status: {},
+    }
+    otomiStack.fileStore.setTeamResource(codeRepoNoUrl)
+
+    const result = await otomiStack.getRepoBranches('no-url-repo', 'demo')
+    expect(result).toEqual(['HEAD'])
+  })
+
+  it('should return branches from extractRepositoryRefs', async () => {
+    const mockGitInstance = { listRemote: jest.fn() }
+    ;(getAuthenticatedGitClient as jest.Mock).mockResolvedValue({ git: mockGitInstance, url: 'https://gitea.test.com' })
+    ;(extractRepositoryRefs as jest.Mock).mockResolvedValue(['main', 'develop'])
+
+    const result = await otomiStack.getRepoBranches('code-1', 'demo')
+
+    expect(getAuthenticatedGitClient).toHaveBeenCalledWith(
+      'https://gitea.test.com',
+      'demo',
+      'test.example.com',
+      expect.anything(),
+      undefined,
+    )
+    expect(extractRepositoryRefs).toHaveBeenCalledWith('https://gitea.test.com', mockGitInstance)
+    expect(result).toEqual(['main', 'develop'])
+  })
+
+  it('should return [] when extractRepositoryRefs throws', async () => {
+    const mockGitInstance = { listRemote: jest.fn() }
+    ;(getAuthenticatedGitClient as jest.Mock).mockResolvedValue({ git: mockGitInstance, url: 'https://gitea.test.com' })
+    ;(extractRepositoryRefs as jest.Mock).mockRejectedValue(new Error('Network error'))
+
+    const result = await otomiStack.getRepoBranches('code-1', 'demo')
+    expect(result).toEqual([])
+  })
+
+  it('should return [] when getAuthenticatedGitClient throws', async () => {
+    ;(getAuthenticatedGitClient as jest.Mock).mockRejectedValue(new Error('Auth failed'))
+
+    const result = await otomiStack.getRepoBranches('code-1', 'demo')
+    expect(result).toEqual([])
+  })
+
+  it('should clean up the SSH key file after fetching branches', async () => {
+    const keyPath = '/tmp/otomi/sshKey-test'
+    const mockGitInstance = { listRemote: jest.fn() }
+    ;(getAuthenticatedGitClient as jest.Mock).mockResolvedValue({
+      git: mockGitInstance,
+      url: 'https://gitea.test.com',
+      keyPath,
+    })
+    ;(extractRepositoryRefs as jest.Mock).mockResolvedValue(['main'])
+    ;(pathExists as jest.Mock).mockResolvedValue(true)
+
+    await otomiStack.getRepoBranches('code-1', 'demo')
+
+    expect(pathExists).toHaveBeenCalledWith(keyPath)
+    expect(unlink).toHaveBeenCalledWith(keyPath)
+  })
+
+  it('should clean up the SSH key file if an error is thrown while fetching branches', async () => {
+    const keyPath = '/tmp/otomi/sshKey-test'
+    const mockGitInstance = { listRemote: jest.fn() }
+    ;(getAuthenticatedGitClient as jest.Mock).mockResolvedValue({
+      git: mockGitInstance,
+      url: 'https://gitea.test.com',
+      keyPath,
+    })
+    ;(extractRepositoryRefs as jest.Mock).mockRejectedValue(new Error('test error'))
+    ;(pathExists as jest.Mock).mockResolvedValue(true)
+
+    await otomiStack.getRepoBranches('code-1', 'demo')
+
+    expect(pathExists).toHaveBeenCalledWith(keyPath)
+    expect(unlink).toHaveBeenCalledWith(keyPath)
+  })
+})
+
+describe('getTestRepoConnect', () => {
+  let otomiStack: OtomiStack
+
+  beforeEach(async () => {
+    otomiStack = new OtomiStack()
+    await otomiStack.init()
+
+    const { FileStore } = require('./fileStore/file-store')
+    otomiStack.fileStore = new FileStore()
+
+    jest.spyOn(otomiStack, 'getApp').mockReturnValue({ id: 'gitea', values: { enabled: true } } as App)
+    jest
+      .spyOn(otomiStack, 'getSettings')
+      .mockResolvedValue({ cluster: { name: '', provider: 'custom', domainSuffix: 'test.example.com' } })
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  it('should return { status: "success" } when git.listRemote succeeds', async () => {
+    const mockGitInstance = { listRemote: jest.fn().mockResolvedValue('') }
+    ;(getAuthenticatedGitClient as jest.Mock).mockResolvedValue({
+      git: mockGitInstance,
+      url: 'https://gitea.test.com',
+    })
+
+    const result = await otomiStack.getTestRepoConnect('https://gitea.test.com', 'demo', 'my-secret')
+
+    expect(result).toEqual({ status: 'success' })
+    expect(mockGitInstance.listRemote).toHaveBeenCalledWith(['https://gitea.test.com'])
+  })
+
+  it('should return { status: "failed" } when git.listRemote throws', async () => {
+    const mockGitInstance = { listRemote: jest.fn().mockRejectedValue(new Error('Connection refused')) }
+    ;(getAuthenticatedGitClient as jest.Mock).mockResolvedValue({
+      git: mockGitInstance,
+      url: 'https://gitea.test.com',
+    })
+
+    const result = await otomiStack.getTestRepoConnect('https://gitea.test.com', 'demo', 'my-secret')
+
+    expect(result).toEqual({ status: 'failed', message: 'Connection refused' })
+  })
+
+  it('should return { status: "failed" } when getAuthenticatedGitClient throws', async () => {
+    ;(getAuthenticatedGitClient as jest.Mock).mockRejectedValue(new Error('Invalid credentials'))
+
+    const result = await otomiStack.getTestRepoConnect('https://gitea.test.com', 'demo', 'my-secret')
+
+    expect(result).toEqual({ status: 'failed', message: 'Invalid credentials' })
+  })
+
+  it('should clean up the SSH key file after testing connection', async () => {
+    const keyPath = '/tmp/otomi/sshKey-test'
+    const mockGitInstance = { listRemote: jest.fn().mockResolvedValue('') }
+    ;(getAuthenticatedGitClient as jest.Mock).mockResolvedValue({
+      git: mockGitInstance,
+      url: 'https://gitea.test.com',
+      keyPath,
+    })
+    ;(pathExists as jest.Mock).mockResolvedValue(true)
+
+    await otomiStack.getTestRepoConnect('https://gitea.test.com', 'demo', 'my-secret')
+
+    expect(pathExists).toHaveBeenCalledWith(keyPath)
+    expect(unlink).toHaveBeenCalledWith(keyPath)
   })
 })
