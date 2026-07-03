@@ -10,6 +10,7 @@ import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
 import { existsSync, rmSync } from 'fs'
+import { pathExists, unlink } from 'fs-extra'
 import { readFile } from 'fs/promises'
 import { generate as generatePassword } from 'generate-password'
 import { cloneDeep, isEmpty, isEqual, map, merge, omit, pick, set, unset } from 'lodash'
@@ -147,12 +148,10 @@ import {
 } from './k8s-operations'
 import CloudTty from './tty'
 import {
+  extractRepositoryRefs,
+  getAuthenticatedGitClient,
   getGiteaRepoUrls,
-  getPrivateRepoBranches,
-  getPublicRepoBranches,
   normalizeRepoUrl,
-  testPrivateRepoConnect,
-  testPublicRepoConnect,
 } from './utils/codeRepoUtils'
 import { isKnativeSupported } from './utils/k8sUtils'
 import { getV1ObjectFromApl } from './utils/manifests'
@@ -176,7 +175,7 @@ import {
   userSecretDataToUser,
 } from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
-import { fetchWorkloadCatalog, isInteralGiteaURL } from './utils/workloadUtils'
+import { fetchWorkloadCatalog } from './utils/workloadUtils'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -1540,69 +1539,60 @@ export default class OtomiStack {
 
     const coderepo = this.getAplCodeRepo(teamId, codeRepoName)
     const { repositoryUrl, secret: secretName } = coderepo.spec
-
+    if (!repositoryUrl) return ['HEAD']
+    const giteaValues = this.getApp('gitea').values
     const { cluster } = await this.getSettings(['cluster'])
 
     try {
-      let sshPrivateKey = ''
-      let username = ''
-      let accessToken = ''
-
-      if (secretName) {
-        const secret = await getSecretValues(secretName, `team-${teamId}`)
-        sshPrivateKey = secret?.['ssh-privatekey'] || ''
-        username = secret?.username || ''
-        accessToken = secret?.password || ''
+      const { git, url, keyPath } = await getAuthenticatedGitClient(
+        repositoryUrl,
+        teamId,
+        cluster?.domainSuffix,
+        giteaValues,
+        secretName,
+      )
+      try {
+        return await extractRepositoryRefs(url, git)
+      } catch (error) {
+        const errorMessage = error?.response?.data?.message || error?.message || 'Failed to get repo branches'
+        debug('Error getting branches:', errorMessage)
+        return []
+      } finally {
+        if (keyPath && (await pathExists(keyPath))) {
+          await unlink(keyPath)
+        }
       }
-
-      const isPrivate = !!secretName
-      const isSSH = !!sshPrivateKey
-
-      const repoUrl = isInteralGiteaURL(repositoryUrl, cluster?.domainSuffix)
-        ? repositoryUrl
-        : normalizeRepoUrl(repositoryUrl, isPrivate, isSSH)
-
-      if (!repoUrl) return ['HEAD']
-
-      if (isPrivate) {
-        return await getPrivateRepoBranches(repoUrl, sshPrivateKey, username, accessToken)
-      }
-
-      return await getPublicRepoBranches(repoUrl)
     } catch (error) {
-      const errorMessage = error.response?.data?.message || error?.message || 'Failed to get repo branches'
-      debug('Error getting branches:', errorMessage)
+      debug('Error getting branches:', error?.message)
       return []
     }
   }
 
-  async getTestRepoConnect(url: string, teamId: string, secretName: string): Promise<TestRepoConnect> {
+  async getTestRepoConnect(repositoryUrl: string, teamId: string, secretName: string): Promise<TestRepoConnect> {
+    const giteaValues = this.getApp('gitea').values
+    const { cluster } = await this.getSettings(['cluster'])
+
     try {
-      let sshPrivateKey = '',
-        username = '',
-        accessToken = ''
-
-      const isPrivate = !!secretName
-
-      if (isPrivate) {
-        const secret = await getSecretValues(secretName, `team-${teamId}`)
-        sshPrivateKey = secret?.['ssh-privatekey'] || ''
-        username = secret?.username || ''
-        accessToken = secret?.password || ''
+      const { git, url, keyPath } = await getAuthenticatedGitClient(
+        repositoryUrl,
+        teamId,
+        cluster?.domainSuffix,
+        giteaValues,
+        secretName,
+      )
+      try {
+        await git.listRemote([url])
+        return { status: 'success' }
+      } catch (error) {
+        const message = error?.response?.data?.message || error?.message
+        return { status: 'failed', message }
+      } finally {
+        if (keyPath && (await pathExists(keyPath))) {
+          await unlink(keyPath)
+        }
       }
-
-      const isSSH = !!sshPrivateKey
-      const repoUrl = normalizeRepoUrl(url, isPrivate, isSSH)
-
-      if (!repoUrl) return { status: 'failed' }
-
-      if (isPrivate) {
-        return (await testPrivateRepoConnect(repoUrl, sshPrivateKey, username, accessToken)) as TestRepoConnect
-      }
-
-      return (await testPublicRepoConnect(repoUrl)) as TestRepoConnect
     } catch (error) {
-      return { status: 'failed' }
+      return { status: 'failed', message: error?.message }
     }
   }
 
@@ -1833,12 +1823,14 @@ export default class OtomiStack {
     keepLocalClone: boolean = false,
     forceRefresh: boolean = false,
   ): Promise<{ url: string; helmCharts: any; catalog: any; chartsPath?: string }> {
+    const giteaValues = this.getApp('gitea').values
     const { cluster } = await this.getSettings(['cluster'])
     try {
       const { helmCharts, catalog } = await fetchWorkloadCatalog(
         url,
         helmChartsDir,
         branch,
+        giteaValues,
         cluster?.domainSuffix,
         teamId,
         chartsPath,
@@ -1960,6 +1952,7 @@ export default class OtomiStack {
   async getAplCatalogChart(name: string, chartName: string): Promise<AplCatalogChartResponse> {
     const catalog = this.getAplCatalog(name)
     const { repositoryUrl, branch, chartsPath } = catalog.spec
+    const giteaValues = this.getApp('gitea').values
     const { cluster } = await this.getSettings(['cluster'])
     const encodedCatalogName = encodeURIComponent(catalog.spec.name)
     const encodedBranch = encodeURIComponent(branch)
@@ -1968,7 +1961,15 @@ export default class OtomiStack {
     try {
       const singleChart =
         (
-          await fetchWorkloadCatalog(repositoryUrl, helmChartsDir, branch, cluster?.domainSuffix, undefined, chartsPath)
+          await fetchWorkloadCatalog(
+            repositoryUrl,
+            helmChartsDir,
+            branch,
+            giteaValues,
+            cluster?.domainSuffix,
+            undefined,
+            chartsPath,
+          )
         ).catalog.find((c) => c.name === chartName) || null
 
       return toPlatformObject(

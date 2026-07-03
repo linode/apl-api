@@ -1,5 +1,4 @@
 import Debug from 'debug'
-import { GitConfig } from '../otomi-models'
 import { Git } from '../git'
 
 const debug = Debug('otomi:git-connect')
@@ -12,7 +11,7 @@ export function getUrl(url: string): string {
   return !url || url.includes('://') ? url : `${getProtocol(url)}://${url}`
 }
 
-export function getAuthenticatedUrl(gitConfig: GitConfig): string {
+export function getAuthenticatedUrl(gitConfig: { repoUrl: string; username?: string; password: string }): string {
   const protocol = getProtocol(gitConfig.repoUrl)
   if (protocol === 'file') {
     return gitConfig.repoUrl
