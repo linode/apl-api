@@ -8,7 +8,7 @@ import {
   extractRepositoryRefs,
   getAuthenticatedGitClient,
   getGiteaRepoUrls,
-  isInteralGiteaURL,
+  isInternalGiteaUrl,
   normalizeRepoUrl,
   normalizeSSHKey,
 } from './codeRepoUtils'
@@ -43,31 +43,31 @@ describe('codeRepoUtils', () => {
 
   describe('isInteralGiteaURL', () => {
     it('returns true for a valid internal gitea URL', () => {
-      const result = isInteralGiteaURL('https://gitea.cluster.local/my-org/my-repo', 'cluster.local')
+      const result = isInternalGiteaUrl('https://gitea.cluster.local/my-org/my-repo', 'cluster.local')
 
       expect(result).toBe(true)
     })
 
     it('returns false for a non-gitea hostname', () => {
-      const result = isInteralGiteaURL('https://github.com/my-org/my-repo', 'cluster.local')
+      const result = isInternalGiteaUrl('https://github.com/my-org/my-repo', 'cluster.local')
 
       expect(result).toBe(false)
     })
 
     it('returns false when clusterDomainSuffix is missing', () => {
-      const result = isInteralGiteaURL('https://gitea.cluster.local/my-org/my-repo')
+      const result = isInternalGiteaUrl('https://gitea.cluster.local/my-org/my-repo')
 
       expect(result).toBe(false)
     })
 
     it('returns false when URL hostname does not exactly match', () => {
-      const result = isInteralGiteaURL('https://gitea.other.local/my-org/my-repo', 'cluster.local')
+      const result = isInternalGiteaUrl('https://gitea.other.local/my-org/my-repo', 'cluster.local')
 
       expect(result).toBe(false)
     })
 
     it('returns false for an invalid URL', () => {
-      const result = isInteralGiteaURL('not-a-real-url', 'cluster.local')
+      const result = isInternalGiteaUrl('not-a-real-url', 'cluster.local')
 
       expect(result).toBe(false)
     })

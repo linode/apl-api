@@ -13,7 +13,7 @@ import {
   GIT_PROVIDER_URL_PATTERNS,
 } from 'src/validators'
 import YAML from 'yaml'
-import { getGiteaAuth, isInteralGiteaURL } from './codeRepoUtils'
+import { getGiteaAuth, isInternalGiteaUrl } from './codeRepoUtils'
 import { getAuthenticatedUrl } from '../git/connect'
 
 const debug = Debug('apl:workloadUtils')
@@ -366,7 +366,7 @@ export async function fetchWorkloadCatalog(
   // Clone repository
   // TODO: refactor chartRepo (ChartRepo!) to use getAuthenticatedGitClient for supporting SSH
   let gitUrl = url // Assume unauthenticated url, unless hosted on internal Gitea
-  if (giteaValues && isInteralGiteaURL(url, clusterDomainSuffix)) {
+  if (giteaValues && isInternalGiteaUrl(url, clusterDomainSuffix)) {
     const giteaAuth = await getGiteaAuth(giteaValues)
     if (giteaAuth) {
       gitUrl = getAuthenticatedUrl({ repoUrl: url, ...giteaAuth })

@@ -108,7 +108,7 @@ export function normalizeSSHKey(sshPrivateKey) {
   return `-----BEGIN OPENSSH PRIVATE KEY-----\n${basePrivateKey}\n-----END OPENSSH PRIVATE KEY-----`
 }
 
-export function isInteralGiteaURL(repositoryUrl: string, clusterDomainSuffix?: string) {
+export function isInternalGiteaUrl(repositoryUrl: string, clusterDomainSuffix?: string) {
   if (!clusterDomainSuffix) return false
   try {
     const url = new URL(repositoryUrl)
@@ -199,7 +199,7 @@ export async function getAuthenticatedGitClient(
       })
       return { git, url: authUrl }
     }
-  } else if (isHTTPS && giteaAppValues && isInteralGiteaURL(normalizedUrl, domainSuffix)) {
+  } else if (isHTTPS && giteaAppValues && isInternalGiteaUrl(normalizedUrl, domainSuffix)) {
     // For internal Gitea, use internal credentials if nothing else was provided
     const giteaAuth = await getGiteaAuth(giteaAppValues)
     if (!giteaAuth) {
