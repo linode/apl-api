@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [5.1.0](https://github.com/redkubes/otomi-api/compare/v5.0.0...v5.1.0) (2026-07-21)
+
+
+### Features
+
+* do not generate team password ([#1019](https://github.com/redkubes/otomi-api/issues/1019)) ([fb59331](https://github.com/redkubes/otomi-api/commit/fb5933172cf8f7fdd0cf48e1634f6c9a99a93aaa))
+* Git configure edit modal ([#1017](https://github.com/redkubes/otomi-api/issues/1017)) ([86d00c0](https://github.com/redkubes/otomi-api/commit/86d00c09f4a362844772e1c7e8b91d13910ea604))
+
+
+### Bug Fixes
+
+* authz test rework ([#1010](https://github.com/redkubes/otomi-api/issues/1010)) ([0803b4b](https://github.com/redkubes/otomi-api/commit/0803b4b63b69c69958e76e6caf34ca49f174d724))
+* create user test team ([#1023](https://github.com/redkubes/otomi-api/issues/1023)) ([55438c3](https://github.com/redkubes/otomi-api/commit/55438c3e596d8b860f3566ea7e3f3d7e1340f014))
+* fetch gitea credentials from dedicated secret ([#1014](https://github.com/redkubes/otomi-api/issues/1014)) ([43a0646](https://github.com/redkubes/otomi-api/commit/43a0646fa0d73071cf9eb45a5e5bdef5c791dd16))
+* gitea connectivity ([#1025](https://github.com/redkubes/otomi-api/issues/1025)) ([43a29cb](https://github.com/redkubes/otomi-api/commit/43a29cb9c515ec120af0f678fe8d9459ad031dcf))
+* improved code repo validation ([#1020](https://github.com/redkubes/otomi-api/issues/1020)) ([cc344af](https://github.com/redkubes/otomi-api/commit/cc344afd573e8015a450b73617b9a1a0b5350aec))
+* make sure to encode credentials separately ([#1026](https://github.com/redkubes/otomi-api/issues/1026)) ([4b0f609](https://github.com/redkubes/otomi-api/commit/4b0f6091aec965d60ffd36b834fa1064f63efccd))
+* only include specific fields in git config ([#1029](https://github.com/redkubes/otomi-api/issues/1029)) ([a84fb1f](https://github.com/redkubes/otomi-api/commit/a84fb1f3007909cf98730b12e643a8a5c8784939))
+* remove git settings from values ([#1018](https://github.com/redkubes/otomi-api/issues/1018)) ([36995ca](https://github.com/redkubes/otomi-api/commit/36995ca066c825c8e97da2e5288537df20cce078))
+* remove password field from git get request ([#1028](https://github.com/redkubes/otomi-api/issues/1028)) ([656655c](https://github.com/redkubes/otomi-api/commit/656655caf038b9c88922affea3eb44d4e19bb0fb))
+* settings update and Git secret rotation ([#1024](https://github.com/redkubes/otomi-api/issues/1024)) ([48a9661](https://github.com/redkubes/otomi-api/commit/48a9661b76b1d3f6b1c20a19c439e26ed2d58a9b))
+* team check in edit user ([#1013](https://github.com/redkubes/otomi-api/issues/1013)) ([2abe381](https://github.com/redkubes/otomi-api/commit/2abe3811f36af2edca90afe34f0a5f94109f26c0))
+
+
+### Others
+
+* add reoccurring package lock changes ([#1016](https://github.com/redkubes/otomi-api/issues/1016)) ([5b7d67c](https://github.com/redkubes/otomi-api/commit/5b7d67c613ddd4eb135d4bdbeb8df2e45595ae56))
+* default AI permissions to run npm jest ([ee0c9c9](https://github.com/redkubes/otomi-api/commit/ee0c9c9eec782c8a5c9043d9550ee0e878a42fd9))
+* **deps:** bump actions/checkout from 6 to 7 ([#1021](https://github.com/redkubes/otomi-api/issues/1021)) ([46f79fb](https://github.com/redkubes/otomi-api/commit/46f79fb1afde4e3a2e3e6bb6b7b36956ea4c9dcd))
+
+
+### Tests
+
+* fix types ([fb0568b](https://github.com/redkubes/otomi-api/commit/fb0568b0aafb7790bf336e460f687fe87a9a5953))
+
+
+### CI
+
+* optimize Docker cache usage ([#1004](https://github.com/redkubes/otomi-api/issues/1004)) ([02851d4](https://github.com/redkubes/otomi-api/commit/02851d4fc8256c6b3a42b01155373b6a12cee560))
+
 ## [5.0.0](https://github.com/redkubes/otomi-api/compare/v4.18.0...v5.0.0) (2026-06-03)
 
 
