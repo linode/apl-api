@@ -44,6 +44,13 @@ function expectInvalid(patternName: string, values: string[]) {
   })
 }
 
+/**
+ * Runs the regex in a separate process to guard against catastrophic
+ * backtracking (ReDoS). A Jest timeout or setTimeout cannot interrupt a
+ * synchronous `regex.test()` because it blocks the JavaScript event loop.
+ * By using a child process, the OS can terminate the regex evaluation if
+ * it exceeds the configured timeout.
+ */
 function expectRegexToComplete(patternName: string, pattern: string, inputs: string[]) {
   try {
     execFileSync(
