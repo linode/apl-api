@@ -1,5 +1,6 @@
 import Debug from 'debug'
 import { Response } from 'express'
+import { ensureStatus } from 'src/api/response-utils'
 import { OpenApiRequestExt, SealedSecretManifestRequest } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:sealedsecrets')
@@ -12,7 +13,7 @@ export const getAplSealedSecrets = (req: OpenApiRequestExt, res: Response): void
   const { teamId } = req.params
   debug(`getSealedSecrets(${teamId})`)
   const v = req.otomi.getAplSealedSecrets(decodeURIComponent(teamId))
-  res.json(v)
+  res.json(v.map((secret) => ensureStatus(secret)))
 }
 
 /**
@@ -23,5 +24,5 @@ export const createAplSealedSecret = async (req: OpenApiRequestExt, res: Respons
   const { teamId } = req.params
   debug(`createSealedSecret(${teamId}, ...)`)
   const v = await req.otomi.createAplSealedSecret(decodeURIComponent(teamId), req.body as SealedSecretManifestRequest)
-  res.json(v)
+  res.json(ensureStatus(v))
 }
