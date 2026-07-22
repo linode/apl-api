@@ -1,5 +1,6 @@
 import Debug from 'debug'
 import { Response } from 'express'
+import { ensureStatus } from 'src/api/response-utils'
 import { DeepPartial, OpenApiRequestExt, SealedSecretManifestRequest } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:teams:sealedsecrets')
@@ -12,7 +13,7 @@ export const getAplSealedSecret = async (req: OpenApiRequestExt, res: Response):
   const { teamId, sealedSecretName } = req.params
   debug(`getSealedSecret(${sealedSecretName})`)
   const data = await req.otomi.getAplSealedSecret(decodeURIComponent(teamId), decodeURIComponent(sealedSecretName))
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -27,7 +28,7 @@ export const editAplSealedSecret = async (req: OpenApiRequestExt, res: Response)
     decodeURIComponent(sealedSecretName),
     req.body as SealedSecretManifestRequest,
   )
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -43,7 +44,7 @@ export const patchAplSealedSecret = async (req: OpenApiRequestExt, res: Response
     req.body as DeepPartial<SealedSecretManifestRequest>,
     true,
   )
-  res.json(data)
+  res.json(ensureStatus(data))
 }
 
 /**
@@ -54,5 +55,5 @@ export const deleteAplSealedSecret = async (req: OpenApiRequestExt, res: Respons
   const { teamId, sealedSecretName } = req.params
   debug(`deleteSealedSecret(${sealedSecretName})`)
   await req.otomi.deleteAplSealedSecret(decodeURIComponent(teamId), decodeURIComponent(sealedSecretName))
-  res.json({})
+  res.status(200).end()
 }
