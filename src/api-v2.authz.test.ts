@@ -27,6 +27,124 @@ function createTeamResource(kind: AplKind, spec: Record<string, any>) {
   }
 }
 
+function createNamedTeamResource(kind: AplKind, name: string, teamId: string, spec: Record<string, any>) {
+  return {
+    kind,
+    metadata: {
+      name,
+      labels: { 'apl.io/teamId': teamId },
+    },
+    spec,
+  }
+}
+
+function withStatus<T extends Record<string, any>>(
+  resource: T,
+): T & { status: { conditions: never[]; phase: string } } {
+  return {
+    ...resource,
+    status: {
+      conditions: [],
+      phase: 'Ready',
+    },
+  }
+}
+
+const mockServiceResource = withStatus(
+  createNamedTeamResource('AplTeamService', 'service1', 'team1', {
+    serviceType: 'ksvcPredeployed',
+    ingress: { type: 'cluster' },
+    networkPolicy: { ingressPrivate: { mode: 'DenyAll' } },
+  }),
+)
+
+const mockWorkloadResource = withStatus(
+  createNamedTeamResource('AplTeamWorkload', 'my-uuid', 'team1', {
+    url: 'https://test.local/',
+    chart: 'some-chart',
+  }),
+)
+
+const mockSealedSecretResource = withStatus({
+  kind: 'SealedSecret',
+  metadata: {
+    name: 'my-secret',
+    labels: { 'apl.io/teamId': 'team1' },
+  },
+  spec: {
+    encryptedData: { key: 'value' },
+    template: {
+      type: 'kubernetes.io/opaque',
+    },
+  },
+})
+
+const mockCodeRepoResource = withStatus(
+  createNamedTeamResource('AplTeamCodeRepo', 'my-repo', 'team1', {
+    gitService: 'github',
+    repositoryUrl: 'https://github.com/example/repo',
+  }),
+)
+
+const mockBuildResource = withStatus(
+  createNamedTeamResource('AplTeamBuild', 'build1', 'team1', {
+    imageName: 'api-image',
+    tag: 'main',
+    mode: {
+      type: 'buildpacks',
+      buildpacks: {
+        repoUrl: 'https://github.com/example/repo',
+        path: '/',
+        revision: 'main',
+      },
+    },
+  }),
+)
+
+const mockNetpolResource = withStatus(
+  createNamedTeamResource('AplTeamNetworkControl', 'netpol1', 'team1', {
+    ruleType: {
+      type: 'ingress',
+      ingress: { mode: 'AllowAll' },
+    },
+  }),
+)
+
+const mockPolicyResource = withStatus(
+  createNamedTeamResource('AplTeamPolicy', 'disallow-selinux', 'team1', {
+    action: 'Enforce',
+    severity: 'high',
+  }),
+)
+
+const mockTeam1Resource = withStatus(
+  createNamedTeamResource('AplTeamSettingSet', 'team1', 'team1', {
+    selfService: {
+      teamMembers: {
+        createServices: true,
+        editSecurityPolicies: true,
+        useCloudShell: true,
+        downloadKubeconfig: true,
+        downloadDockerLogin: true,
+      },
+    },
+  }),
+)
+
+const mockTeam2Resource = withStatus(
+  createNamedTeamResource('AplTeamSettingSet', 'team2', 'team2', {
+    selfService: {
+      teamMembers: {
+        createServices: false,
+        editSecurityPolicies: false,
+        useCloudShell: false,
+        downloadKubeconfig: false,
+        downloadDockerLogin: false,
+      },
+    },
+  }),
+)
+
 jest.mock('./k8s-operations')
 jest.mock('./utils/sealedSecretUtils')
 beforeAll(async () => {
@@ -181,43 +299,49 @@ describe('API V2 authz tests', () => {
       }
     })
 
-    const team1 = {
-      kind: 'AplTeamSettingSet',
-      metadata: {
-        name: 'team1',
-        labels: {
-          'apl.io/teamId': 'team1',
-        },
-      },
-      spec: {
-        selfService: {
-          teamMembers: {
-            createServices: true,
-            editSecurityPolicies: true,
-          },
-        },
-      },
-    }
+    jest.spyOn(otomiStack, 'getApiStatus').mockReturnValue({ locked: false })
+    jest.spyOn(otomiStack, 'createAplService').mockResolvedValue(mockServiceResource as any)
+    jest.spyOn(otomiStack, 'getAplService').mockReturnValue(mockServiceResource as any)
+    jest.spyOn(otomiStack, 'editAplService').mockResolvedValue(mockServiceResource as any)
+    jest.spyOn(otomiStack, 'getAllAplServices').mockReturnValue([mockServiceResource] as any)
+    jest.spyOn(otomiStack, 'getTeamAplServices').mockReturnValue([mockServiceResource] as any)
 
-    const team2 = {
-      kind: 'AplTeamSettingSet',
-      metadata: {
-        name: 'team2',
-        labels: {
-          'apl.io/teamId': 'team2',
-        },
-      },
-      spec: {
-        selfService: {
-          teamMembers: {
-            createServices: false,
-            editSecurityPolicies: false,
-          },
-        },
-      },
-    }
+    jest.spyOn(otomiStack, 'createAplWorkload').mockResolvedValue(mockWorkloadResource as any)
+    jest.spyOn(otomiStack, 'getAplWorkload').mockReturnValue(mockWorkloadResource as any)
+    jest.spyOn(otomiStack, 'editAplWorkload').mockResolvedValue(mockWorkloadResource as any)
+    jest.spyOn(otomiStack, 'getAllAplWorkloads').mockReturnValue([mockWorkloadResource] as any)
+    jest.spyOn(otomiStack, 'getTeamAplWorkloads').mockReturnValue([mockWorkloadResource] as any)
 
-    jest.spyOn(otomiStack, 'getAplTeams').mockReturnValue([team1, team2] as any)
+    jest.spyOn(otomiStack, 'createAplSealedSecret').mockResolvedValue(mockSealedSecretResource as any)
+    jest.spyOn(otomiStack, 'getAplSealedSecret').mockResolvedValue(mockSealedSecretResource as any)
+    jest.spyOn(otomiStack, 'editAplSealedSecret').mockResolvedValue(mockSealedSecretResource as any)
+    jest.spyOn(otomiStack, 'getAllAplSealedSecrets').mockReturnValue([mockSealedSecretResource] as any)
+    jest.spyOn(otomiStack, 'getAplSealedSecrets').mockReturnValue([mockSealedSecretResource] as any)
+
+    jest.spyOn(otomiStack, 'createAplCodeRepo').mockResolvedValue(mockCodeRepoResource as any)
+    jest.spyOn(otomiStack, 'getAplCodeRepo').mockReturnValue(mockCodeRepoResource as any)
+    jest.spyOn(otomiStack, 'editAplCodeRepo').mockResolvedValue(mockCodeRepoResource as any)
+    jest.spyOn(otomiStack, 'getAllAplCodeRepos').mockReturnValue([mockCodeRepoResource] as any)
+    jest.spyOn(otomiStack, 'getTeamAplCodeRepos').mockReturnValue([mockCodeRepoResource] as any)
+
+    jest.spyOn(otomiStack, 'createAplBuild').mockResolvedValue(mockBuildResource as any)
+    jest.spyOn(otomiStack, 'getAplBuild').mockReturnValue(mockBuildResource as any)
+    jest.spyOn(otomiStack, 'editAplBuild').mockResolvedValue(mockBuildResource as any)
+    jest.spyOn(otomiStack, 'getAllAplBuilds').mockReturnValue([mockBuildResource] as any)
+    jest.spyOn(otomiStack, 'getTeamAplBuilds').mockReturnValue([mockBuildResource] as any)
+
+    jest.spyOn(otomiStack, 'createAplNetpol').mockResolvedValue(mockNetpolResource as any)
+    jest.spyOn(otomiStack, 'getAplNetpol').mockReturnValue(mockNetpolResource as any)
+    jest.spyOn(otomiStack, 'editAplNetpol').mockResolvedValue(mockNetpolResource as any)
+    jest.spyOn(otomiStack, 'getAllAplNetpols').mockReturnValue([mockNetpolResource] as any)
+    jest.spyOn(otomiStack, 'getTeamAplNetpols').mockReturnValue([mockNetpolResource] as any)
+
+    jest.spyOn(otomiStack, 'getAplPolicy').mockReturnValue(mockPolicyResource as any)
+    jest.spyOn(otomiStack, 'editAplPolicy').mockResolvedValue(mockPolicyResource as any)
+    jest.spyOn(otomiStack, 'getAllAplPolicies').mockReturnValue([mockPolicyResource] as any)
+    jest.spyOn(otomiStack, 'getTeamAplPolicies').mockReturnValue([mockPolicyResource] as any)
+    jest.spyOn(otomiStack, 'createAplTeam').mockResolvedValue(mockTeam1Resource as any)
+    jest.spyOn(otomiStack, 'editAplTeam').mockResolvedValue(mockTeam1Resource as any)
     jest.spyOn(otomiStack, 'getGitSettings').mockResolvedValue({
       repoUrl: 'https://github.com/example/repo.git',
       username: 'user',
@@ -225,6 +349,12 @@ describe('API V2 authz tests', () => {
       branch: 'main',
     })
     jest.spyOn(otomiStack, 'getDashboard').mockResolvedValue([])
+
+    const team1 = mockTeam1Resource
+
+    const team2 = mockTeam2Resource
+
+    jest.spyOn(otomiStack, 'getAplTeams').mockReturnValue([team1, team2] as any)
     jest.spyOn(otomiStack, 'getAplTeam').mockImplementation((teamId: string) => {
       if (teamId === 'team1') return team1 as any
       if (teamId === 'team2') return team2 as any
@@ -1283,7 +1413,8 @@ describe('API V2 authz tests', () => {
 
     describe('Team Member', () => {
       test('team member can get api status', async () => {
-        await agent.get('/v2/status').set('Authorization', `Bearer ${teamMemberToken}`).expect(200)
+        const res = await agent.get('/v2/status').set('Authorization', `Bearer ${teamMemberToken}`)
+        await expect(res.status).toBe(200)
       })
     })
 

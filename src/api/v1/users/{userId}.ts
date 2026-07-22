@@ -34,5 +34,5 @@ export const deleteUser = async (req: OpenApiRequestExt, res: Response): Promise
   const { userId } = req.params
   debug(`deleteUser(${userId})`)
   await req.otomi.deleteUser(decodeURIComponent(userId))
-  res.json({})
+  res.status(200).end()
 }
