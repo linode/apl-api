@@ -25,5 +25,5 @@ export const deleteAplCloudtty = async (req: OpenApiRequestExt, res: Response): 
   debug(`deleteCloudtty - ${sessionUser.email} - ${sessionUser.sub}`)
   const { teamId } = req.query as { teamId: string }
   await req.otomi.deleteCloudtty(teamId, sessionUser)
-  res.json({})
+  res.status(200).end()
 }

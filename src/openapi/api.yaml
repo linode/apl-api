@@ -703,7 +703,17 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                type: array
+                items:
+                  type: object
+                  required:
+                    - name
+                    - count
+                  properties:
+                    name:
+                      type: string
+                    count:
+                      type: integer
 
   '/v2/builds':
     get:
@@ -2350,10 +2360,21 @@ components:
         - spec
     AplAIModelResponse:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/AplAIModel'
-        - $ref: '#/components/schemas/aplMetadata'
-        - $ref: '#/components/schemas/aplStatusResponse'
+      properties:
+        kind:
+          type: string
+          enum: [AplAIModel]
+        spec:
+          $ref: 'aiModel.yaml#/AplAIModelSpec'
+        metadata:
+          $ref: '#/components/schemas/aplMetadata/properties/metadata'
+        status:
+          $ref: '#/components/schemas/aplStatusResponse/properties/status'
+      required:
+        - kind
+        - spec
+        - metadata
+        - status
     AplAgent:
       type: object
       properties:
@@ -2371,10 +2392,21 @@ components:
         - $ref: '#/components/schemas/aplMetadata'
     AplAgentResponse:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/AplAgent'
-        - $ref: '#/components/schemas/aplTeamMetadata'
-        - $ref: '#/components/schemas/aplStatusResponse'
+      properties:
+        kind:
+          type: string
+          enum: [AkamaiAgent]
+        spec:
+          $ref: 'agent.yaml#/AplAgentSpec'
+        metadata:
+          $ref: '#/components/schemas/aplTeamMetadata/properties/metadata'
+        status:
+          $ref: '#/components/schemas/aplStatusResponse/properties/status'
+      required:
+        - kind
+        - spec
+        - metadata
+        - status
     AplBuild:
       type: object
       properties:
@@ -2392,10 +2424,21 @@ components:
         - $ref: '#/components/schemas/aplMetadata'
     AplBuildResponse:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/AplBuild'
-        - $ref: '#/components/schemas/aplTeamMetadata'
-        - $ref: '#/components/schemas/aplStatusResponse'
+      properties:
+        kind:
+          type: string
+          enum: [AplTeamBuild]
+        spec:
+          $ref: 'build.yaml#/AplBuildSpec'
+        metadata:
+          $ref: '#/components/schemas/aplTeamMetadata/properties/metadata'
+        status:
+          $ref: '#/components/schemas/aplStatusResponse/properties/status'
+      required:
+        - kind
+        - spec
+        - metadata
+        - status
     AplCatalog:
       type: object
       x-acl:
@@ -2421,10 +2464,21 @@ components:
         - $ref: '#/components/schemas/aplMetadata'
     AplCatalogResponse:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/AplCatalog'
-        - $ref: '#/components/schemas/aplMetadata'
-        - $ref: '#/components/schemas/aplStatusResponse'
+      properties:
+        kind:
+          type: string
+          enum: [AplCatalog]
+        spec:
+          $ref: 'catalog.yaml#/AplCatalogSpec'
+        metadata:
+          $ref: '#/components/schemas/aplMetadata/properties/metadata'
+        status:
+          $ref: '#/components/schemas/aplStatusResponse/properties/status'
+      required:
+        - kind
+        - spec
+        - metadata
+        - status
     AplCatalogChart:
       type: object
       properties:
@@ -2438,10 +2492,21 @@ components:
         - spec
     AplCatalogChartResponse:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/AplCatalogChart'
-        - $ref: '#/components/schemas/aplMetadata'
-        - $ref: '#/components/schemas/aplStatusResponse'
+      properties:
+        kind:
+          type: string
+          enum: [AplCatalogChart]
+        spec:
+          $ref: 'catalog.yaml#/AplCatalogChartSpec'
+        metadata:
+          $ref: '#/components/schemas/aplMetadata/properties/metadata'
+        status:
+          $ref: '#/components/schemas/aplStatusResponse/properties/status'
+      required:
+        - kind
+        - spec
+        - metadata
+        - status
     AplCodeRepo:
       type: object
       properties:
@@ -2459,10 +2524,21 @@ components:
         - $ref: '#/components/schemas/aplMetadata'
     AplCodeRepoResponse:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/AplCodeRepo'
-        - $ref: '#/components/schemas/aplTeamMetadata'
-        - $ref: '#/components/schemas/aplStatusResponse'
+      properties:
+        kind:
+          type: string
+          enum: [AplTeamCodeRepo]
+        spec:
+          $ref: 'codeRepo.yaml#/AplCodeRepoSpec'
+        metadata:
+          $ref: '#/components/schemas/aplTeamMetadata/properties/metadata'
+        status:
+          $ref: '#/components/schemas/aplStatusResponse/properties/status'
+      required:
+        - kind
+        - spec
+        - metadata
+        - status
     AplKnowledgeBase:
       type: object
       properties:
@@ -2480,10 +2556,21 @@ components:
         - $ref: '#/components/schemas/aplMetadata'
     AplKnowledgeBaseResponse:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/AplKnowledgeBase'
-        - $ref: '#/components/schemas/aplTeamMetadata'
-        - $ref: '#/components/schemas/aplStatusResponse'
+      properties:
+        kind:
+          type: string
+          enum: [AkamaiKnowledgeBase]
+        spec:
+          $ref: 'knowledgeBase.yaml#/AplKnowledgeBaseSpec'
+        metadata:
+          $ref: '#/components/schemas/aplTeamMetadata/properties/metadata'
+        status:
+          $ref: '#/components/schemas/aplStatusResponse/properties/status'
+      required:
+        - kind
+        - spec
+        - metadata
+        - status
     AplNetpol:
       type: object
       properties:
@@ -2501,10 +2588,21 @@ components:
         - $ref: '#/components/schemas/aplMetadata'
     AplNetpolResponse:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/AplNetpol'
-        - $ref: '#/components/schemas/aplTeamMetadata'
-        - $ref: '#/components/schemas/aplStatusResponse'
+      properties:
+        kind:
+          type: string
+          enum: [AplTeamNetworkControl]
+        spec:
+          $ref: 'netpol.yaml#/AplNetpolSpec'
+        metadata:
+          $ref: '#/components/schemas/aplTeamMetadata/properties/metadata'
+        status:
+          $ref: '#/components/schemas/aplStatusResponse/properties/status'
+      required:
+        - kind
+        - spec
+        - metadata
+        - status
     AplPolicy:
       type: object
       properties:
@@ -2522,10 +2620,21 @@ components:
         - $ref: '#/components/schemas/aplMetadata'
     AplPolicyResponse:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/AplPolicy'
-        - $ref: '#/components/schemas/aplTeamMetadata'
-        - $ref: '#/components/schemas/aplStatusResponse'
+      properties:
+        kind:
+          type: string
+          enum: [AplTeamPolicy]
+        spec:
+          $ref: 'policies.yaml#/Policy'
+        metadata:
+          $ref: '#/components/schemas/aplTeamMetadata/properties/metadata'
+        status:
+          $ref: '#/components/schemas/aplStatusResponse/properties/status'
+      required:
+        - kind
+        - spec
+        - metadata
+        - status
     SealedSecretManifest:
       type: object
       properties:
@@ -2546,10 +2655,24 @@ components:
         - $ref: '#/components/schemas/aplMetadata'
     SealedSecretManifestResponse:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/SealedSecretManifest'
-        - $ref: '#/components/schemas/aplTeamMetadata'
-        - $ref: '#/components/schemas/aplStatusResponse'
+      properties:
+        apiVersion:
+          type: string
+          enum: ['bitnami.com/v1alpha1']
+        kind:
+          type: string
+          enum: [SealedSecret]
+        spec:
+          $ref: '#/components/schemas/SealedSecretManifestSpec'
+        metadata:
+          $ref: '#/components/schemas/aplTeamMetadata/properties/metadata'
+        status:
+          $ref: '#/components/schemas/aplStatusResponse/properties/status'
+      required:
+        - kind
+        - spec
+        - metadata
+        - status
     AplService:
       type: object
       properties:
@@ -2567,10 +2690,21 @@ components:
         - $ref: '#/components/schemas/aplMetadata'
     AplServiceResponse:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/AplService'
-        - $ref: '#/components/schemas/aplTeamMetadata'
-        - $ref: '#/components/schemas/aplStatusResponse'
+      properties:
+        kind:
+          type: string
+          enum: [AplTeamService]
+        spec:
+          $ref: 'service.yaml#/AplServiceSpec'
+        metadata:
+          $ref: '#/components/schemas/aplTeamMetadata/properties/metadata'
+        status:
+          $ref: '#/components/schemas/aplStatusResponse/properties/status'
+      required:
+        - kind
+        - spec
+        - metadata
+        - status
     AplTeamSettings:
       type: object
       properties:
@@ -2588,10 +2722,21 @@ components:
         - $ref: '#/components/schemas/aplTeamMetadata'
     AplTeamSettingsResponse:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/AplTeamSettings'
-        - $ref: '#/components/schemas/aplTeamMetadata'
-        - $ref: '#/components/schemas/aplStatusResponse'
+      properties:
+        kind:
+          type: string
+          enum: [AplTeamSettingSet]
+        spec:
+          $ref: 'team.yaml#/AplTeamSpec'
+        metadata:
+          $ref: '#/components/schemas/aplTeamMetadata/properties/metadata'
+        status:
+          $ref: '#/components/schemas/aplStatusResponse/properties/status'
+      required:
+        - kind
+        - spec
+        - metadata
+        - status
     AplWorkload:
       type: object
       properties:
@@ -2609,10 +2754,21 @@ components:
         - $ref: '#/components/schemas/aplMetadata'
     AplWorkloadResponse:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/AplWorkload'
-        - $ref: '#/components/schemas/aplTeamMetadata'
-        - $ref: '#/components/schemas/aplStatusResponse'
+      properties:
+        kind:
+          type: string
+          enum: [AplTeamWorkload]
+        spec:
+          $ref: 'workload.yaml#/AplWorkloadSpec'
+        metadata:
+          $ref: '#/components/schemas/aplTeamMetadata/properties/metadata'
+        status:
+          $ref: '#/components/schemas/aplStatusResponse/properties/status'
+      required:
+        - kind
+        - spec
+        - metadata
+        - status
 
     Agent:
       $ref: 'agent.yaml#/Agent'

@@ -48,5 +48,5 @@ export const migrateGit = async (req: OpenApiRequestExt, res: Response): Promise
   // Write config and push to new remote
   await req.otomi.migrateGitSettings(newGitConfig, remoteHasContent)
 
-  res.json({})
+  res.status(200).end()
 }
