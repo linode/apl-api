@@ -18,6 +18,7 @@ import {
   jwtMiddleware,
   onResponseValidationError,
   sessionMiddleware,
+  validateResponseError,
 } from 'src/middleware'
 import { apiRateLimiter, authRateLimiter } from 'src/middleware/rate-limit'
 import { setMockIdx } from 'src/mocks'

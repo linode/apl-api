@@ -37,6 +37,8 @@ AplCatalogChartSpec:
         type: string
       repositoryUrl:
         type: string
+      icon:
+        type: string
   required:
     - name
     - version
