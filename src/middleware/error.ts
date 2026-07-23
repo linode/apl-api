@@ -9,7 +9,7 @@ import { cleanSession } from './session'
 const env = cleanEnv({})
 
 export function validateResponseError(err: InternalServerError, body: any, req: Request): void {
-  warn(`Response body fails validation: `, err, req.originalUrl)
+  warn(`Response body fails validation: `, err, req.method)
   return
 }
 // Note: 4 arguments (no more, no less) must be defined in your errorMiddleware function. Otherwise the function will be silently ignored.
