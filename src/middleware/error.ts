@@ -1,6 +1,6 @@
 import { debug, error, warn } from 'console'
 import { Request, Response } from 'express'
-import { InternalServerError } from 'express-openapi-validator/dist/openapi.validator'
+
 import { HttpError, OtomiError } from 'src/error'
 import { OpenApiRequest } from 'src/otomi-models'
 import { cleanEnv } from 'src/validators'
@@ -8,7 +8,7 @@ import { cleanSession } from './session'
 
 const env = cleanEnv({})
 
-export function validateResponseError(err: InternalServerError, body: any, req: Request): void {
+export function validateResponseError(err: any, body: any, req: Request): void {
   warn(`Response body fails validation: `, err, req.method)
   return
 }
