@@ -16,8 +16,8 @@ import {
   getSessionStack,
   groupAuthzSecurityHandler,
   jwtMiddleware,
+  onResponseValidationError,
   sessionMiddleware,
-  validateResponseError,
 } from 'src/middleware'
 import { apiRateLimiter, authRateLimiter } from 'src/middleware/rate-limit'
 import { setMockIdx } from 'src/mocks'
@@ -290,7 +290,7 @@ export async function initApp(inOtomiStack?: OtomiStack) {
       },
       validateResponses: {
         removeAdditional: 'failing',
-        onError: validateResponseError,
+        onError: onResponseValidationError,
       },
       validateSecurity: {
         handlers: { groupAuthz: groupAuthzSecurityHandler },
