@@ -8,7 +8,7 @@ import { cleanSession } from './session'
 
 const env = cleanEnv({})
 
-export function validateResponseError(err: any, body: any, req: Request): void {
+export function validateResponseError(err: any, _body: any, req: Request): void {
   warn(`Response body fails validation: `, err, req.method)
   return
 }
