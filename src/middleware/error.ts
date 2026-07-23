@@ -1,5 +1,6 @@
-import { debug, error } from 'console'
-import { Response } from 'express'
+import { debug, error, warn } from 'console'
+import { Request, Response } from 'express'
+import { InternalServerError } from 'express-openapi-validator/dist/openapi.validator'
 import { HttpError, OtomiError } from 'src/error'
 import { OpenApiRequest } from 'src/otomi-models'
 import { cleanEnv } from 'src/validators'
@@ -7,6 +8,10 @@ import { cleanSession } from './session'
 
 const env = cleanEnv({})
 
+export function validateResponseError(err: InternalServerError, body: any, req: Request): void {
+  warn(`Response body fails validation: `, err, req.originalUrl)
+  return
+}
 // Note: 4 arguments (no more, no less) must be defined in your errorMiddleware function. Otherwise the function will be silently ignored.
 
 export function errorMiddleware(e, req: OpenApiRequest, res: Response, next): void {
