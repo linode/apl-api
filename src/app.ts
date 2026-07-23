@@ -16,8 +16,8 @@ import {
   getSessionStack,
   groupAuthzSecurityHandler,
   jwtMiddleware,
+  onResponseValidationError,
   sessionMiddleware,
-  validateResponseError,
 } from 'src/middleware'
 import { apiRateLimiter, authRateLimiter } from 'src/middleware/rate-limit'
 import { setMockIdx } from 'src/mocks'
@@ -289,8 +289,9 @@ export async function initApp(inOtomiStack?: OtomiStack) {
         coerceTypes: 'array', // coerce scalar data to an array with one element and vice versa (as required by the schema).
       },
       validateResponses: {
-        removeAdditional: 'all', // Remove properties not defined in the schema from responses
-        onError: validateResponseError,
+        // TODO set to 'all' when all responses are fixed
+        removeAdditional: 'failing',
+        onError: onResponseValidationError,
       },
       validateSecurity: {
         handlers: { groupAuthz: groupAuthzSecurityHandler },
