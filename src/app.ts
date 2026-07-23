@@ -17,6 +17,7 @@ import {
   groupAuthzSecurityHandler,
   jwtMiddleware,
   sessionMiddleware,
+  validateResponseError,
 } from 'src/middleware'
 import { apiRateLimiter, authRateLimiter } from 'src/middleware/rate-limit'
 import { setMockIdx } from 'src/mocks'
@@ -289,6 +290,7 @@ export async function initApp(inOtomiStack?: OtomiStack) {
       },
       validateResponses: {
         removeAdditional: 'all', // Remove properties not defined in the schema from responses
+        onError: validateResponseError,
       },
       validateSecurity: {
         handlers: { groupAuthz: groupAuthzSecurityHandler },
