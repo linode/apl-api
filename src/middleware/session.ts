@@ -1,6 +1,7 @@
 import Debug from 'debug'
 import { RequestHandler } from 'express'
 import { remove } from 'fs-extra'
+import { rm } from 'fs/promises'
 import http from 'http'
 import { join } from 'path'
 import { Server } from 'socket.io'
@@ -11,7 +12,6 @@ import { API_NAMESPACE, cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validato
 import { v4 as uuidv4 } from 'uuid'
 import { setApiStatusInConfigMap } from '../k8s-operations'
 import { getSanitizedErrorMessage } from '../utils'
-import { rm } from 'fs/promises'
 
 const debug = Debug('otomi:session')
 const env = cleanEnv({
@@ -119,10 +119,7 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
     // eslint-disable-next-line no-param-reassign
     req.otomi = roStack
 
-    if (['post', 'put', 'delete'].includes(req.method.toLowerCase())) {
-      // in the workloadCatalog endpoint(s), don't need to create a session
-      if (req.path === '/v1/workloadCatalog') return next()
-
+    if (['patch', 'post', 'put', 'delete'].includes(req.method.toLowerCase())) {
       // Block all write operations when the API is locked (git migration completed)
       if (readOnlyStack?.locked) throw new ApiLockedError()
 
