@@ -25,6 +25,7 @@ import { AplResponseObject, OpenAPIDoc, Schema, SealedSecretManifestResponse } f
 import { default as OtomiStack } from 'src/otomi-stack'
 import { getValuesSchema } from 'src/utils'
 import {
+  API_VALIDATE_RESPONSE,
   CATALOG_CACHE_REFRESH_INTERVAL_MS,
   CHECK_LATEST_COMMIT_INTERVAL,
   cleanEnv,
@@ -37,6 +38,7 @@ import getLatestRemoteCommitSha from './git/connect'
 import { getBuildStatus, getSealedSecretStatus, getServiceStatus, getWorkloadStatus } from './k8s-operations'
 
 const env = cleanEnv({
+  API_VALIDATE_RESPONSE,
   CATALOG_CACHE_REFRESH_INTERVAL_MS,
   CHECK_LATEST_COMMIT_INTERVAL,
   EXPRESS_PAYLOAD_LIMIT,
@@ -288,11 +290,13 @@ export async function initApp(inOtomiStack?: OtomiStack) {
         allowUnknownQueryParameters: false,
         coerceTypes: 'array', // coerce scalar data to an array with one element and vice versa (as required by the schema).
       },
-      validateResponses: {
-        // TODO set to 'all' when all responses are fixed
-        removeAdditional: 'failing',
-        onError: onResponseValidationError,
-      },
+      validateResponses: env.API_VALIDATE_RESPONSE
+        ? {
+            // TODO set to 'all' when all responses are fixed
+            removeAdditional: 'failing',
+            onError: onResponseValidationError,
+          }
+        : false,
       validateSecurity: {
         handlers: { groupAuthz: groupAuthzSecurityHandler },
       },

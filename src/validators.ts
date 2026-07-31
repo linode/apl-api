@@ -9,6 +9,10 @@ export const AUTHZ_MOCK_IS_TEAM_ADMIN = bool({
   default: true,
 })
 export const AUTHZ_MOCK_TEAM = str({ desc: 'Comma separated list of teams a user belongs to', default: undefined })
+export const API_VALIDATE_RESPONSE = bool({
+  desc: 'Enable OpenAPI response validation middleware',
+  default: false,
+})
 export const CATALOG_CACHE_REFRESH_INTERVAL_MS = num({
   desc: 'Interval in milliseconds for refreshing the BYO catalog cache',
   default: 600000, // 10 minutes
