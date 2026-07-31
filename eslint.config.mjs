@@ -75,7 +75,7 @@ export default defineConfig([
           varsIgnorePattern: '^_',
         },
       ],
-      
+
       '@typescript-eslint/no-use-before-define': ['error'],
       '@typescript-eslint/restrict-template-expressions': 'off',
       '@typescript-eslint/naming-convention': [
@@ -112,6 +112,16 @@ export default defineConfig([
 
       // Plugins
       'prettier/prettier': 'error',
+    },
+  },
+  // Test files specific configuration
+  {
+    files: ['**/*.test.ts', '**/stubs/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
     },
   },
 ])

@@ -244,14 +244,7 @@ export interface Acl {
 }
 
 export type AclAction =
-  | 'create'
-  | 'create-any'
-  | 'delete'
-  | 'delete-any'
-  | 'read'
-  | 'read-any'
-  | 'update'
-  | 'update-any'
+  'create' | 'create-any' | 'delete' | 'delete-any' | 'read' | 'read-any' | 'update' | 'update-any'
 
 export enum SessionRole {
   PlatformAdmin = 'platformAdmin',
