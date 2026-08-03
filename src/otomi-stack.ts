@@ -1,8 +1,8 @@
 import {
   ApiException,
   CoreV1Api,
-  User as k8sUser,
   KubeConfig,
+  User as k8sUser,
   V1ObjectReference,
   V1Secret,
 } from '@kubernetes/client-node'
@@ -734,7 +734,7 @@ export default class OtomiStack {
    */
   private async getGitConfig(inputConfig?: Partial<GitConfig>): Promise<GitConfig> {
     let gitConfig
-    if (process.env.NODE_ENV === 'test' || env.GIT_REPO_URL.startsWith('file://')) {
+    if (process.env.NODE_ENV === 'test' || env.GIT_REPO_URL?.startsWith('file://')) {
       gitConfig = { password: '', ...GIT_DEFAULT_CONFIG, repoUrl: '' }
     } else {
       gitConfig = {
