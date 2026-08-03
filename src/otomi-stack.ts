@@ -1,8 +1,8 @@
 import {
   ApiException,
   CoreV1Api,
-  User as k8sUser,
   KubeConfig,
+  User as k8sUser,
   V1ObjectReference,
   V1Secret,
 } from '@kubernetes/client-node'
