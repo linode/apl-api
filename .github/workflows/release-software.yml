@@ -19,7 +19,7 @@ env:
   RELEASE_BRANCH_PREFIX: "releases/"
   RELEASE_TAG_PREFIX: "v"
   OCI_USERNAME: ${{ secrets.OCI_USERNAME }}
-  OCI_PASSWORD: ${{ secrets.OCI_PASSWORD }}
+  OCI_PASSWORD: ${{ secrets.DOCKERHUB_LINODEBOT_TOKEN }}
 
 jobs:
   release-get-tag:

@@ -1,24 +1,27 @@
 # Linode APL default Workflow
-#
-# Given facts:
-# * We don't allow manual tagging, but let the workflow create them after tests have passed.
-# * We don't let workflows be triggered by events coming from tags
-# * We use `npm run release` (without automated tagging) which only bumps version and creates changelog and commit message with title 'chore(release): v${semverVersion}'
-# * Pipeline detects the release title and after tests pass, creates artifacts (images) and makes full tag copies (and github release) to allow release patching.
 name: Build test push release
 on:
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "adr/**"
+      - ".vscode/**"
+      - "**.md"
   push:
     branches:
-      - "**"
-    tags-ignore:
-      - "*"
+      - main
+    paths-ignore:
+      - "docs/**"
+      - "adr/**"
+      - ".vscode/**"
+      - "**.md"
 env:
   COMMIT_MSG: ${{ github.event.head_commit.message }}
   CACHE_REGISTRY: ghcr.io
   CACHE_REPO: linode/apl-api
   REPO: linode/apl-api
   DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_LINODEBOT_TOKEN }}
-  DOCKER_USERNAME: ${{ vars.DOCKERHUB_LINODEBOT_USERNAME }}
+  DOCKER_USERNAME: ${{ secrets.OCI_USERNAME }}
   BOT_EMAIL: ${{ vars.BOT_EMAIL }}
   BOT_USERNAME: ${{ vars.BOT_USERNAME }}
   BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
