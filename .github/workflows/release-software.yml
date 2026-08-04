@@ -1,3 +1,6 @@
+# Required repository/environment secrets:
+#   OCI_USERNAME              - registry login username
+#   DOCKERHUB_LINODEBOT_TOKEN - registry login token
 name: Release Software
 
 on:
@@ -18,8 +21,6 @@ env:
   RELEASE_BRANCH: ${{ github.ref_name }}
   RELEASE_BRANCH_PREFIX: "releases/"
   RELEASE_TAG_PREFIX: "v"
-  OCI_USERNAME: ${{ secrets.OCI_USERNAME }}
-  OCI_PASSWORD: ${{ secrets.DOCKERHUB_LINODEBOT_TOKEN }}
 
 jobs:
   release-get-tag:
@@ -84,8 +85,8 @@ jobs:
         uses: docker/login-action@v4
         with:
           registry: ${{ env.CONTAINER_REGISTRY }}
-          username: ${{ env.OCI_USERNAME }}
-          password: ${{ env.OCI_PASSWORD }}
+          username: ${{ secrets.OCI_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_LINODEBOT_TOKEN }}
 
       - name: Push to OCI registry
         uses: docker/build-push-action@v7
