@@ -2,7 +2,6 @@
 import { fixupPluginRules } from '@eslint/compat'
 import pluginTs from '@typescript-eslint/eslint-plugin'
 import parserTs from '@typescript-eslint/parser'
-import pluginImport from 'eslint-plugin-import'
 import pluginUnused from 'eslint-plugin-unused-imports'
 import pluginPrettier from 'eslint-plugin-prettier'
 import globals from 'globals'
@@ -35,18 +34,8 @@ export default defineConfig([
     },
     plugins: {
       '@typescript-eslint': fixupPluginRules(pluginTs),
-      import: fixupPluginRules(pluginImport),
       'unused-imports': fixupPluginRules(pluginUnused),
       prettier: fixupPluginRules(pluginPrettier),
-    },
-    settings: {
-      'import/resolver': {
-        node: {
-          extensions: ['.ts'],
-          paths: ['src'],
-        },
-        typescript: {},
-      },
     },
     rules: {
       // TS rules
@@ -77,6 +66,7 @@ export default defineConfig([
       ],
 
       '@typescript-eslint/no-use-before-define': ['error'],
+      '@typescript-eslint/no-require-imports': 'error',
       '@typescript-eslint/restrict-template-expressions': 'off',
       '@typescript-eslint/naming-convention': [
         'error',
@@ -91,8 +81,6 @@ export default defineConfig([
       'comma-dangle': ['error', 'only-multiline'],
       'eol-last': ['error', 'always'],
       'func-names': 'off',
-      'import/extensions': 'off',
-      'import/no-extraneous-dependencies': 'off',
       'no-console': 'off',
       'no-debugger': 'warn',
       'no-fallthrough': 'warn',
