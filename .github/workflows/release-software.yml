@@ -93,7 +93,7 @@ jobs:
           CONTAINER_IMAGE_TAG: ${{ env.CONTAINER_REGISTRY }}/${{ env.CONTAINER_IMAGE_NAME }}:${{ needs.release-get-tag.outputs.release_tag }}
         with:
           push: ${{ !inputs.dry_run }}
-          load: true
+          load: ${{ !inputs.dry_run }}
           context: .
           build-args: |
             VERSION=${{ env.GIT_TAG }}
