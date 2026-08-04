@@ -4,20 +4,20 @@ on:
   workflow_dispatch:
     inputs:
       is_prerelease:
-        description: 'Cut an RC tag instead of a stable tag'
+        description: "Cut an RC tag instead of a stable tag"
         required: true
         type: boolean
       dry_run:
-        description: 'Skip all writes (tag, release, and Docker push)'
+        description: "Skip all writes (tag, release, and Docker push)"
         required: true
         type: boolean
 
 env:
   CONTAINER_REGISTRY: docker.io
-  CONTAINER_IMAGE_NAME: linode/apl-gh-actions
+  CONTAINER_IMAGE_NAME: linode/apl-api
   RELEASE_BRANCH: ${{ github.ref_name }}
-  RELEASE_BRANCH_PREFIX: 'releases/'
-  RELEASE_TAG_PREFIX: 'v'
+  RELEASE_BRANCH_PREFIX: "releases/"
+  RELEASE_TAG_PREFIX: "v"
   OCI_USERNAME: ${{ secrets.OCI_USERNAME }}
   OCI_PASSWORD: ${{ secrets.OCI_PASSWORD }}
 
