@@ -12,7 +12,7 @@ export const getAplCatalogsChart = async (req: OpenApiRequestExt, res: Response)
   const { catalogId, chartName } = req.params
   debug(`getAplCatalogChart(${catalogId}, ${chartName})`)
 
-  const data = await req.otomi.getAplCatalogChart(decodeURIComponent(catalogId), decodeURIComponent(chartName))
+  const data = await req.otomi.getAplCatalogChart(catalogId, chartName)
 
   res.json(data)
 }

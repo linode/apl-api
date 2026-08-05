@@ -12,7 +12,7 @@ const debug = Debug('otomi:api:v2:catalogs')
 export const getAplCatalog = (req: OpenApiRequestExt, res: Response): void => {
   const { catalogId } = req.params
   debug(`getAplCatalog(${catalogId})`)
-  const data = req.otomi.getAplCatalog(decodeURIComponent(catalogId))
+  const data = req.otomi.getAplCatalog(catalogId)
   res.json(ensureStatus(data))
 }
 
@@ -23,7 +23,7 @@ export const getAplCatalog = (req: OpenApiRequestExt, res: Response): void => {
 export const editAplCatalog = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { catalogId } = req.params
   debug(`editAplCatalog(${catalogId})`)
-  const data = await req.otomi.editAplCatalog(decodeURIComponent(catalogId), req.body as AplCatalogRequest)
+  const data = await req.otomi.editAplCatalog(catalogId, req.body as AplCatalogRequest)
   res.json(ensureStatus(data))
 }
 
@@ -34,7 +34,7 @@ export const editAplCatalog = async (req: OpenApiRequestExt, res: Response): Pro
 export const patchAplCatalog = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { catalogId } = req.params
   debug(`patchAplCatalog(${catalogId})`)
-  const data = await req.otomi.editAplCatalog(decodeURIComponent(catalogId), req.body as AplCatalogRequest, true)
+  const data = await req.otomi.editAplCatalog(catalogId, req.body as AplCatalogRequest, true)
   res.json(ensureStatus(data))
 }
 
@@ -45,6 +45,6 @@ export const patchAplCatalog = async (req: OpenApiRequestExt, res: Response): Pr
 export const deleteAplCatalog = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { catalogId } = req.params
   debug(`deleteAplCatalog(${catalogId})`)
-  await req.otomi.deleteAplCatalog(decodeURIComponent(catalogId))
+  await req.otomi.deleteAplCatalog(catalogId)
   res.status(200).end()
 }

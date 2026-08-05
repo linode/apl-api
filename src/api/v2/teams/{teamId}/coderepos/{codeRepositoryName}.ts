@@ -12,7 +12,7 @@ const debug = Debug('otomi:api:v2:teams:codeRepos')
 export const getAplCodeRepo = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId, codeRepositoryName } = req.params
   debug(`getCodeRepo(${codeRepositoryName})`)
-  const data = req.otomi.getAplCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
+  const data = req.otomi.getAplCodeRepo(teamId, codeRepositoryName)
   res.json(ensureStatus(data))
 }
 
@@ -23,11 +23,7 @@ export const getAplCodeRepo = (req: OpenApiRequestExt, res: Response): void => {
 export const editAplCodeRepo = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, codeRepositoryName } = req.params
   debug(`editCodeRepo(${codeRepositoryName})`)
-  const data = await req.otomi.editAplCodeRepo(
-    decodeURIComponent(teamId),
-    decodeURIComponent(codeRepositoryName),
-    req.body as AplCodeRepoRequest,
-  )
+  const data = await req.otomi.editAplCodeRepo(teamId, codeRepositoryName, req.body as AplCodeRepoRequest)
   res.json(ensureStatus(data))
 }
 
@@ -39,8 +35,8 @@ export const patchAplCodeRepo = async (req: OpenApiRequestExt, res: Response): P
   const { teamId, codeRepositoryName } = req.params
   debug(`editCodeRepo(${codeRepositoryName}, patch)`)
   const data = await req.otomi.editAplCodeRepo(
-    decodeURIComponent(teamId),
-    decodeURIComponent(codeRepositoryName),
+    teamId,
+    codeRepositoryName,
     req.body as DeepPartial<AplCodeRepoRequest>,
     true,
   )
@@ -54,6 +50,6 @@ export const patchAplCodeRepo = async (req: OpenApiRequestExt, res: Response): P
 export const deleteAplCodeRepo = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, codeRepositoryName } = req.params
   debug(`deleteCodeRepo(${codeRepositoryName})`)
-  await req.otomi.deleteAplCodeRepo(decodeURIComponent(teamId), decodeURIComponent(codeRepositoryName))
+  await req.otomi.deleteAplCodeRepo(teamId, codeRepositoryName)
   res.status(200).end()
 }

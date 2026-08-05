@@ -12,7 +12,7 @@ const debug = Debug('otomi:api:v2:teams:builds')
 export const getAplBuild = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId, buildName } = req.params
   debug(`getBuild(${buildName})`)
-  const data = req.otomi.getAplBuild(decodeURIComponent(teamId), decodeURIComponent(buildName))
+  const data = req.otomi.getAplBuild(teamId, buildName)
   res.json(ensureStatus(data))
 }
 
@@ -23,11 +23,7 @@ export const getAplBuild = (req: OpenApiRequestExt, res: Response): void => {
 export const editAplBuild = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, buildName } = req.params
   debug(`editBuild(${buildName})`)
-  const data = await req.otomi.editAplBuild(
-    decodeURIComponent(teamId),
-    decodeURIComponent(buildName),
-    req.body as AplBuildRequest,
-  )
+  const data = await req.otomi.editAplBuild(teamId, buildName, req.body as AplBuildRequest)
   res.json(ensureStatus(data))
 }
 
@@ -38,12 +34,7 @@ export const editAplBuild = async (req: OpenApiRequestExt, res: Response): Promi
 export const patchAplBuild = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, buildName } = req.params
   debug(`editBuild(${buildName}, patch)`)
-  const data = await req.otomi.editAplBuild(
-    decodeURIComponent(teamId),
-    decodeURIComponent(buildName),
-    req.body as DeepPartial<AplBuildRequest>,
-    true,
-  )
+  const data = await req.otomi.editAplBuild(teamId, buildName, req.body as DeepPartial<AplBuildRequest>, true)
   res.json(ensureStatus(data))
 }
 
@@ -54,6 +45,6 @@ export const patchAplBuild = async (req: OpenApiRequestExt, res: Response): Prom
 export const deleteAplBuild = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, buildName } = req.params
   debug(`deleteBuild(${buildName})`)
-  await req.otomi.deleteAplBuild(decodeURIComponent(teamId), decodeURIComponent(buildName))
+  await req.otomi.deleteAplBuild(teamId, buildName)
   res.status(200).end()
 }

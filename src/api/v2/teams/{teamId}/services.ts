@@ -11,7 +11,7 @@ const debug = Debug('otomi:api:v2:teams:services')
 export const getTeamAplServices = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId } = req.params
   debug(`getTeamServices(${teamId})`)
-  const v = req.otomi.getTeamAplServices(decodeURIComponent(teamId))
+  const v = req.otomi.getTeamAplServices(teamId)
   res.json(v)
 }
 
@@ -22,6 +22,6 @@ export const getTeamAplServices = (req: OpenApiRequestExt, res: Response): void 
 export const createAplService = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId } = req.params
   debug(`createService(${teamId}, ...)`)
-  const v = await req.otomi.createAplService(decodeURIComponent(teamId), req.body as AplServiceRequest)
+  const v = await req.otomi.createAplService(teamId, req.body as AplServiceRequest)
   res.json(v)
 }

@@ -11,7 +11,7 @@ const debug = Debug('otomi:api:alpha:teams:kb')
 export const getAplKnowledgeBases = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId } = req.params
   debug(`getAplKnowledgeBases(${teamId})`)
-  const v = req.otomi.getAplKnowledgeBases(decodeURIComponent(teamId))
+  const v = req.otomi.getAplKnowledgeBases(teamId)
   res.json(v)
 }
 
@@ -22,6 +22,6 @@ export const getAplKnowledgeBases = (req: OpenApiRequestExt, res: Response): voi
 export const createAplKnowledgeBase = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId } = req.params
   debug(`createAplKnowledgeBase(${teamId}, ...)`)
-  const v = await req.otomi.createAplKnowledgeBase(decodeURIComponent(teamId), req.body as AplKnowledgeBaseRequest)
+  const v = await req.otomi.createAplKnowledgeBase(teamId, req.body as AplKnowledgeBaseRequest)
   res.json(v)
 }

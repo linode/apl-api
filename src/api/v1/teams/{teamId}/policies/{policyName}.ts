@@ -11,7 +11,7 @@ const debug = Debug('otomi:api:v1:teams:policies')
 export const getPolicy = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId, policyName } = req.params
   debug(`getPolicy(${policyName})`)
-  const data = req.otomi.getPolicy(decodeURIComponent(teamId), decodeURIComponent(policyName))
+  const data = req.otomi.getPolicy(teamId, policyName)
   res.json(data)
 }
 
@@ -22,10 +22,6 @@ export const getPolicy = (req: OpenApiRequestExt, res: Response): void => {
 export const editPolicy = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, policyName } = req.params
   debug(`editPolicy(${policyName})`)
-  const data = await req.otomi.editPolicy(
-    decodeURIComponent(teamId),
-    decodeURIComponent(policyName),
-    req.body as Policy,
-  )
+  const data = await req.otomi.editPolicy(teamId, policyName, req.body as Policy)
   res.json(data)
 }

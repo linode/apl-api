@@ -12,7 +12,7 @@ const debug = Debug('otomi:api:v2:teams:netpols')
 export const getAplNetpol = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId, netpolName } = req.params
   debug(`getNetpol(${netpolName})`)
-  const data = req.otomi.getAplNetpol(decodeURIComponent(teamId), decodeURIComponent(netpolName))
+  const data = req.otomi.getAplNetpol(teamId, netpolName)
   res.json(ensureStatus(data))
 }
 
@@ -23,11 +23,7 @@ export const getAplNetpol = (req: OpenApiRequestExt, res: Response): void => {
 export const editAplNetpol = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, netpolName } = req.params
   debug(`editNetpol(${netpolName})`)
-  const data = await req.otomi.editAplNetpol(
-    decodeURIComponent(teamId),
-    decodeURIComponent(netpolName),
-    req.body as AplNetpolRequest,
-  )
+  const data = await req.otomi.editAplNetpol(teamId, netpolName, req.body as AplNetpolRequest)
   res.json(ensureStatus(data))
 }
 
@@ -38,12 +34,7 @@ export const editAplNetpol = async (req: OpenApiRequestExt, res: Response): Prom
 export const patchAplNetpol = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, netpolName } = req.params
   debug(`editNetpol(${netpolName}, patch)`)
-  const data = await req.otomi.editAplNetpol(
-    decodeURIComponent(teamId),
-    decodeURIComponent(netpolName),
-    req.body as DeepPartial<AplNetpolRequest>,
-    true,
-  )
+  const data = await req.otomi.editAplNetpol(teamId, netpolName, req.body as DeepPartial<AplNetpolRequest>, true)
   res.json(ensureStatus(data))
 }
 
@@ -54,6 +45,6 @@ export const patchAplNetpol = async (req: OpenApiRequestExt, res: Response): Pro
 export const deleteAplNetpol = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, netpolName } = req.params
   debug(`deleteNetpol(${netpolName})`)
-  await req.otomi.deleteAplNetpol(decodeURIComponent(teamId), decodeURIComponent(netpolName))
+  await req.otomi.deleteAplNetpol(teamId, netpolName)
   res.status(200).end()
 }
