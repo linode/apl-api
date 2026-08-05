@@ -1,5 +1,7 @@
 import { AplKind } from '../otomi-models'
 
+const ID_NAME_PATTERN = /^[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?$/
+
 export interface FileMap {
   envDir: string
   kind: AplKind
@@ -234,11 +236,20 @@ export function getFileMapForKind(kind: AplKind): FileMap {
   return getFileMaps('').get(kind)!
 }
 
+export function validateIdParameters(idNames: Array<string | undefined>) {
+  for (const idName of idNames) {
+    if (idName !== undefined && !ID_NAME_PATTERN.test(idName)) {
+      throw new Error(`${idName} is not a valid identifier`)
+    }
+  }
+}
+
 export function getResourceFilePath(kind: AplKind, name: string, teamId?: string): string {
   const fileMap = getFileMapForKind(kind)
   if (!fileMap) {
     throw new Error(`Unknown kind: ${kind}`)
   }
+  validateIdParameters([name, teamId])
 
   return fileMap.pathTemplate.replace('{teamId}', teamId || '').replace('{name}', name)
 }
@@ -248,6 +259,7 @@ export function getNamespaceResourceFilePath(kind: AplKind, name: string, namesp
   if (!fileMap) {
     throw new Error(`Unknown kind: ${kind}`)
   }
+  validateIdParameters([name, namespace])
 
   return fileMap.pathTemplate.replace('{namespace}', namespace || '').replace('{name}', name)
 }
