@@ -123,4 +123,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload "$GIT_TAG" src/generated-schema.json#openapi-schema.json --repo "${{ github.repository }}"
+          cp src/generated-schema.json src/openapi-schema.json
+          gh release upload "$GIT_TAG" src/openapi-schema.json --repo "${{ github.repository }}"
