@@ -107,3 +107,21 @@ jobs:
           is_prerelease: ${{ inputs.is_prerelease }}
           dry_run: ${{ inputs.dry_run }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Build OpenAPI schema
+        run: |
+          npm ci
+          npm run build:models
+
+      - name: Attach OpenAPI schema to release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp src/generated-schema.json src/openapi-schema.json
+          gh release upload "$GIT_TAG" src/openapi-schema.json --repo "${{ github.repository }}"
