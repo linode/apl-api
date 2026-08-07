@@ -35,7 +35,8 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
           fetch-depth: 1
-
+          # This is required to fetch all tags so that release-get-tag can find the highest tag on the branch
+          fetch-tags: true
       - name: Validate branch, compute release tag, and check it does not already exist
         id: compute-tag
         uses: linode/apl-gh-actions/actions/release-get-tag@v0.3.0
@@ -61,7 +62,8 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: ${{ env.RELEASE_BRANCH }}
-          fetch-depth: 0
+          fetch-depth: 1
+          fetch-tags: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure git identity
