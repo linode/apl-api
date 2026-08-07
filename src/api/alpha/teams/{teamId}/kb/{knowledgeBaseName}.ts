@@ -11,7 +11,7 @@ const debug = Debug('otomi:api:alpha:teams:kb')
 export const getAplKnowledgeBase = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, knowledgeBaseName } = req.params
   debug(`getAplKnowledgeBase(${knowledgeBaseName})`)
-  const data = await req.otomi.getAplKnowledgeBase(decodeURIComponent(teamId), decodeURIComponent(knowledgeBaseName))
+  const data = await req.otomi.getAplKnowledgeBase(teamId, knowledgeBaseName)
   res.json(data)
 }
 
@@ -22,11 +22,7 @@ export const getAplKnowledgeBase = async (req: OpenApiRequestExt, res: Response)
 export const editAplKnowledgeBase = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, knowledgeBaseName } = req.params
   debug(`editAplKnowledgeBase(${knowledgeBaseName})`)
-  const data = await req.otomi.editAplKnowledgeBase(
-    decodeURIComponent(teamId),
-    decodeURIComponent(knowledgeBaseName),
-    req.body as AplKnowledgeBaseRequest,
-  )
+  const data = await req.otomi.editAplKnowledgeBase(teamId, knowledgeBaseName, req.body as AplKnowledgeBaseRequest)
   res.json(data)
 }
 
@@ -37,6 +33,6 @@ export const editAplKnowledgeBase = async (req: OpenApiRequestExt, res: Response
 export const deleteAplKnowledgeBase = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, knowledgeBaseName } = req.params
   debug(`deleteAplKnowledgeBase(${knowledgeBaseName})`)
-  await req.otomi.deleteAplKnowledgeBase(decodeURIComponent(teamId), decodeURIComponent(knowledgeBaseName))
+  await req.otomi.deleteAplKnowledgeBase(teamId, knowledgeBaseName)
   res.json({})
 }

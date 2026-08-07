@@ -141,12 +141,12 @@ paths:
           in: query
           description: name of the workload to get Podlabels from
           schema:
-            type: string
+            $ref: 'definitions.yaml#/idName'
         - name: namespace
           in: query
           description: namespace of the workload to get Podlabels from
           schema:
-            type: string
+            $ref: 'definitions.yaml#/idName'
       responses:
         '200':
           description: Successfully obtained Podlabels from given workload
@@ -172,12 +172,12 @@ paths:
           in: query
           description: name of the label to get pods name from
           schema:
-            type: string
+            $ref: 'definitions.yaml#/annotation'
         - name: namespace
           in: query
           description: namespace of the workload to get Podlabels from
           schema:
-            type: string
+            $ref: 'definitions.yaml#/idName'
       responses:
         '200':
           description: Successfully obtained pods from given label
@@ -692,7 +692,7 @@ paths:
           in: query
           description: Name of the team
           schema:
-            type: string
+            $ref: 'definitions.yaml#/idName'
       responses:
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -1022,8 +1022,7 @@ paths:
         in: query
         description: Id of the team
         schema:
-          type: string
-          pattern: '^[a-z0-9-]+$'
+          $ref: 'definitions.yaml#/idName'
     get:
       operationId: connectAplCloudtty
       x-eov-operation-handler: v2/cloudtty
@@ -1055,8 +1054,7 @@ paths:
         in: query
         description: Id of the team
         schema:
-          type: string
-          pattern: '^[a-z0-9-]+$'
+          $ref: 'definitions.yaml#/idName'
     get:
       operationId: connectCloudtty
       x-eov-operation-handler: v1/cloudtty
@@ -1391,7 +1389,7 @@ paths:
           description: Optional catalog name to refresh a single cache; when omitted all enabled catalogs are refreshed
           required: false
           schema:
-            type: string
+            $ref: 'definitions.yaml#/idName'
       responses:
         '200':
           description: Successfully refreshed catalog cache(s)
@@ -1405,7 +1403,7 @@ paths:
         in: path
         required: true
         schema:
-          type: string
+          $ref: 'definitions.yaml#/idName'
         description: Name of the chart to fetch
     get:
       operationId: getAplCatalogsChart
@@ -1805,11 +1803,11 @@ paths:
           in: query
           required: true
           schema:
-            type: string
+            $ref: 'definitions.yaml#/repoUrl'
         - name: secret
           in: query
           schema:
-            type: string
+            $ref: 'definitions.yaml#/idName'
       responses:
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -1835,11 +1833,11 @@ paths:
           in: query
           required: true
           schema:
-            type: string
+            $ref: 'definitions.yaml#/repoUrl'
         - name: secretName
           in: query
           schema:
-            type: string
+            $ref: 'definitions.yaml#/idName'
       responses:
         '200':
           description: The request is successful.
@@ -1908,8 +1906,8 @@ paths:
           schema:
             type: array
             items:
-              type: string
-              uniqueItems: true
+              $ref: 'definitions.yaml#/idName'
+            uniqueItems: true
       responses:
         '200':
           description: The request is successful.
@@ -1963,7 +1961,7 @@ paths:
         name: teamId
         required: true
         schema:
-          type: string
+          $ref: 'definitions.yaml#/idName'
     get:
       operationId: getTeamApps
       x-eov-operation-handler: v1/apps/{teamId}
@@ -2003,12 +2001,12 @@ paths:
         name: teamId
         required: true
         schema:
-          type: string
+          $ref: 'definitions.yaml#/idName'
       - in: path
         name: appId
         required: true
         schema:
-          type: string
+          $ref: 'definitions.yaml#/idName'
     get:
       operationId: getTeamApp
       x-eov-operation-handler: v1/apps/{teamId}/{appId}
@@ -2135,98 +2133,98 @@ components:
       description: Name of the build
       required: true
       schema:
-        type: string
+        $ref: 'definitions.yaml#/idName'
     policyParams:
       name: policyName
       in: path
       description: Name of the policy
       required: true
       schema:
-        type: string
+        $ref: 'definitions.yaml#/idName'
     userParams:
       name: userId
       in: path
       description: ID of the user
       required: true
       schema:
-        type: string
+        $ref: 'definitions.yaml#/idName'
     catalogParams:
       name: catalogId
       in: path
       description: ID of the catalog
       required: true
       schema:
-        type: string
+        $ref: 'definitions.yaml#/idName'
     codeRepoParams:
       name: codeRepositoryName
       in: path
       description: Name of the code repository
       required: true
       schema:
-        type: string
+        $ref: 'definitions.yaml#/idName'
     teamParams:
       name: teamId
       in: path
       description: ID of team
       required: true
       schema:
-        type: string
+        $ref: 'definitions.yaml#/idName'
     namespaceParams:
       name: namespace
       in: path
       description: Namspace to write file under in manifest
       required: true
       schema:
-        type: string
+        $ref: 'definitions.yaml#/idName'
     netpolParams:
       name: netpolName
       in: path
       description: Name of the network policy
       required: true
       schema:
-        type: string
+        $ref: 'definitions.yaml#/idName'
     serviceParams:
       name: serviceName
       in: path
       description: Name of the service
       required: true
       schema:
-        type: string
+        $ref: 'definitions.yaml#/idName'
     sealedSecretParams:
       name: sealedSecretName
       in: path
       description: Name of the sealed secret
       required: true
       schema:
-        type: string
+        $ref: 'definitions.yaml#/idName'
     settingsParams:
       name: settingId
       in: path
       description: ID of the setting
       required: true
       schema:
-        type: string
+        $ref: 'definitions.yaml#/idName'
     workloadParams:
       name: workloadName
       in: path
       description: Name of the workload
       required: true
       schema:
-        type: string
+        $ref: 'definitions.yaml#/idName'
     knowledgeBaseParams:
       name: knowledgeBaseName
       in: path
       description: Name of the knowledge base
       required: true
       schema:
-        type: string
+        $ref: 'definitions.yaml#/idName'
     agentParams:
       name: agentName
       in: path
       description: Name of the agent
       required: true
       schema:
-        type: string
+        $ref: 'definitions.yaml#/idName'
   securitySchemes:
     groupAuthn:
       type: apiKey

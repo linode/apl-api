@@ -808,6 +808,64 @@ describe('API V2 authz tests', () => {
         await agent.delete('/v2/teams/team1/sealedsecrets/my-secret').expect(401)
       })
     })
+
+    describe('Path Traversal', () => {
+      // Regression tests: path traversal payloads in sealedSecretName must be rejected
+      // before reaching any business logic, regardless of the caller's team membership.
+
+      // Double-encoded slash: %252F decodes to %2F (not a real slash to the router),
+      // but the resulting param value fails the idName pattern (400 error).
+      test('rejects double-encoded traversal in DELETE', async () => {
+        await agent
+          .delete('/v2/teams/team1/sealedsecrets/..%252F..%252Fteam2%252Fsealedsecrets%252Fvictim-secret')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(400)
+      })
+
+      test('rejects double-encoded traversal in GET', async () => {
+        await agent
+          .get('/v2/teams/team1/sealedsecrets/..%252F..%252Fteam2%252Fsealedsecrets%252Fvictim-secret')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(400)
+      })
+
+      test('rejects double-encoded traversal in PUT', async () => {
+        await agent
+          .put('/v2/teams/team1/sealedsecrets/..%252F..%252Fteam2%252Fsealedsecrets%252Fvictim-secret')
+          .send(secretData)
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(400)
+      })
+
+      test('rejects plain traversal in DELETE', async () => {
+        await agent
+          .delete('/v2/teams/team1/sealedsecrets/../../team2/sealedsecrets/victim-secret')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('rejects plain traversal in GET', async () => {
+        await agent
+          .get('/v2/teams/team1/sealedsecrets/../../team2/sealedsecrets/victim-secret')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('rejects plain traversal in PUT', async () => {
+        await agent
+          .put('/v2/teams/team1/sealedsecrets/../../team2/sealedsecrets/victim-secret')
+          .send(secretData)
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('cross-team dot-dot traversal allowed due to Express path normalization', async () => {
+        await agent
+          .get('/v2/teams/team2/sealedsecrets/../../team1/sealedsecrets/my-secret')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(200)
+      })
+    })
   })
 
   describe('V2 Code Repository Endpoints', () => {

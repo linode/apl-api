@@ -12,7 +12,7 @@ const debug = Debug('otomi:api:v2:teams:services')
 export const getAplService = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId, serviceName } = req.params
   debug(`getService(${serviceName})`)
-  const data = req.otomi.getAplService(decodeURIComponent(teamId), decodeURIComponent(serviceName))
+  const data = req.otomi.getAplService(teamId, serviceName)
   res.json(ensureStatus(data))
 }
 
@@ -23,11 +23,7 @@ export const getAplService = (req: OpenApiRequestExt, res: Response): void => {
 export const editAplService = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, serviceName } = req.params
   debug(`editService(${serviceName})`)
-  const data = await req.otomi.editAplService(
-    decodeURIComponent(teamId),
-    decodeURIComponent(serviceName),
-    req.body as AplServiceRequest,
-  )
+  const data = await req.otomi.editAplService(teamId, serviceName, req.body as AplServiceRequest)
   res.json(ensureStatus(data))
 }
 
@@ -38,12 +34,7 @@ export const editAplService = async (req: OpenApiRequestExt, res: Response): Pro
 export const patchAplService = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, serviceName } = req.params
   debug(`editService(${serviceName}, patch)`)
-  const data = await req.otomi.editAplService(
-    decodeURIComponent(teamId),
-    decodeURIComponent(serviceName),
-    req.body as DeepPartial<AplServiceRequest>,
-    true,
-  )
+  const data = await req.otomi.editAplService(teamId, serviceName, req.body as DeepPartial<AplServiceRequest>, true)
   res.json(ensureStatus(data))
 }
 
@@ -54,6 +45,6 @@ export const patchAplService = async (req: OpenApiRequestExt, res: Response): Pr
 export const deleteAplService = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, serviceName } = req.params
   debug(`deleteService(${serviceName})`)
-  await req.otomi.deleteAplService(decodeURIComponent(teamId), decodeURIComponent(serviceName))
+  await req.otomi.deleteAplService(teamId, serviceName)
   res.status(200).end()
 }

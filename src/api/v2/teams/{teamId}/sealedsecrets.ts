@@ -12,7 +12,7 @@ const debug = Debug('otomi:api:v2:teams:sealedsecrets')
 export const getAplSealedSecrets = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId } = req.params
   debug(`getSealedSecrets(${teamId})`)
-  const v = req.otomi.getAplSealedSecrets(decodeURIComponent(teamId))
+  const v = req.otomi.getAplSealedSecrets(teamId)
   res.json(v.map((secret) => ensureStatus(secret)))
 }
 
@@ -23,6 +23,6 @@ export const getAplSealedSecrets = (req: OpenApiRequestExt, res: Response): void
 export const createAplSealedSecret = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId } = req.params
   debug(`createSealedSecret(${teamId}, ...)`)
-  const v = await req.otomi.createAplSealedSecret(decodeURIComponent(teamId), req.body as SealedSecretManifestRequest)
+  const v = await req.otomi.createAplSealedSecret(teamId, req.body as SealedSecretManifestRequest)
   res.json(ensureStatus(v))
 }

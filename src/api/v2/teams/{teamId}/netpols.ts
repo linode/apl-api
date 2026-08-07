@@ -11,7 +11,7 @@ const debug = Debug('otomi:api:v2:teams:netpols')
 export const getTeamAplNetpols = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId } = req.params
   debug(`getTeamNetpols(${teamId})`)
-  const v = req.otomi.getTeamAplNetpols(decodeURIComponent(teamId))
+  const v = req.otomi.getTeamAplNetpols(teamId)
   res.json(v)
 }
 
@@ -22,6 +22,6 @@ export const getTeamAplNetpols = (req: OpenApiRequestExt, res: Response): void =
 export const createAplNetpol = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId } = req.params
   debug(`createNetpol(${teamId}, ...)`)
-  const v = await req.otomi.createAplNetpol(decodeURIComponent(teamId), req.body as AplNetpolRequest)
+  const v = await req.otomi.createAplNetpol(teamId, req.body as AplNetpolRequest)
   res.json(v)
 }

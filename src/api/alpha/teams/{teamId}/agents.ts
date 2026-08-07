@@ -11,7 +11,7 @@ const debug = Debug('otomi:api:alpha:teams:agents')
 export const getAplAgents = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId } = req.params
   debug(`getAplAgents(${teamId})`)
-  const v = req.otomi.getAplAgents(decodeURIComponent(teamId))
+  const v = req.otomi.getAplAgents(teamId)
   res.json(v)
 }
 
@@ -22,6 +22,6 @@ export const getAplAgents = (req: OpenApiRequestExt, res: Response): void => {
 export const createAplAgent = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId } = req.params
   debug(`createAplAgent(${teamId}, ...)`)
-  const v = await req.otomi.createAplAgent(decodeURIComponent(teamId), req.body as AplAgentRequest)
+  const v = await req.otomi.createAplAgent(teamId, req.body as AplAgentRequest)
   res.json(v)
 }

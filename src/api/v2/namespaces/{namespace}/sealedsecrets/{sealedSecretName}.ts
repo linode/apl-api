@@ -12,10 +12,7 @@ const debug = Debug('otomi:api:v2:teams:sealedsecrets')
 export const getAplNamespaceSealedSecret = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { namespace, sealedSecretName } = req.params
   debug(`getSealedSecret(${sealedSecretName}) for namespace(${namespace})`)
-  const data = await req.otomi.getAplNamespaceSealedSecret(
-    decodeURIComponent(namespace),
-    decodeURIComponent(sealedSecretName),
-  )
+  const data = await req.otomi.getAplNamespaceSealedSecret(namespace, sealedSecretName)
   res.json(ensureStatus(data))
 }
 
@@ -27,8 +24,8 @@ export const editAplNamespaceSealedSecret = async (req: OpenApiRequestExt, res: 
   const { namespace, sealedSecretName } = req.params
   debug(`editSealedSecret(${sealedSecretName}) for namespace(${namespace})`)
   const data = await req.otomi.editAplNamespaceSealedSecret(
-    decodeURIComponent(namespace),
-    decodeURIComponent(sealedSecretName),
+    namespace,
+    sealedSecretName,
     req.body as SealedSecretManifestRequest,
   )
   res.json(ensureStatus(data))
@@ -42,8 +39,8 @@ export const patchAplNamespaceSealedSecret = async (req: OpenApiRequestExt, res:
   const { namespace, sealedSecretName } = req.params
   debug(`editSealedSecret(${sealedSecretName} for namespace(${namespace}), patch)`)
   const data = await req.otomi.editAplNamespaceSealedSecret(
-    decodeURIComponent(namespace),
-    decodeURIComponent(sealedSecretName),
+    namespace,
+    sealedSecretName,
     req.body as DeepPartial<SealedSecretManifestRequest>,
     true,
   )
@@ -57,6 +54,6 @@ export const patchAplNamespaceSealedSecret = async (req: OpenApiRequestExt, res:
 export const deleteAplNamespaceSealedSecret = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { namespace, sealedSecretName } = req.params
   debug(`deleteSealedSecret(${sealedSecretName}) for namespace(${namespace})`)
-  await req.otomi.deleteAplNamespaceSealedSecret(decodeURIComponent(namespace), decodeURIComponent(sealedSecretName))
+  await req.otomi.deleteAplNamespaceSealedSecret(namespace, sealedSecretName)
   res.status(200).end()
 }
