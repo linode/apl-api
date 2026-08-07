@@ -76,7 +76,16 @@ jobs:
         with:
           release_tag: ${{ env.GIT_TAG }}
           dry_run: ${{ inputs.dry_run }}
-
+      - name: Fetch values-schema.yaml from apl-core
+        run: |
+          # Try matching branch first, fall back to main
+          curl -sL -f \
+            "https://raw.githubusercontent.com/linode/apl-core/${{ needs.release-get-tag.outputs.release_tag }}/values-schema.yaml" \
+            -o src/values-schema.yaml 2>/dev/null \
+          || curl -sL -f \
+            "https://raw.githubusercontent.com/linode/apl-core/main/values-schema.yaml" \
+            -o src/values-schema.yaml
+          echo "Schema fetched for branch: ${{ needs.release-get-tag.outputs.release_tag }} (with main fallback)"
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
