@@ -837,6 +837,28 @@ describe('API V2 authz tests', () => {
           .expect(400)
       })
 
+      test('rejects plain traversal in DELETE', async () => {
+        await agent
+          .delete('/v2/teams/team1/sealedsecrets/../../team2/sealedsecrets/victim-secret')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('rejects plain traversal in GET', async () => {
+        await agent
+          .get('/v2/teams/team1/sealedsecrets/../../team2/sealedsecrets/victim-secret')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('rejects plain traversal in PUT', async () => {
+        await agent
+          .put('/v2/teams/team1/sealedsecrets/../../team2/sealedsecrets/victim-secret')
+          .send(secretData)
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
       // Express normalizes /sealedsecrets/.. to /sealedsecrets/ (the list route).
       // Authz must still deny a cross-team caller even after that normalization.
       test('cross-team dot-dot traversal is denied after Express path normalization', async () => {
