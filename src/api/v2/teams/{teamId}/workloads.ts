@@ -11,7 +11,7 @@ const debug = Debug('otomi:api:v2:teams:workloads')
 export const getTeamAplWorkloads = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId } = req.params
   debug(`getTeamWorkloads(${teamId})`)
-  const v = req.otomi.getTeamAplWorkloads(decodeURIComponent(teamId))
+  const v = req.otomi.getTeamAplWorkloads(teamId)
   res.json(v)
 }
 
@@ -22,6 +22,6 @@ export const getTeamAplWorkloads = (req: OpenApiRequestExt, res: Response): void
 export const createAplWorkload = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId } = req.params
   debug(`createWorkload(${teamId}, ...)`)
-  const v = await req.otomi.createAplWorkload(decodeURIComponent(teamId), req.body as AplWorkloadRequest)
+  const v = await req.otomi.createAplWorkload(teamId, req.body as AplWorkloadRequest)
   res.json(v)
 }

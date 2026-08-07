@@ -12,7 +12,7 @@ const debug = Debug('otomi:api:v2:teams:sealedsecrets')
 export const getAplSealedSecret = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, sealedSecretName } = req.params
   debug(`getSealedSecret(${sealedSecretName})`)
-  const data = await req.otomi.getAplSealedSecret(decodeURIComponent(teamId), decodeURIComponent(sealedSecretName))
+  const data = await req.otomi.getAplSealedSecret(teamId, sealedSecretName)
   res.json(ensureStatus(data))
 }
 
@@ -23,11 +23,7 @@ export const getAplSealedSecret = async (req: OpenApiRequestExt, res: Response):
 export const editAplSealedSecret = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, sealedSecretName } = req.params
   debug(`editSealedSecret(${sealedSecretName})`)
-  const data = await req.otomi.editAplSealedSecret(
-    decodeURIComponent(teamId),
-    decodeURIComponent(sealedSecretName),
-    req.body as SealedSecretManifestRequest,
-  )
+  const data = await req.otomi.editAplSealedSecret(teamId, sealedSecretName, req.body as SealedSecretManifestRequest)
   res.json(ensureStatus(data))
 }
 
@@ -39,8 +35,8 @@ export const patchAplSealedSecret = async (req: OpenApiRequestExt, res: Response
   const { teamId, sealedSecretName } = req.params
   debug(`editSealedSecret(${sealedSecretName}, patch)`)
   const data = await req.otomi.editAplSealedSecret(
-    decodeURIComponent(teamId),
-    decodeURIComponent(sealedSecretName),
+    teamId,
+    sealedSecretName,
     req.body as DeepPartial<SealedSecretManifestRequest>,
     true,
   )
@@ -54,6 +50,6 @@ export const patchAplSealedSecret = async (req: OpenApiRequestExt, res: Response
 export const deleteAplSealedSecret = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, sealedSecretName } = req.params
   debug(`deleteSealedSecret(${sealedSecretName})`)
-  await req.otomi.deleteAplSealedSecret(decodeURIComponent(teamId), decodeURIComponent(sealedSecretName))
+  await req.otomi.deleteAplSealedSecret(teamId, sealedSecretName)
   res.status(200).end()
 }

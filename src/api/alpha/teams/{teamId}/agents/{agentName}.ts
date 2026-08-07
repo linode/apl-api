@@ -11,7 +11,7 @@ const debug = Debug('otomi:api:alpha:teams:agents')
 export const getAplAgent = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, agentName } = req.params
   debug(`getAplAgent(${agentName})`)
-  const data = await req.otomi.getAplAgent(decodeURIComponent(teamId), decodeURIComponent(agentName))
+  const data = await req.otomi.getAplAgent(teamId, agentName)
   res.json(data)
 }
 
@@ -22,11 +22,7 @@ export const getAplAgent = async (req: OpenApiRequestExt, res: Response): Promis
 export const editAplAgent = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, agentName } = req.params
   debug(`editAplAgent(${agentName})`)
-  const data = await req.otomi.editAplAgent(
-    decodeURIComponent(teamId),
-    decodeURIComponent(agentName),
-    req.body as AplAgentRequest,
-  )
+  const data = await req.otomi.editAplAgent(teamId, agentName, req.body as AplAgentRequest)
   res.json(data)
 }
 
@@ -37,6 +33,6 @@ export const editAplAgent = async (req: OpenApiRequestExt, res: Response): Promi
 export const deleteAplAgent = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { teamId, agentName } = req.params
   debug(`deleteAplAgent(${agentName})`)
-  await req.otomi.deleteAplAgent(decodeURIComponent(teamId), decodeURIComponent(agentName))
+  await req.otomi.deleteAplAgent(teamId, agentName)
   res.json({})
 }

@@ -11,7 +11,7 @@ const debug = Debug('otomi:api:v1:users')
 export const getUser = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { userId } = req.params
   debug(`getUser(${userId})`)
-  const data = await req.otomi.getUser(decodeURIComponent(userId), req.user)
+  const data = await req.otomi.getUser(userId, req.user)
   res.json(data)
 }
 
@@ -22,7 +22,7 @@ export const getUser = async (req: OpenApiRequestExt, res: Response): Promise<vo
 export const editUser = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { userId } = req.params
   debug(`editUser(${userId})`)
-  const data = await req.otomi.editUser(decodeURIComponent(userId), req.body as User, req.user as SessionUser)
+  const data = await req.otomi.editUser(userId, req.body as User, req.user as SessionUser)
   res.json(data)
 }
 
@@ -33,6 +33,6 @@ export const editUser = async (req: OpenApiRequestExt, res: Response): Promise<v
 export const deleteUser = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { userId } = req.params
   debug(`deleteUser(${userId})`)
-  await req.otomi.deleteUser(decodeURIComponent(userId))
+  await req.otomi.deleteUser(userId)
   res.status(200).end()
 }

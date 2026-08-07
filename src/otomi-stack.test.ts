@@ -332,7 +332,7 @@ describe('Users tests', () => {
     sub: 'session-user',
   }
   const defaultPlatformAdmin: User = {
-    id: '1',
+    id: 'user-1',
     email: `platform-admin@${domainSuffix}`,
     firstName: 'platform',
     lastName: 'admin',
@@ -341,7 +341,7 @@ describe('Users tests', () => {
     teams: [],
   }
   const anyPlatformAdmin: User = {
-    id: '2',
+    id: 'user-2',
     email: `any-admin@${domainSuffix}`,
     firstName: 'any',
     lastName: 'admin',
@@ -350,7 +350,7 @@ describe('Users tests', () => {
     teams: [],
   }
   const teamAdmin: User = {
-    id: '3',
+    id: 'user-3',
     email: `team-admin@${domainSuffix}`,
     firstName: 'team',
     lastName: 'admin',
@@ -359,7 +359,7 @@ describe('Users tests', () => {
     teams: [],
   }
   const teamMember1: User = {
-    id: '4',
+    id: 'user-4',
     email: `team-member1@${domainSuffix}`,
     firstName: 'team1',
     lastName: 'member1',
@@ -368,7 +368,7 @@ describe('Users tests', () => {
     teams: [],
   }
   const teamMember2: User = {
-    id: '5',
+    id: 'user-5',
     email: `team-member2@${domainSuffix}`,
     firstName: 'team2',
     lastName: 'member2',
@@ -410,14 +410,14 @@ describe('Users tests', () => {
   })
 
   test('should not allow deleting the default platform admin user', async () => {
-    await expect(otomiStack.deleteUser('1')).rejects.toMatchObject({
+    await expect(otomiStack.deleteUser('user-1')).rejects.toMatchObject({
       code: 403,
       publicMessage: 'Cannot delete the default platform admin user',
     })
   })
 
   test('should allow deleting any other platform admin user', async () => {
-    expect(await otomiStack.deleteUser('2')).toBeUndefined()
+    expect(await otomiStack.deleteUser('user-2')).toBeUndefined()
   })
 
   describe('User Retrieve Validation', () => {
@@ -600,7 +600,7 @@ describe('Users tests', () => {
   describe('User Editing Endpoints/Functions', () => {
     describe('editUser', () => {
       it('should allow platform admin to edit a user', async () => {
-        const user = { ...defaultPlatformAdmin, id: '3', email: 'edit@dev.linode-apl.net' }
+        const user = { ...defaultPlatformAdmin, id: 'user-3', email: 'edit@dev.linode-apl.net' }
         createTestUser(otomiStack, user)
 
         const updated = { ...user, firstName: 'edited' }
@@ -613,7 +613,7 @@ describe('Users tests', () => {
       })
 
       it('should not allow non-platform admin to edit a user', async () => {
-        const user = { ...defaultPlatformAdmin, id: '4', email: 'edit2@dev.linode-apl.net' }
+        const user = { ...defaultPlatformAdmin, id: 'user-4', email: 'edit2@dev.linode-apl.net' }
         createTestUser(otomiStack, user)
 
         await expect(

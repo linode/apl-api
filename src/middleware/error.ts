@@ -30,7 +30,9 @@ export function errorMiddleware(e, req: OpenApiRequest, res: Response, next): vo
   } else if (code === 400 && e?.errors?.length > 0) {
     // Handle both express-openapi and express-openapi-validator validation errors
     const errorCode = e?.errors[0]?.errorCode || ''
-    if (errorCode.includes('openapi.requestValidation') || errorCode.includes('request')) {
+    if (errorCode === 'pattern.openapi.validation') {
+      msg = e.message
+    } else if (errorCode.includes('openapi.requestValidation') || errorCode.includes('request')) {
       const requiredProperties = e?.errors.map((item: any) => item?.path || item?.dataPath).join(', ')
       msg = `Required property missing! '${requiredProperties}'`
     } else if (e?.errors[0]?.message) {

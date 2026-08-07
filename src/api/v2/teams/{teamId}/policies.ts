@@ -11,6 +11,6 @@ const debug = Debug('otomi:api:v2:teams:policies')
 export const getTeamAplPolicies = (req: OpenApiRequestExt, res: Response): void => {
   const { teamId } = req.params
   debug(`getTeamPolicies(${teamId})`)
-  const v = req.otomi.getTeamAplPolicies(decodeURIComponent(teamId))
+  const v = req.otomi.getTeamAplPolicies(teamId)
   res.json(v)
 }
