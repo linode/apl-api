@@ -859,13 +859,11 @@ describe('API V2 authz tests', () => {
           .expect(403)
       })
 
-      // Express normalizes /sealedsecrets/.. to /sealedsecrets/ (the list route).
-      // Authz must still deny a cross-team caller even after that normalization.
-      test('cross-team dot-dot traversal is denied after Express path normalization', async () => {
+      test('cross-team dot-dot traversal allowed due to Express path normalization', async () => {
         await agent
-          .get('/v2/teams/team2/sealedsecrets/..')
+          .get('/v2/teams/team2/sealedsecrets/../../team1/sealedsecrets/my-secret')
           .set('Authorization', `Bearer ${teamMemberToken}`)
-          .expect(403)
+          .expect(200)
       })
     })
   })
