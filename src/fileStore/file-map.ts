@@ -1,6 +1,6 @@
 import { AplKind } from '../otomi-models'
 
-const ID_NAME_PATTERN = /^[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?$/
+const ID_NAME_PATTERN = /^[a-z](?:[-a-zA-Z0-9]{0,61}[a-zA-Z0-9])?$/
 
 export interface FileMap {
   envDir: string
