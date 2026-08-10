@@ -21,6 +21,11 @@ describe('getResourceFilePath', () => {
       const result = getResourceFilePath('AplTeamService', 'svc-01', 'team-01')
       expect(result).toBe('env/teams/team-01/services/svc-01.yaml')
     })
+
+    it('accepts camelCase names such as platformBackups', () => {
+      const result = getResourceFilePath('AplApp', 'platformBackups')
+      expect(result).toBe('env/apps/platformBackups.yaml')
+    })
   })
 
   describe('path traversal protection', () => {
