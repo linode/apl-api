@@ -622,6 +622,12 @@ idName:
   type: string
   x-message: a valid name that consists of lowercase letters, dashes
   example: team-name
+settingsName:
+  pattern: '^[a-z](?:[-a-zA-Z0-9]{0,61}[a-zA-Z0-9])?$'
+  maxLength: 63
+  type: string
+  x-message: a valid name that starts with a lowercase letter and consists of letters, digits, and dashes
+  example: platformBackups
 image:
   allOf:
     - properties:
