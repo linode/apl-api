@@ -106,6 +106,8 @@ const redosCases: Record<string, string[]> = {
 
   idName: [`${'a-'.repeat(50_000)}!`],
 
+  settingsName: [`${'aB'.repeat(50_000)}!`, `${'a-'.repeat(50_000)}!`],
+
   quantityCpu: [`${'1'.repeat(100_000)}x`, `${'1'.repeat(100_000)}.0000`],
 
   quantityMem: [`${'1'.repeat(100_000)}MiX`],
@@ -247,6 +249,16 @@ describe('OpenAPI definition regex patterns', () => {
 
     it('rejects invalid ID names', () => {
       expectInvalid('idName', ['', 'Secret', '-secret', 'secret-', 'secret.name', 'secret_name'])
+    })
+  })
+
+  describe('settingsName', () => {
+    it('accepts valid settings names including camelCase', () => {
+      expectValid('settingsName', ['a', 'settings', 'platformBackups', 'mySettingName', 'setting1'])
+    })
+
+    it('rejects invalid settings names', () => {
+      expectInvalid('settingsName', ['', 'Settings', '-settings', 'settings-', 'settings.name', 'settings_name'])
     })
   })
 

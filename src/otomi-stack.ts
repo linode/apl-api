@@ -503,9 +503,11 @@ export default class OtomiStack {
     const settings: Settings = {}
     const settingsFileMaps = getSettingsFileMaps(this.getRepoPath())
 
+    // Deduplicate input
+    const keySet = new Set(keys)
     // Early return: if specific keys requested, only fetch those
-    if (keys && keys.length > 0) {
-      keys.forEach((key) => {
+    if (keySet.size > 0) {
+      keySet.forEach((key) => {
         const fileMap = settingsFileMaps.get(key)
         if (!fileMap) return // Skip unknown keys
 
@@ -515,7 +517,7 @@ export default class OtomiStack {
         }
       })
 
-      if (keys.includes('otomi')) {
+      if (keySet.has('otomi')) {
         // Apply otomi nodeSelector transformation if needed
         this.transformOtomiNodeSelector(settings)
         // Merge in Git configuration
