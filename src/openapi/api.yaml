@@ -1906,8 +1906,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: 'definitions.yaml#/idName'
-            uniqueItems: true
+              $ref: 'definitions.yaml#/settingsName'
       responses:
         '200':
           description: The request is successful.
