@@ -126,6 +126,8 @@ import {
   OBJ_STORAGE_APPS,
   OBJECT_STORAGE_UI_EXCLUSIONS,
   PREINSTALLED_EXCLUDED_APPS,
+  TTY_IMAGE_REPOSITORY,
+  TTY_IMAGE_TAG,
   VERSIONS,
 } from 'src/validators'
 import { v4 as uuidv4 } from 'uuid'
@@ -206,6 +208,8 @@ const env = cleanEnv({
   OBJ_STORAGE_APPS,
   KNOWLEDGE_BASE_KIND,
   OBJECT_STORAGE_UI_EXCLUSIONS,
+  TTY_IMAGE_REPOSITORY,
+  TTY_IMAGE_TAG,
 })
 
 export const rootPath = '/tmp/otomi/values'
@@ -261,7 +265,10 @@ export default class OtomiStack {
 
   getCloudTty() {
     if (!this.cloudTty) {
-      this.cloudTty = new CloudTty()
+      this.cloudTty = new CloudTty({
+        imageRepository: env.TTY_IMAGE_REPOSITORY,
+        imageTag: env.TTY_IMAGE_TAG,
+      })
     }
     return this.cloudTty
   }
