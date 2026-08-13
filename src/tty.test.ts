@@ -1,4 +1,4 @@
-import CloudTty from './tty'
+import CloudTty, { TtyConfig } from './tty'
 import { ApiException } from '@kubernetes/client-node'
 import { SessionUser } from './otomi-models'
 
@@ -69,6 +69,11 @@ jest.mock('@kubernetes/client-node', () => {
 })
 
 describe('CloudTty', () => {
+  const testConfig: TtyConfig = {
+    imageRepository: 'tty-image',
+    imageTag: 'tty-tag',
+  }
+
   beforeEach(() => {
     jest.clearAllMocks()
     mockCustomObjectsApi.createNamespacedCustomObject.mockResolvedValue({ kind: 'ok' })
@@ -86,7 +91,7 @@ describe('CloudTty', () => {
   })
 
   test('createOrPatch calls create function when no conflict occurs', async () => {
-    const tty = new CloudTty()
+    const tty = new CloudTty(testConfig)
     const createFn = jest.fn().mockResolvedValue({ kind: 'created' })
     const patchFn = jest.fn().mockResolvedValue({ kind: 'patched' })
 
@@ -99,7 +104,7 @@ describe('CloudTty', () => {
   })
 
   test('createOrPatch calls patch function when create throws 409', async () => {
-    const tty = new CloudTty()
+    const tty = new CloudTty(testConfig)
     const createFn = jest.fn().mockImplementation(() => {
       throw new ApiException(409, '', {}, {})
     })
@@ -117,7 +122,7 @@ describe('CloudTty', () => {
   })
 
   test('deleteIfExists ignores 404 errors', async () => {
-    const tty = new CloudTty()
+    const tty = new CloudTty(testConfig)
     const deleteFn = jest.fn().mockRejectedValue(new ApiException(404, '', {}, {}))
 
     await expect(tty.deleteIfExists(deleteFn, { name: 'x' })).resolves.toBeUndefined()
@@ -126,7 +131,7 @@ describe('CloudTty', () => {
   })
 
   test('deleteIfExists logs non-404 errors and continues', async () => {
-    const tty = new CloudTty()
+    const tty = new CloudTty(testConfig)
     const error = new ApiException(500, '', {}, {})
     const deleteFn = jest.fn().mockRejectedValue(error)
 
@@ -134,7 +139,7 @@ describe('CloudTty', () => {
   })
 
   test('createAuthorizationPolicy passes expected API parameters', async () => {
-    const tty = new CloudTty()
+    const tty = new CloudTty(testConfig)
 
     await tty.createAuthorizationPolicy('team-a', 'user-1')
 
@@ -164,7 +169,7 @@ describe('CloudTty', () => {
   })
 
   test('createPod sends namespace and key pod configuration fields', async () => {
-    const tty = new CloudTty()
+    const tty = new CloudTty(testConfig)
 
     await tty.createPod('team-a', 'user-1')
 
@@ -186,13 +191,13 @@ describe('CloudTty', () => {
     expect(params.body.spec.containers[0]).toEqual(
       expect.objectContaining({
         name: 'tty',
-        image: 'linode/apl-tty:1.2.6',
+        image: 'tty-image:tty-tag',
       }),
     )
   })
 
   test('createRoute sends expected route metadata and host/path settings', async () => {
-    const tty = new CloudTty()
+    const tty = new CloudTty(testConfig)
 
     await tty.createRoute('team-a', 'user-1', 'example.org')
 
@@ -220,7 +225,7 @@ describe('CloudTty', () => {
   })
 
   test('createTty for platform admin creates cluster role binding only', async () => {
-    const tty = new CloudTty()
+    const tty = new CloudTty(testConfig)
     const createAuthorizationPolicy = jest.spyOn(tty, 'createAuthorizationPolicy').mockResolvedValue({ kind: 'ok' })
     const createServiceAccount = jest.spyOn(tty, 'createServiceAccount').mockResolvedValue({ kind: 'ok' })
     const createPod = jest.spyOn(tty, 'createPod').mockResolvedValue({ kind: 'ok' })
@@ -241,7 +246,7 @@ describe('CloudTty', () => {
   })
 
   test('createTty for team user creates role bindings for all teams', async () => {
-    const tty = new CloudTty()
+    const tty = new CloudTty(testConfig)
     jest.spyOn(tty, 'createAuthorizationPolicy').mockResolvedValue({ kind: 'ok' })
     jest.spyOn(tty, 'createServiceAccount').mockResolvedValue({ kind: 'ok' })
     jest.spyOn(tty, 'createPod').mockResolvedValue({ kind: 'ok' })
@@ -259,7 +264,7 @@ describe('CloudTty', () => {
   })
 
   test('deleteTty removes namespaced and team-scoped resources for team users', async () => {
-    const tty = new CloudTty()
+    const tty = new CloudTty(testConfig)
     const deleteAuthorizationPolicy = jest.spyOn(tty, 'deleteAuthorizationPolicy').mockResolvedValue()
     const deleteServiceAccount = jest.spyOn(tty, 'deleteServiceAccount').mockResolvedValue()
     const deletePod = jest.spyOn(tty, 'deletePod').mockResolvedValue()
