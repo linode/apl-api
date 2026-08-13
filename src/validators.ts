@@ -211,6 +211,14 @@ export const GIT_CONFIG_SECRET_NAMESPACE = str({
   desc: 'Namespace of Secret resource with access credentials to the Git values store',
   default: 'apl-secrets',
 })
+export const TTY_IMAGE_REPOSITORY = str({
+  desc: 'Repository of the cloud shell image',
+  default: 'linode/apl-tty',
+})
+export const TTY_IMAGE_TAG = str({
+  desc: 'Tag of the cloud shell image',
+  default: '1.2.8',
+})
 const { env } = process
 export function cleanEnv<T>(validators: { [K in keyof T]: ValidatorSpec<T[K]> }, options: CleanOptions<T> = {}) {
   if (env.NODE_ENV === 'test') {
