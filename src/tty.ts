@@ -12,18 +12,25 @@ import {
 import Debug from 'debug'
 import { SessionUser } from './otomi-models'
 
+export interface TtyConfig {
+  imageRepository: string
+  imageTag: string
+}
+
 export default class CloudTty {
   private k8sApi: CoreV1Api
   private customObjectsApi: CustomObjectsApi
   private rbacAuthorizationApi: RbacAuthorizationV1Api
+  private config: TtyConfig
   private readonly debug: Debug.Debugger
 
-  constructor() {
+  constructor(ttyConfig: TtyConfig) {
     const kc = new KubeConfig()
     kc.loadFromDefault()
     this.k8sApi = kc.makeApiClient(CoreV1Api)
     this.customObjectsApi = kc.makeApiClient(CustomObjectsApi)
     this.rbacAuthorizationApi = kc.makeApiClient(RbacAuthorizationV1Api)
+    this.config = ttyConfig
 
     // Bind every method on each client instance
     for (const client of [this.k8sApi, this.customObjectsApi, this.rbacAuthorizationApi]) {
@@ -141,6 +148,7 @@ export default class CloudTty {
   }
 
   async createPod(namespace: string, sub: string): Promise<KubernetesObject> {
+    const image = `${this.config.imageRepository}:${this.config.imageTag}`
     const body = {
       apiVersion: 'v1',
       kind: 'Pod',
@@ -165,7 +173,7 @@ export default class CloudTty {
         },
         containers: [
           {
-            image: 'linode/apl-tty:1.2.6',
+            image,
             name: 'tty',
             resources: {
               requests: {
