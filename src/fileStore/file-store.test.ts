@@ -1,3 +1,8 @@
+import { ensureDir, remove } from 'fs-extra'
+import { writeFile } from 'fs/promises'
+import os from 'os'
+import path from 'path'
+
 import * as fileMap from './file-map'
 import { FileStore } from './file-store'
 
@@ -62,5 +67,54 @@ describe('FileStore.getNamespacesWithSealedSecrets', () => {
     })
 
     expect(() => fileStore.getNamespacesWithSealedSecrets()).toThrow('not namespace-scoped')
+  })
+})
+
+describe('FileStore.load', () => {
+  let envDir: string
+
+  beforeEach(async () => {
+    envDir = path.join(os.tmpdir(), `apl-api-file-store-${Date.now()}`)
+
+    await ensureDir(path.join(envDir, 'env/teams/alpha/builds'))
+  })
+
+  afterEach(async () => {
+    await remove(envDir)
+  })
+
+  it('continues loading when a build contains invalid YAML', async () => {
+    await writeFile(
+      path.join(envDir, 'env/teams/alpha/builds/healthy.yaml'),
+      `
+kind: AplTeamBuild
+metadata:
+  name: healthy
+  labels:
+    apl.io/teamId: alpha
+spec:
+  repositoryUrl: https://github.com/example/repository
+status: {}
+`,
+      'utf8',
+    )
+
+    await writeFile(
+      path.join(envDir, 'env/teams/alpha/builds/broken.yaml'),
+      `
+kind: AplTeamBuild
+metadata:
+  name: broken
+spec:
+  repositoryUrl: [this is invalid yaml
+`,
+      'utf8',
+    )
+
+    const store = await FileStore.load(envDir)
+
+    expect(store.getTeamResource('AplTeamBuild', 'alpha', 'healthy')).toBeDefined()
+
+    expect(store.getTeamResource('AplTeamBuild', 'alpha', 'broken')).toBeUndefined()
   })
 })
