@@ -104,6 +104,10 @@ const redosCases: Record<string, string[]> = {
 
   k8sName: [`${'a-'.repeat(50_000)}!`],
 
+  kubernetesLabelValue: [`${'a-'.repeat(50_000)}!`, `${'a.'.repeat(50_000)}!`],
+
+  kubernetesLabelName: [`${'a-'.repeat(50_000)}!`, `${'a.'.repeat(50_000)}!`],
+
   idName: [`${'a-'.repeat(50_000)}!`],
 
   settingsName: [`${'aB'.repeat(50_000)}!`, `${'a-'.repeat(50_000)}!`],
@@ -147,6 +151,8 @@ describe('OpenAPI definition regex patterns', () => {
         'email',
         'hostPort',
         'k8sName',
+        'kubernetesLabelValue',
+        'kubernetesLabelName',
         'idName',
         'quantityCpu',
         'quantityMem',
@@ -239,6 +245,55 @@ describe('OpenAPI definition regex patterns', () => {
 
     it('rejects invalid Kubernetes names', () => {
       expectInvalid('k8sName', ['', 'Secret', '-secret', '_secret', 'secret-', 'secret_', 'secret.name'])
+    })
+  })
+
+  describe('kubernetesLabelValue', () => {
+    it('accepts valid Kubernetes label values', () => {
+      expectValid('kubernetesLabelValue', ['', 'app', 'my-app', 'my_app', 'my.app', 'APP123', 'a'.repeat(63)])
+    })
+
+    it('rejects invalid Kubernetes label values', () => {
+      expectInvalid('kubernetesLabelValue', [
+        '-app',
+        'app-',
+        '.app',
+        'app.',
+        '_app',
+        'app_',
+        'app value',
+        'foo\nbar',
+        'foo\r\nbar',
+        '{{ malicious }}',
+        'foo: bar',
+        '---',
+        'a'.repeat(64),
+      ])
+    })
+  })
+
+  describe('kubernetesLabelName', () => {
+    it('accepts valid Kubernetes label names', () => {
+      expectValid('kubernetesLabelName', ['app', 'my-app', 'my_app', 'my.app', 'APP123', 'a'.repeat(63)])
+    })
+
+    it('rejects invalid Kubernetes label names', () => {
+      expectInvalid('kubernetesLabelName', [
+        '',
+        '-app',
+        'app-',
+        '.app',
+        'app.',
+        '_app',
+        'app_',
+        'app name',
+        'foo\nbar',
+        'foo\r\nbar',
+        '{{ malicious }}',
+        'foo: bar',
+        '---',
+        'a'.repeat(64),
+      ])
     })
   })
 
