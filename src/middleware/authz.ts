@@ -17,8 +17,19 @@ const HttpMethodMapping: Record<string, string> = {
  */
 export function authorize(req: OpenApiRequestExt, authz: Authz): void {
   const { body, user } = req
+  const schema = req.openapi?.schema
+
+  // Only trust query/body input for the authz subject when this specific operation's
+  // OpenAPI schema declares that field.
+  const queryTeamIdDeclared = schema?.parameters?.some((p) => p.name === 'teamId' && p.in === 'query') ?? false
+  const bodyTeamIdDeclared = !!schema?.requestBody?.content?.['application/json']?.schema?.properties?.teamId
+
   // express-openapi-validator stores path params in req.openapi.pathParams
-  const teamId = req.openapi?.pathParams?.teamId ?? req.params?.teamId ?? req.query?.teamId ?? body?.teamId
+  const teamId =
+    req.openapi?.pathParams?.teamId ??
+    req.params?.teamId ??
+    (queryTeamIdDeclared ? req.query?.teamId : undefined) ??
+    (bodyTeamIdDeclared ? body?.teamId : undefined)
   const action = HttpMethodMapping[req.method]
 
   // Get x-aclSchema from req.openapi.schema (set by express-openapi-validator)
