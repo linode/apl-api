@@ -843,6 +843,14 @@ kms:
 labels:
   $ref: '#/annotations'
   description: A set of labels.
+kubernetesLabelName:
+  type: string
+  maxLength: 63
+  pattern: '^[A-Za-z0-9](?:[-._A-Za-z0-9]{0,61}[A-Za-z0-9])?$'
+kubernetesLabelValue:
+  type: string
+  maxLength: 63
+  pattern: '^$|^[A-Za-z0-9](?:[-._A-Za-z0-9]{0,61}[A-Za-z0-9])?$'
 logLevel:
   title: Log Level
   type: string
