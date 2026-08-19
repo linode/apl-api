@@ -11,13 +11,14 @@ const debug = Debug('otomi:api:v2:sealedsecrets')
 export const getAllAplSealedSecrets = (req: OpenApiRequestExt, res: Response): void => {
   debug('getAllSealedSecrets')
   const all = req.otomi.getAllAplSealedSecrets()
-  // Defense in depth: even if the ACL model is misconfigured, never hand a non-platformAdmin
-  // caller another team's secrets from this cross-team collection endpoint.
+  // Defense in depth: filter even if ACL is misconfigured.
   const v = req.user.isPlatformAdmin
     ? all
     : all.filter((secret) => {
-        const teamId =
-          secret.metadata.namespace?.replace(/^team-/, '') ?? (secret.metadata.labels?.['apl.io/teamId'] as string)
+        const namespace = secret.metadata.namespace
+        const teamId = namespace?.startsWith('team-')
+          ? namespace.slice('team-'.length)
+          : (secret.metadata.labels?.['apl.io/teamId'] as string)
         return teamId && req.user.teams.includes(teamId)
       })
   res.json(v)

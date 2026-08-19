@@ -19,15 +19,22 @@ export function authorize(req: OpenApiRequestExt, authz: Authz): void {
   const { body, user } = req
   const schema = req.openapi?.schema
 
-  // Only trust query/body input for the authz subject when this specific operation's
-  // OpenAPI schema declares that field.
+  // Only trust query/body teamId if this operation's schema actually declares it.
   const queryTeamIdDeclared = schema?.parameters?.some((p) => p.name === 'teamId' && p.in === 'query') ?? false
   const bodyTeamIdDeclared = !!schema?.requestBody?.content?.['application/json']?.schema?.properties?.teamId
+
+  // Namespace routes key on `namespace` (team-{teamId} convention), not `teamId`.
+  const namespaceParam = req.openapi?.pathParams?.namespace ?? req.params?.namespace
+  const namespaceTeamId =
+    typeof namespaceParam === 'string' && namespaceParam.startsWith('team-')
+      ? namespaceParam.slice('team-'.length)
+      : undefined
 
   // express-openapi-validator stores path params in req.openapi.pathParams
   const teamId =
     req.openapi?.pathParams?.teamId ??
     req.params?.teamId ??
+    namespaceTeamId ??
     (queryTeamIdDeclared ? req.query?.teamId : undefined) ??
     (bodyTeamIdDeclared ? body?.teamId : undefined)
   const action = HttpMethodMapping[req.method]
