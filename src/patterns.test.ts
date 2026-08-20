@@ -264,6 +264,8 @@ describe('OpenAPI definition regex patterns', () => {
         'app value',
         'foo\nbar',
         'foo\r\nbar',
+        'app\n',
+        'app\r\n',
         '{{ malicious }}',
         'foo: bar',
         '---',
