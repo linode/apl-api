@@ -52,12 +52,12 @@ ruleType:
       type: object
       properties:
         toLabelName:
-          type: string
+          $ref: 'definitions.yaml#/kubernetesLabelName'
           title: Selector label name
           description: 'The name of the Pod selector label.'
           example: app
         toLabelValue:
-          type: string
+          $ref: 'definitions.yaml#/kubernetesLabelValue'
           title: Selector label value
           description: 'The value of the Pod selector label.'
           example: my-app
@@ -79,12 +79,12 @@ ruleType:
                 title: Namespace name
                 description: 'The name of the namespace.'
               fromLabelName:
-                type: string
+                $ref: 'definitions.yaml#/kubernetesLabelName'
                 title: Selector label name
                 description: 'The name of the Pod selector label.'
                 example: app
               fromLabelValue:
-                type: string
+                $ref: 'definitions.yaml#/kubernetesLabelValue'
                 title: Selector label value
                 description: 'The value of the Pod selector label.'
                 example: my-app
