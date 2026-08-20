@@ -1382,7 +1382,7 @@ paths:
       operationId: refreshAplCatalogCache
       x-eov-operation-handler: v2/catalogs/refresh
       description: Refresh BYO catalog cache(s)
-      x-aclSchema: AplCatalog
+      x-aclSchema: AplCatalogRefresh
       parameters:
         - name: catalogId
           in: query
@@ -2455,6 +2455,12 @@ components:
       required:
         - kind
         - spec
+    AplCatalogRefresh:
+      type: object
+      x-acl:
+        platformAdmin: [create-any]
+        teamAdmin: [create-any]
+        teamMember: [create-any]
     AplCatalogRequest:
       allOf:
         - $ref: '#/components/schemas/AplCatalog'
