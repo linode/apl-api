@@ -58,6 +58,19 @@ const mockServiceResource = withStatus(
   }),
 )
 
+const mockCatalogResource = withStatus({
+  kind: 'AplCatalog',
+  metadata: {
+    name: 'test-catalog',
+  },
+  spec: {
+    name: 'test-catalog',
+    repositoryUrl: 'https://github.com/example/catalog.git',
+    branch: 'main',
+    enabled: true,
+  },
+})
+
 const mockWorkloadResource = withStatus(
   createNamedTeamResource('AplTeamWorkload', 'my-uuid', 'team1', {
     url: 'https://test.local/',
@@ -222,6 +235,15 @@ describe('API V2 authz tests', () => {
       'getAplTeam',
       'editAplTeam',
       'deleteAplTeam',
+      // Catalogs
+      'getAllAplCatalogs',
+      'createAplCatalog',
+      'getAplCatalog',
+      'editAplCatalog',
+      'deleteAplCatalog',
+      'getAplCatalogCharts',
+      'getAplCatalogChart',
+      'refreshBYOCatalogCache',
       // Services
       'createAplService',
       'getAplService',
@@ -305,6 +327,14 @@ describe('API V2 authz tests', () => {
     jest.spyOn(otomiStack, 'editAplService').mockResolvedValue(mockServiceResource as any)
     jest.spyOn(otomiStack, 'getAllAplServices').mockReturnValue([mockServiceResource] as any)
     jest.spyOn(otomiStack, 'getTeamAplServices').mockReturnValue([mockServiceResource] as any)
+
+    jest.spyOn(otomiStack, 'createAplCatalog').mockResolvedValue(mockCatalogResource as any)
+    jest.spyOn(otomiStack, 'getAplCatalog').mockReturnValue(mockCatalogResource as any)
+    jest.spyOn(otomiStack, 'editAplCatalog').mockResolvedValue(mockCatalogResource as any)
+    jest.spyOn(otomiStack, 'getAllAplCatalogs').mockReturnValue([mockCatalogResource] as any)
+    jest.spyOn(otomiStack, 'getAplCatalogCharts').mockResolvedValue([] as any)
+    jest.spyOn(otomiStack, 'getAplCatalogChart').mockResolvedValue({} as any)
+    jest.spyOn(otomiStack, 'refreshBYOCatalogCache').mockResolvedValue(undefined)
 
     jest.spyOn(otomiStack, 'createAplWorkload').mockResolvedValue(mockWorkloadResource as any)
     jest.spyOn(otomiStack, 'getAplWorkload').mockReturnValue(mockWorkloadResource as any)
@@ -1023,6 +1053,216 @@ describe('API V2 authz tests', () => {
 
       test('anonymous user cannot delete code repo', async () => {
         await agent.delete('/v2/teams/team1/coderepos/my-repo').expect(401)
+      })
+    })
+  })
+
+  describe('V2 Catalog Endpoints', () => {
+    const catalogData = {
+      kind: 'AplCatalog',
+      metadata: {
+        name: 'test-catalog',
+      },
+      spec: {
+        name: 'test-catalog',
+        repositoryUrl: 'https://github.com/example/catalog.git',
+        branch: 'main',
+        enabled: true,
+      },
+    }
+
+    describe('Platform Admin', () => {
+      test('platform admin can get all catalogs', async () => {
+        await agent.get('/v2/catalogs').set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
+      })
+
+      test('platform admin can create catalog', async () => {
+        await agent
+          .post('/v2/catalogs')
+          .send(catalogData)
+          .set('Authorization', `Bearer ${platformAdminToken}`)
+          .expect(200)
+      })
+
+      test('platform admin can get specific catalog', async () => {
+        await agent.get('/v2/catalogs/test-catalog').set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
+      })
+
+      test('platform admin can update catalog', async () => {
+        await agent
+          .put('/v2/catalogs/test-catalog')
+          .send(catalogData)
+          .set('Authorization', `Bearer ${platformAdminToken}`)
+          .expect(200)
+      })
+
+      test('platform admin can patch catalog', async () => {
+        await agent
+          .patch('/v2/catalogs/test-catalog')
+          .send(catalogData)
+          .set('Authorization', `Bearer ${platformAdminToken}`)
+          .expect(200)
+      })
+
+      test('platform admin can delete catalog', async () => {
+        await agent.delete('/v2/catalogs/test-catalog').set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
+      })
+
+      test('platform admin can get catalog charts', async () => {
+        await agent
+          .get('/v2/catalogs/test-catalog/charts')
+          .set('Authorization', `Bearer ${platformAdminToken}`)
+          .expect(200)
+      })
+
+      test('platform admin can get specific catalog chart', async () => {
+        await agent
+          .get('/v2/catalogs/test-catalog/charts/test-chart')
+          .set('Authorization', `Bearer ${platformAdminToken}`)
+          .expect(200)
+      })
+
+      test('platform admin can refresh catalogs', async () => {
+        await agent.post('/v2/catalogs/refresh').set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
+      })
+    })
+
+    describe('Team Admin', () => {
+      test('team admin can get all catalogs', async () => {
+        await agent.get('/v2/catalogs').set('Authorization', `Bearer ${teamAdminToken}`).expect(200)
+      })
+
+      test('team admin can get specific catalog', async () => {
+        await agent.get('/v2/catalogs/test-catalog').set('Authorization', `Bearer ${teamAdminToken}`).expect(200)
+      })
+
+      test('team admin can get catalog charts', async () => {
+        await agent.get('/v2/catalogs/test-catalog/charts').set('Authorization', `Bearer ${teamAdminToken}`).expect(200)
+      })
+
+      test('team admin can get specific catalog chart', async () => {
+        await agent
+          .get('/v2/catalogs/test-catalog/charts/test-chart')
+          .set('Authorization', `Bearer ${teamAdminToken}`)
+          .expect(200)
+      })
+
+      test('team admin cannot create catalog', async () => {
+        await agent.post('/v2/catalogs').send(catalogData).set('Authorization', `Bearer ${teamAdminToken}`).expect(403)
+      })
+
+      test('team admin cannot update catalog', async () => {
+        await agent
+          .put('/v2/catalogs/test-catalog')
+          .send(catalogData)
+          .set('Authorization', `Bearer ${teamAdminToken}`)
+          .expect(403)
+      })
+
+      test('team admin cannot patch catalog', async () => {
+        await agent
+          .patch('/v2/catalogs/test-catalog')
+          .send(catalogData)
+          .set('Authorization', `Bearer ${teamAdminToken}`)
+          .expect(403)
+      })
+
+      test('team admin cannot delete catalog', async () => {
+        await agent.delete('/v2/catalogs/test-catalog').set('Authorization', `Bearer ${teamAdminToken}`).expect(403)
+      })
+
+      test('team admin can refresh catalogs', async () => {
+        await agent.post('/v2/catalogs/refresh').set('Authorization', `Bearer ${teamAdminToken}`).expect(200)
+      })
+    })
+
+    describe('Team Member', () => {
+      test('team member can get all catalogs', async () => {
+        await agent.get('/v2/catalogs').set('Authorization', `Bearer ${teamMemberToken}`).expect(200)
+      })
+
+      test('team member can get specific catalog', async () => {
+        await agent.get('/v2/catalogs/test-catalog').set('Authorization', `Bearer ${teamMemberToken}`).expect(200)
+      })
+
+      test('team member can get catalog charts', async () => {
+        await agent
+          .get('/v2/catalogs/test-catalog/charts')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(200)
+      })
+
+      test('team member can get specific catalog chart', async () => {
+        await agent
+          .get('/v2/catalogs/test-catalog/charts/test-chart')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(200)
+      })
+
+      test('team member cannot create catalog', async () => {
+        await agent.post('/v2/catalogs').send(catalogData).set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
+      })
+
+      test('team member cannot update catalog', async () => {
+        await agent
+          .put('/v2/catalogs/test-catalog')
+          .send(catalogData)
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('team member cannot patch catalog', async () => {
+        await agent
+          .patch('/v2/catalogs/test-catalog')
+          .send(catalogData)
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('team member cannot delete catalog', async () => {
+        await agent.delete('/v2/catalogs/test-catalog').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
+      })
+
+      test('team member can refresh catalogs', async () => {
+        await agent.post('/v2/catalogs/refresh').set('Authorization', `Bearer ${teamMemberToken}`).expect(200)
+      })
+    })
+
+    describe('Unauthenticated', () => {
+      test('anonymous user cannot get all catalogs', async () => {
+        await agent.get('/v2/catalogs').expect(401)
+      })
+
+      test('anonymous user cannot create catalog', async () => {
+        await agent.post('/v2/catalogs').send(catalogData).expect(401)
+      })
+
+      test('anonymous user cannot get specific catalog', async () => {
+        await agent.get('/v2/catalogs/test-catalog').expect(401)
+      })
+
+      test('anonymous user cannot update catalog', async () => {
+        await agent.put('/v2/catalogs/test-catalog').send(catalogData).expect(401)
+      })
+
+      test('anonymous user cannot patch catalog', async () => {
+        await agent.patch('/v2/catalogs/test-catalog').send(catalogData).expect(401)
+      })
+
+      test('anonymous user cannot delete catalog', async () => {
+        await agent.delete('/v2/catalogs/test-catalog').expect(401)
+      })
+
+      test('anonymous user cannot get catalog charts', async () => {
+        await agent.get('/v2/catalogs/test-catalog/charts').expect(401)
+      })
+
+      test('anonymous user cannot get specific catalog chart', async () => {
+        await agent.get('/v2/catalogs/test-catalog/charts/test-chart').expect(401)
+      })
+
+      test('anonymous user cannot refresh catalogs', async () => {
+        await agent.post('/v2/catalogs/refresh').expect(401)
       })
     })
   })
