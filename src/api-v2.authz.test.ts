@@ -1385,6 +1385,24 @@ describe('API V2 authz tests', () => {
         ingress: { mode: 'AllowAll' },
       },
     })
+    const createIngressAllowOnlyNetpol = (fromLabelValue: string, toLabelValue = 'frontend') =>
+      createTeamResource('AplTeamNetworkControl', {
+        ruleType: {
+          type: 'ingress',
+          ingress: {
+            mode: 'AllowOnly',
+            toLabelName: 'app',
+            toLabelValue,
+            allow: [
+              {
+                fromNamespace: 'team1',
+                fromLabelName: 'app',
+                fromLabelValue,
+              },
+            ],
+          },
+        },
+      })
 
     describe('Platform Admin', () => {
       test('platform admin can get all network policies', async () => {
@@ -1399,6 +1417,48 @@ describe('API V2 authz tests', () => {
           .send(netpolData)
           .set('Authorization', `Bearer ${teamMemberToken}`)
           .expect(200)
+      })
+
+      test('rejects multiline network policy label values', async () => {
+        const netpol = createIngressAllowOnlyNetpol('foo\nbar')
+
+        const response = await agent
+          .post('/v2/teams/team1/netpols')
+          .send(netpol)
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+
+        expect(response.status).toBe(400)
+      })
+
+      it.each(['foo\nbar', 'foo\r\nbar', '{{ malicious }}', 'foo: bar', 'foo bar', '---'])(
+        'rejects invalid label value %p',
+        async (fromLabelValue) => {
+          const response = await agent
+            .post('/v2/teams/team1/netpols')
+            .send(createIngressAllowOnlyNetpol(fromLabelValue))
+            .set('Authorization', `Bearer ${teamMemberToken}`)
+
+          expect(response.status).toBe(400)
+        },
+      )
+
+      it.each(['app', 'my-app', 'my_app', 'my.app', 'APP123', ''])(
+        'accepts Kubernetes label value %p',
+        async (fromLabelValue) => {
+          await agent
+            .post('/v2/teams/team1/netpols')
+            .send(createIngressAllowOnlyNetpol(fromLabelValue))
+            .set('Authorization', `Bearer ${teamMemberToken}`)
+            .expect(200)
+        },
+      )
+
+      test('rejects invalid to-label value on ingress selector', async () => {
+        await agent
+          .post('/v2/teams/team1/netpols')
+          .send(createIngressAllowOnlyNetpol('frontend', 'foo\nbar'))
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(400)
       })
 
       test('team member can get team network policies', async () => {
