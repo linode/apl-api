@@ -92,6 +92,34 @@ const mockSealedSecretResource = withStatus({
   },
 })
 
+const mockSealedSecretResourceTeam2 = withStatus({
+  kind: 'SealedSecret',
+  metadata: {
+    name: 'team2-secret',
+    labels: { 'apl.io/teamId': 'team2' },
+  },
+  spec: {
+    encryptedData: { key: 'value' },
+    template: {
+      type: 'kubernetes.io/opaque',
+    },
+  },
+})
+
+const mockOperatorSealedSecretResource = withStatus({
+  kind: 'SealedSecret',
+  metadata: {
+    name: 'otomi-secrets',
+    namespace: 'apl-secrets',
+  },
+  spec: {
+    encryptedData: { adminPassword: 'value' },
+    template: {
+      type: 'kubernetes.io/opaque',
+    },
+  },
+})
+
 const mockCodeRepoResource = withStatus(
   createNamedTeamResource('AplTeamCodeRepo', 'my-repo', 'team1', {
     gitService: 'github',
@@ -347,6 +375,13 @@ describe('API V2 authz tests', () => {
     jest.spyOn(otomiStack, 'editAplSealedSecret').mockResolvedValue(mockSealedSecretResource as any)
     jest.spyOn(otomiStack, 'getAllAplSealedSecrets').mockReturnValue([mockSealedSecretResource] as any)
     jest.spyOn(otomiStack, 'getAplSealedSecrets').mockReturnValue([mockSealedSecretResource] as any)
+
+    // Namespace-scoped sealed secrets (operator-owned + arbitrary namespace routes)
+    jest.spyOn(otomiStack, 'getAplNamespaceSealedSecrets').mockReturnValue([mockOperatorSealedSecretResource] as any)
+    jest.spyOn(otomiStack, 'getAplNamespaceSealedSecret').mockResolvedValue(mockOperatorSealedSecretResource as any)
+    jest.spyOn(otomiStack, 'createAplNamespaceSealedSecret').mockResolvedValue(mockOperatorSealedSecretResource as any)
+    jest.spyOn(otomiStack, 'editAplNamespaceSealedSecret').mockResolvedValue(mockOperatorSealedSecretResource as any)
+    jest.spyOn(otomiStack, 'deleteAplNamespaceSealedSecret').mockResolvedValue(undefined as any)
 
     jest.spyOn(otomiStack, 'createAplCodeRepo').mockResolvedValue(mockCodeRepoResource as any)
     jest.spyOn(otomiStack, 'getAplCodeRepo').mockReturnValue(mockCodeRepoResource as any)
@@ -894,6 +929,148 @@ describe('API V2 authz tests', () => {
           .get('/v2/teams/team2/sealedsecrets/../../team1/sealedsecrets/my-secret')
           .set('Authorization', `Bearer ${teamMemberToken}`)
           .expect(200)
+      })
+    })
+  })
+
+  describe('V2 Cross-Tenant Authz Bypass Regression', () => {
+    const secretData = {
+      kind: 'SealedSecret',
+      metadata: { name: 'test-secret' },
+      spec: { encryptedData: { key: 'value' }, template: { type: 'kubernetes.io/opaque' } },
+    }
+
+    describe('GET /v2/sealedsecrets (cross-team collection)', () => {
+      beforeEach(() => {
+        jest
+          .spyOn(otomiStack, 'getAllAplSealedSecrets')
+          .mockReturnValue([mockSealedSecretResource, mockSealedSecretResourceTeam2] as any)
+      })
+
+      test('team member cannot use the cross-team collection endpoint at all (requires platformAdmin read-any; use /v2/teams/{teamId}/sealedsecrets instead)', async () => {
+        await agent.get('/v2/sealedsecrets').set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
+      })
+
+      test('platform admin sees all teams secrets', async () => {
+        const res = await agent
+          .get('/v2/sealedsecrets')
+          .set('Authorization', `Bearer ${platformAdminToken}`)
+          .expect(200)
+        expect(res.body).toHaveLength(2)
+      })
+
+      test('rejects forged teamId via query string (undeclared param for this operation)', async () => {
+        await agent.get('/v2/sealedsecrets?teamId=team1').set('Authorization', `Bearer ${team2MemberToken}`).expect(403)
+      })
+
+      test('rejects forged teamId via JSON body on a GET (undeclared requestBody for this operation)', async () => {
+        await agent
+          .get('/v2/sealedsecrets')
+          .send({ teamId: 'team1' })
+          .set('Authorization', `Bearer ${team2MemberToken}`)
+          .expect(403)
+      })
+    })
+
+    describe('/v2/namespaces/{namespace}/sealedsecrets (namespace not tied to caller teams)', () => {
+      test('team member can access their own team namespace', async () => {
+        await agent
+          .get('/v2/namespaces/team-team1/sealedsecrets')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(200)
+      })
+
+      test('team member cannot read another teams namespace', async () => {
+        await agent
+          .get('/v2/namespaces/team-team2/sealedsecrets')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('team member cannot read the operator-owned apl-secrets namespace', async () => {
+        await agent
+          .get('/v2/namespaces/apl-secrets/sealedsecrets')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('team member cannot create a sealed secret in another teams namespace', async () => {
+        await agent
+          .post('/v2/namespaces/team-team2/sealedsecrets')
+          .send(secretData)
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('team member cannot create a sealed secret in the operator-owned apl-secrets namespace', async () => {
+        await agent
+          .post('/v2/namespaces/apl-secrets/sealedsecrets')
+          .send(secretData)
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('team member cannot create a sealed secret in the operator-owned apl-users namespace (privilege escalation path)', async () => {
+        await agent
+          .post('/v2/namespaces/apl-users/sealedsecrets')
+          .send(secretData)
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('team member cannot edit a sealed secret in the operator-owned apl-secrets namespace', async () => {
+        await agent
+          .put('/v2/namespaces/apl-secrets/sealedsecrets/otomi-secrets')
+          .send(secretData)
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('team member cannot delete a sealed secret in the operator-owned apl-secrets namespace, even with a forged body', async () => {
+        // forged body must not bypass authz
+        await agent
+          .delete('/v2/namespaces/apl-secrets/sealedsecrets/otomi-secrets')
+          .send({ teamId: 'team1' })
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('platform admin can access any team namespace', async () => {
+        await agent
+          .get('/v2/namespaces/team-team2/sealedsecrets')
+          .set('Authorization', `Bearer ${platformAdminToken}`)
+          .expect(200)
+      })
+
+      // this route has no teamId param at all; query/body teamId must not override the namespace check
+      test('forged ?teamId query cannot unlock a foreign namespace', async () => {
+        await agent
+          .get('/v2/namespaces/team-team2/sealedsecrets?teamId=team1')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('forged ?teamId query cannot unlock the operator-owned namespace', async () => {
+        await agent
+          .get('/v2/namespaces/apl-secrets/sealedsecrets?teamId=team1')
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('forged teamId in body cannot unlock a foreign namespace on create', async () => {
+        await agent
+          .post('/v2/namespaces/team-team2/sealedsecrets')
+          .send({ ...secretData, teamId: 'team1' })
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+
+      test('forged teamId in body cannot unlock the operator-owned namespace on create', async () => {
+        await agent
+          .post('/v2/namespaces/apl-secrets/sealedsecrets')
+          .send({ ...secretData, teamId: 'team1' })
+          .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
       })
     })
   })

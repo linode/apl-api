@@ -1,5 +1,6 @@
 import Debug from 'debug'
 import { Response } from 'express'
+import { assertNamespaceAccess } from 'src/api/namespace-access'
 import { ensureStatus } from 'src/api/response-utils'
 import { OpenApiRequestExt, SealedSecretManifestRequest } from 'src/otomi-models'
 
@@ -11,6 +12,7 @@ const debug = Debug('otomi:api:v2:namespaces:sealedsecrets')
  */
 export const getAplNamespaceSealedSecrets = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { namespace } = req.params
+  assertNamespaceAccess(namespace, req.user)
   debug(`getAplNamespaceSealedSecrets(${namespace}, ...)`)
   const v = await req.otomi.getAplNamespaceSealedSecrets(namespace)
   res.json(v.map((secret) => ensureStatus(secret)))
@@ -22,6 +24,7 @@ export const getAplNamespaceSealedSecrets = async (req: OpenApiRequestExt, res: 
  */
 export const createAplNamespaceSealedSecret = async (req: OpenApiRequestExt, res: Response): Promise<void> => {
   const { namespace } = req.params
+  assertNamespaceAccess(namespace, req.user)
   debug(`createNamespaceSealedSecret(${namespace}, ...)`)
   const v = await req.otomi.createAplNamespaceSealedSecret(namespace, req.body as SealedSecretManifestRequest)
   res.json(ensureStatus(v))
