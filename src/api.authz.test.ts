@@ -249,7 +249,7 @@ describe('API authz tests', () => {
       jest.spyOn(otomiStack, 'editUser').mockResolvedValue(mockUser as any)
 
       await agent
-        .put('/v1/users/user1')
+        .put('/v1/users/6383AB9D-3C42-4650-B8D8-4E58D0E97FEE')
         .send({ ...userData })
         .set('Authorization', `Bearer ${platformAdminToken}`)
         .expect(200)
@@ -259,8 +259,8 @@ describe('API authz tests', () => {
       jest.spyOn(otomiStack, 'deleteUser').mockResolvedValue({} as any)
 
       await agent
-        .delete('/v1/users/user1')
-        .send({ id: 'user1' })
+        .delete('/v1/users/6383AB9D-3C42-4650-B8D8-4E58D0E97FEE')
+        .send({ id: '6383AB9D-3C42-4650-B8D8-4E58D0E97FEE' })
         .set('Authorization', `Bearer ${platformAdminToken}`)
         .expect(200)
     })
@@ -300,7 +300,7 @@ describe('API authz tests', () => {
     test('team admin cannot delete users', async () => {
       await agent
         .delete('/v1/users/user1')
-        .send({ id: 'user1' })
+        .send({ id: 'A4E3926E-19AA-464D-B631-02B85609E91F' })
         .set('Authorization', `Bearer ${teamAdminToken}`)
         .expect(403)
     })
