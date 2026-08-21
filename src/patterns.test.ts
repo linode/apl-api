@@ -122,6 +122,8 @@ const redosCases: Record<string, string[]> = {
 
   url: [`https://${'a.'.repeat(50_000)}!`, `https://example.com/${'a/'.repeat(50_000)}!`],
 
+  uuid: [`${'0'.repeat(100_000)}!`, `${'0-'.repeat(50_000)}!`],
+
   wildcardDomainOrIp: [`${'a.'.repeat(50_000)}!`, `${'a:'.repeat(50_000)}!`],
 
   imageRegistry: [`${'a.'.repeat(50_000)}!`, `${'a/'.repeat(50_000)}!`],
@@ -384,6 +386,27 @@ describe('OpenAPI definition regex patterns', () => {
 
     it('rejects malformed URLs', () => {
       expectInvalid('url', ['', 'example.com', 'ftp://example.com', 'https://', 'https://example.com invalid'])
+    })
+  })
+
+  describe('uuid', () => {
+    it('accepts valid UUIDs', () => {
+      expectValid('uuid', [
+        '8dd15e48-e30e-4788-9709-724f8ba625c7',
+        '00000000-0000-0000-0000-000000000000',
+        'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF',
+      ])
+    })
+
+    it('rejects malformed UUIDs', () => {
+      expectInvalid('uuid', [
+        '',
+        '8dd15e48e30e47889709724f8ba625c7',
+        '8dd15e48-e30e-4788-9709-724f8ba625c',
+        '8dd15e48-e30e-4788-9709-724f8ba625c77',
+        'zdd15e48-e30e-4788-9709-724f8ba625c7',
+        '8dd15e48_e30e_4788_9709_724f8ba625c7',
+      ])
     })
   })
 
