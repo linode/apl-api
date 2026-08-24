@@ -53,6 +53,7 @@ export class Git {
     debug(`Adding git config`)
     await this.git.addConfig('user.name', this.user)
     await this.git.addConfig('user.email', this.email)
+    await this.git.addConfig('http.proactiveAuth', 'basic')
     if (this.isRootClone()) {
       if (getProtocol(this.url) === 'file') {
         // tell the the git repo there to accept updates even when it is checked out
