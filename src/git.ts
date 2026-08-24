@@ -179,7 +179,7 @@ export class Git {
         return await this.initFromTestFolder()
       }
       debug(`Cloning from '${this.url}' to '${this.path}'`)
-      await this.git.clone(this.urlAuth, this.path)
+      await this.git.clone(this.urlAuth, this.path, ['-c', 'http.proactiveAuth=basic'])
       await this.addConfig()
       await this.git.checkout(this.branch)
     } else if (this.url) {
