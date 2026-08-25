@@ -185,6 +185,10 @@ export interface OpenApiRequest extends Request {
       security?: any[]
       operationId?: string
       'x-aclSchema'?: string
+      // Resolved OpenAPI parameter definitions for this operation (path/query/etc.)
+      parameters?: Array<{ name: string; in: string }>
+      // Resolved OpenAPI requestBody schema for this operation, if any
+      requestBody?: { content?: { 'application/json'?: { schema?: { properties?: Record<string, unknown> } } } }
     }
     // Path parameters parsed from the URL (e.g., {teamId} -> pathParams.teamId)
     pathParams?: Record<string, any>
