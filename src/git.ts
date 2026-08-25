@@ -53,6 +53,7 @@ export class Git {
     debug(`Adding git config`)
     await this.git.addConfig('user.name', this.user)
     await this.git.addConfig('user.email', this.email)
+    await this.git.addConfig('http.proactiveAuth', 'basic')
     if (this.isRootClone()) {
       if (getProtocol(this.url) === 'file') {
         // tell the the git repo there to accept updates even when it is checked out
@@ -178,7 +179,7 @@ export class Git {
         return await this.initFromTestFolder()
       }
       debug(`Cloning from '${this.url}' to '${this.path}'`)
-      await this.git.clone(this.urlAuth, this.path)
+      await this.git.clone(this.urlAuth, this.path, ['-c', 'http.proactiveAuth=basic'])
       await this.addConfig()
       await this.git.checkout(this.branch)
     } else if (this.url) {
