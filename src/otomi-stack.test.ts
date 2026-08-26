@@ -283,31 +283,6 @@ describe('Data validation', () => {
         code: 422,
       })
     })
-
-    it('honours a custom RESERVED_SERVICE_NAMES value', async () => {
-      const previous = process.env.RESERVED_SERVICE_NAMES
-      process.env.RESERVED_SERVICE_NAMES = 'custom-reserved'
-      try {
-        await expect(otomiStack.createAplService(teamId, buildService('custom-reserved'))).rejects.toMatchObject({
-          code: 422,
-        })
-        await expect(otomiStack.createAplService(teamId, buildService('grafana'))).resolves.not.toThrow()
-      } finally {
-        if (previous === undefined) delete process.env.RESERVED_SERVICE_NAMES
-        else process.env.RESERVED_SERVICE_NAMES = previous
-      }
-    })
-
-    it('disables the check when RESERVED_SERVICE_NAMES is empty', async () => {
-      const previous = process.env.RESERVED_SERVICE_NAMES
-      process.env.RESERVED_SERVICE_NAMES = ''
-      try {
-        await expect(otomiStack.createAplService(teamId, buildService('grafana'))).resolves.not.toThrow()
-      } finally {
-        if (previous === undefined) delete process.env.RESERVED_SERVICE_NAMES
-        else process.env.RESERVED_SERVICE_NAMES = previous
-      }
-    })
   })
 })
 

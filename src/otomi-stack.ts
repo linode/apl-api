@@ -102,6 +102,7 @@ import {
   getValuesSchema,
   removeBlankAttributes,
 } from 'src/utils'
+import { assertServiceNameNotReserved } from 'src/utils/serviceUtils'
 import { deepQuote } from 'src/utils/yamlUtils'
 import {
   API_NAMESPACE,
@@ -126,7 +127,6 @@ import {
   OBJ_STORAGE_APPS,
   OBJECT_STORAGE_UI_EXCLUSIONS,
   PREINSTALLED_EXCLUDED_APPS,
-  RESERVED_SERVICE_NAMES,
   TTY_IMAGE_REPOSITORY,
   TTY_IMAGE_TAG,
   VERSIONS,
@@ -211,23 +211,7 @@ const env = cleanEnv({
   OBJECT_STORAGE_UI_EXCLUSIONS,
   TTY_IMAGE_REPOSITORY,
   TTY_IMAGE_TAG,
-  RESERVED_SERVICE_NAMES,
 })
-
-function getReservedServiceNames(): Set<string> {
-  return new Set(
-    env.RESERVED_SERVICE_NAMES.split(',')
-      .map((name) => name.trim().toLowerCase())
-      .filter((name) => name.length > 0),
-  )
-}
-
-function assertServiceNameNotReserved(name: string): void {
-  const reserved = getReservedServiceNames()
-  if (reserved.has(name.trim().toLowerCase())) {
-    throw new ValidationError(`Service name is reserved. Reserved names: ${Array.from(reserved).join(', ')}`)
-  }
-}
 
 export const rootPath = '/tmp/otomi/values'
 const clusterSettingsFilePath = 'env/settings/cluster.yaml'
