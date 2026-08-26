@@ -126,6 +126,7 @@ import {
   OBJ_STORAGE_APPS,
   OBJECT_STORAGE_UI_EXCLUSIONS,
   PREINSTALLED_EXCLUDED_APPS,
+  RESERVED_SERVICE_NAMES,
   TTY_IMAGE_REPOSITORY,
   TTY_IMAGE_TAG,
   VERSIONS,
@@ -210,7 +211,23 @@ const env = cleanEnv({
   OBJECT_STORAGE_UI_EXCLUSIONS,
   TTY_IMAGE_REPOSITORY,
   TTY_IMAGE_TAG,
+  RESERVED_SERVICE_NAMES,
 })
+
+function getReservedServiceNames(): Set<string> {
+  return new Set(
+    env.RESERVED_SERVICE_NAMES.split(',')
+      .map((name) => name.trim().toLowerCase())
+      .filter((name) => name.length > 0),
+  )
+}
+
+function assertServiceNameNotReserved(name: string): void {
+  const reserved = getReservedServiceNames()
+  if (reserved.has(name.trim().toLowerCase())) {
+    throw new ValidationError(`Service name is reserved. Reserved names: ${Array.from(reserved).join(', ')}`)
+  }
+}
 
 export const rootPath = '/tmp/otomi/values'
 const clusterSettingsFilePath = 'env/settings/cluster.yaml'
@@ -2101,6 +2118,7 @@ export default class OtomiStack {
   }
 
   async createAplService(teamId: string, data: AplServiceRequest): Promise<AplServiceResponse> {
+    assertServiceNameNotReserved(data.metadata.name)
     if (data.metadata.name.length < 2) throw new ValidationError('Service name must be at least 2 characters long')
     if (data.spec.cname?.tlsSecretName && data.spec.cname?.tlsSecretName.length < 2)
       throw new ValidationError('Secret name must be at least 2 characters long')
@@ -2127,6 +2145,7 @@ export default class OtomiStack {
     data: DeepPartial<AplServiceRequest>,
     patch = false,
   ): Promise<AplServiceResponse> {
+    assertServiceNameNotReserved(name)
     const existing = this.getAplService(teamId, name)
     const updatedSpec = patch ? merge(cloneDeep(existing.spec), data.spec) : { ...existing.spec, ...data.spec }
 

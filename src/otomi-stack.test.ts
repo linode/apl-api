@@ -252,6 +252,63 @@ describe('Data validation', () => {
     expect(teamSettings).toBeDefined()
     expect(teamSettings?.metadata.name).toBe('short')
   })
+
+  describe('Reserved service names', () => {
+    const buildService = (name: string): AplServiceRequest => ({
+      kind: 'AplTeamService',
+      metadata: { name, labels: { 'apl.io/teamId': teamId } },
+      spec: {},
+    })
+
+    it('rejects a reserved name on create', async () => {
+      await expect(otomiStack.createAplService(teamId, buildService('grafana'))).rejects.toMatchObject({
+        code: 422,
+      })
+    })
+
+    it('rejects a reserved name case-insensitively and trims whitespace', async () => {
+      await expect(otomiStack.createAplService(teamId, buildService(' Grafana '))).rejects.toMatchObject({
+        code: 422,
+      })
+    })
+
+    it('allows a non-reserved name on create', async () => {
+      await expect(otomiStack.createAplService(teamId, buildService('my-service'))).resolves.not.toThrow()
+    })
+
+    it('rejects a reserved name on update', async () => {
+      createTestService(otomiStack, teamId, 'alertmanager', { domain: 'alertmanager.example.com' })
+
+      await expect(otomiStack.editAplService(teamId, 'alertmanager', { spec: { port: 8080 } })).rejects.toMatchObject({
+        code: 422,
+      })
+    })
+
+    it('honours a custom RESERVED_SERVICE_NAMES value', async () => {
+      const previous = process.env.RESERVED_SERVICE_NAMES
+      process.env.RESERVED_SERVICE_NAMES = 'custom-reserved'
+      try {
+        await expect(otomiStack.createAplService(teamId, buildService('custom-reserved'))).rejects.toMatchObject({
+          code: 422,
+        })
+        await expect(otomiStack.createAplService(teamId, buildService('grafana'))).resolves.not.toThrow()
+      } finally {
+        if (previous === undefined) delete process.env.RESERVED_SERVICE_NAMES
+        else process.env.RESERVED_SERVICE_NAMES = previous
+      }
+    })
+
+    it('disables the check when RESERVED_SERVICE_NAMES is empty', async () => {
+      const previous = process.env.RESERVED_SERVICE_NAMES
+      process.env.RESERVED_SERVICE_NAMES = ''
+      try {
+        await expect(otomiStack.createAplService(teamId, buildService('grafana'))).resolves.not.toThrow()
+      } finally {
+        if (previous === undefined) delete process.env.RESERVED_SERVICE_NAMES
+        else process.env.RESERVED_SERVICE_NAMES = previous
+      }
+    })
+  })
 })
 
 describe('Work with values', () => {
