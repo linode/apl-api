@@ -1,4 +1,5 @@
 import { mockDeep } from 'jest-mock-extended'
+import { DEX_NO_GROUPS_SENTINEL } from 'src/clients/dexClient'
 import { JWT } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { loadSpec } from '../app'
@@ -31,6 +32,7 @@ const platformAdminJWT: JWT = {
 const teamAdminJWT: JWT = { ...platformAdminJWT, groups: teamAdminGroups }
 const teamMemberJWT: JWT = { ...platformAdminJWT, groups: teamMemberGroups }
 const multiTeamJWT: JWT = { ...platformAdminJWT, groups: multiTeamGroups }
+const noGroupsJWT: JWT = { ...platformAdminJWT, groups: [DEX_NO_GROUPS_SENTINEL] }
 
 describe('JWT claims mapping', () => {
   let otomiStack: OtomiStack
@@ -61,6 +63,14 @@ describe('JWT claims mapping', () => {
 
   test('A user in team-member group should get teamMember role and not have either isPlatformAdmin or isTeamAdmin', () => {
     const user = getUser(teamMemberJWT, otomiStack)
+    expect(user.isPlatformAdmin).toBeFalsy()
+    expect(user.isTeamAdmin).toBeFalsy()
+  })
+
+  test('Dex no-groups sentinel grants no role and no team membership', () => {
+    const user = getUser(noGroupsJWT, otomiStack)
+    expect(user.roles).toEqual([])
+    expect(user.teams).toEqual([])
     expect(user.isPlatformAdmin).toBeFalsy()
     expect(user.isTeamAdmin).toBeFalsy()
   })

@@ -1,6 +1,7 @@
 /* eslint-disable no-param-reassign */
 import Debug from 'debug'
 import { RequestHandler } from 'express'
+import { DEX_NO_GROUPS_SENTINEL } from 'src/clients/dexClient'
 import { verifyJwt } from 'src/jwt-verification'
 import { getMockEmail, getMockGroups, getMockName } from 'src/mocks'
 import { JWT, OpenApiRequestExt, SessionUser } from 'src/otomi-models'
@@ -24,6 +25,8 @@ export function getUser(user: JWT, otomi: OtomiStack): SessionUser {
   // keycloak does not (yet) give roles, so
   // for now we map correct group names to roles
   user?.groups?.forEach((group) => {
+    // Dex-only placeholder for "no groups" (see DEX_NO_GROUPS_SENTINEL) - carries no role or team.
+    if (group === DEX_NO_GROUPS_SENTINEL) return
     if (['platform-admin', 'all-teams-admin'].includes(group)) {
       if (!sessionUser.roles.includes('platformAdmin')) {
         sessionUser.isPlatformAdmin = true

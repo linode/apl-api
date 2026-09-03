@@ -118,6 +118,4 @@ User:
       description: The initial password of the user
   required:
     - email
-    - firstName
-    - lastName
   type: object

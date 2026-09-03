@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { DEX_NO_GROUPS_SENTINEL, Password } from 'src/clients/dexClient'
 import { SealedSecretManifestResponse, User } from 'src/otomi-models'
 import { cleanEnv, ROOT_KEYCLOAK_USER } from 'src/validators'
 import { FileStore } from '../fileStore/file-store'
@@ -76,6 +77,39 @@ export function userSecretDataToUser(data: UserSecretData): User {
     isPlatformAdmin: data.isPlatformAdmin,
     isTeamAdmin: data.isTeamAdmin,
     teams: data.teams,
+  } as User
+}
+
+export interface GroupSource {
+  isPlatformAdmin?: boolean
+  isTeamAdmin?: boolean
+  teams?: string[]
+}
+
+// Mirrors the naming convention read back out of Keycloak-issued tokens
+// in src/middleware/jwt.ts's getUser() — platform-admin / team-admin / team-<id>.
+export function deriveDexGroups(user: GroupSource): string[] {
+  const groups: string[] = []
+  if (user.isPlatformAdmin) groups.push('platform-admin')
+  if (user.isTeamAdmin) groups.push('team-admin')
+  ;(user.teams || []).forEach((teamId) => groups.push(`team-${teamId}`))
+  return groups
+}
+
+// Inverse of deriveDexGroups: when AUTH_PROVIDER=dex, Dex's own password store is the only
+// place a user record lives (see otomi-stack.ts createUser/getUser/editUser/editTeamUsers/
+// deleteUser) — this reconstructs a User-shaped object from the groups Dex hands back over
+// ListPasswords. Dex carries no firstName/lastName/initialPassword, so those come back undefined.
+export function dexPasswordToUser(password: Password): User {
+  const groups = password.groups.filter((group) => group !== DEX_NO_GROUPS_SENTINEL)
+  return {
+    id: password.userId,
+    email: password.email,
+    isPlatformAdmin: groups.includes('platform-admin'),
+    isTeamAdmin: groups.includes('team-admin'),
+    teams: groups
+      .filter((group) => group.startsWith('team-') && group !== 'team-admin')
+      .map((group) => group.substring(5)),
   } as User
 }
 
