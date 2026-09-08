@@ -227,6 +227,7 @@ const env = cleanEnv({
 
 export const rootPath = '/tmp/otomi/values'
 const clusterSettingsFilePath = 'env/settings/cluster.yaml'
+const MIN_USER_PASSWORD_LENGTH = 8
 
 function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: string): string {
   return `env/teams/${teamId}/sealedsecrets/${sealedSecretsName}.yaml`
@@ -1272,7 +1273,7 @@ export default class OtomiStack {
       throw new HttpError(400, error as string)
     }
 
-    const initialPassword = this.generateInitialPassword()
+    const initialPassword = this.resolveInitialPassword(data.initialPassword)
     const user: User = { ...data, id: uuidv4(), initialPassword }
 
     this.validateUserTeamsExist(user)
@@ -1286,6 +1287,16 @@ export default class OtomiStack {
     const aplRecord = await this.saveUser(user)
     await this.doDeployment(aplRecord)
     return user
+  }
+
+  private resolveInitialPassword(suppliedPassword?: string): string {
+    if (env.AUTH_PROVIDER !== 'dex' || !suppliedPassword) {
+      return this.generateInitialPassword()
+    }
+    if (suppliedPassword.length < MIN_USER_PASSWORD_LENGTH) {
+      throw new HttpError(400, `Password must be at least ${MIN_USER_PASSWORD_LENGTH} characters.`)
+    }
+    return suppliedPassword
   }
 
   private generateInitialPassword(): string {

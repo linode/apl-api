@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs'
 import { mockDeep } from 'jest-mock-extended'
 import {
   AplCodeRepoResponse,
@@ -917,6 +918,55 @@ describe('Users tests', () => {
 
       expect(otomi.git.writeTextFile).not.toHaveBeenCalled()
       expect(otomi.doDeployment).not.toHaveBeenCalled()
+    })
+
+    it('createUser uses an admin-supplied initialPassword when AUTH_PROVIDER is dex', async () => {
+      const otomi = await getTestStack('dex')
+
+      const user = await otomi.createUser({
+        email: 'chosen@example.com',
+        isPlatformAdmin: false,
+        isTeamAdmin: false,
+        teams: [],
+        initialPassword: 'a-chosen-password',
+      } as User)
+
+      expect(user.initialPassword).toEqual('a-chosen-password')
+      const call = mockCreateDexPassword.mock.calls[0][0]
+      expect(await bcrypt.compare('a-chosen-password', call.passwordHash)).toBe(true)
+    })
+
+    it('createUser rejects an admin-supplied initialPassword shorter than the minimum, when AUTH_PROVIDER is dex', async () => {
+      const otomi = await getTestStack('dex')
+
+      await expect(
+        otomi.createUser({
+          email: 'tooshort@example.com',
+          isPlatformAdmin: false,
+          isTeamAdmin: false,
+          teams: [],
+          initialPassword: 'short',
+        } as User),
+      ).rejects.toMatchObject({ code: 400 })
+
+      expect(mockCreateDexPassword).not.toHaveBeenCalled()
+    })
+
+    it('createUser ignores a caller-supplied initialPassword and generates one when AUTH_PROVIDER is keycloak', async () => {
+      const otomi = await getTestStack('keycloak')
+
+      const user = await otomi.createUser({
+        email: 'ignored@example.com',
+        firstName: 'I',
+        lastName: 'G',
+        isPlatformAdmin: false,
+        isTeamAdmin: false,
+        teams: [],
+        initialPassword: 'attempted-password',
+      } as User)
+
+      expect(user.initialPassword).not.toEqual('attempted-password')
+      expect(user.initialPassword!.length).toBeGreaterThan(0)
     })
 
     it('createUser aborts and writes nothing to Git when Dex provisioning fails', async () => {

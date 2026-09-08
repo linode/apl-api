@@ -115,7 +115,7 @@ User:
       uniqueItems: true
     initialPassword:
       type: string
-      description: The initial password of the user
+      description: The initial password of the user. With Dex as issuer, an admin may set this on create; otherwise one is generated.
   required:
     - email
   type: object
