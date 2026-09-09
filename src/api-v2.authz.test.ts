@@ -1830,12 +1830,37 @@ describe('API V2 authz tests', () => {
           .expect(200)
       })
 
-      //TODO check if this is the desired behavior
       test('team member cannot connect cloudtty for other team', async () => {
         await agent
           .get('/v2/cloudtty')
           .query({ teamId: 'team2' })
           .set('Authorization', `Bearer ${teamMemberToken}`)
+          .expect(403)
+      })
+    })
+
+    describe('Team Admin', () => {
+      test('team admin can connect cloudtty for own team', async () => {
+        await agent
+          .get('/v2/cloudtty')
+          .query({ teamId: 'team1' })
+          .set('Authorization', `Bearer ${teamAdminToken}`)
+          .expect(200)
+      })
+
+      test('team admin cannot connect cloudtty for other team', async () => {
+        await agent
+          .get('/v2/cloudtty')
+          .query({ teamId: 'team2' })
+          .set('Authorization', `Bearer ${teamAdminToken}`)
+          .expect(403)
+      })
+
+      test('team admin cannot delete cloudtty for other team', async () => {
+        await agent
+          .delete('/v2/cloudtty')
+          .query({ teamId: 'team2' })
+          .set('Authorization', `Bearer ${teamAdminToken}`)
           .expect(403)
       })
     })
