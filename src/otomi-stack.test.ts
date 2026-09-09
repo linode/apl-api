@@ -1066,6 +1066,33 @@ describe('Users tests', () => {
       expect(call.newHash.length).toBeGreaterThan(0)
     })
 
+    it('editUser ignores an attempted email change in dex mode, since Dex has no way to apply it', async () => {
+      mockListDexPasswords.mockResolvedValue([
+        dexPassword({ userId: 'uuid-6', email: 'original@example.com', groups: [] }),
+      ])
+      const otomi = await getTestStack('dex')
+      const sessionUserArg = { isPlatformAdmin: true } as unknown as SessionUser
+
+      const user = await otomi.editUser('uuid-6', { email: 'changed@example.com' } as User, sessionUserArg)
+
+      expect(user.email).toEqual('original@example.com')
+      expect(mockUpdateDexPassword).toHaveBeenCalledWith(expect.objectContaining({ email: 'original@example.com' }))
+    })
+
+    it('editUser rejects a too-short initialPassword in dex mode without calling Dex', async () => {
+      mockListDexPasswords.mockResolvedValue([
+        dexPassword({ userId: 'uuid-7', email: 'shortpw@example.com', groups: [] }),
+      ])
+      const otomi = await getTestStack('dex')
+      const sessionUserArg = { isPlatformAdmin: true } as unknown as SessionUser
+
+      await expect(
+        otomi.editUser('uuid-7', { initialPassword: 'short' } as User, sessionUserArg),
+      ).rejects.toMatchObject({ code: 400 })
+
+      expect(mockUpdateDexPassword).not.toHaveBeenCalled()
+    })
+
     it('editTeamUsers looks users up in Dex, calls Dex UpdatePassword with the new groups, and writes nothing to Git', async () => {
       mockListDexPasswords.mockResolvedValue([dexPassword({ userId: 'uuid-1', groups: ['team-blue'] })])
       const otomi = await getTestStack('dex')

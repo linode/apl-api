@@ -125,7 +125,6 @@
   },
   "main": "dist/src/app.js",
   "name": "@redkubes/otomi-api",
-  "name": "@redkubes/otomi-api",
   "publishConfig": {
     "private": true,
     "registry": "https://npm.pkg.github.com"
@@ -156,8 +155,8 @@
     "release:bump:minor": "standard-version --skip.changelog true --release-as minor",
     "release:client": "bin/release-client.sh",
     "start": "node dist/src/app.js",
-    "test": "npm run build:models && jest",
-    "test:pattern": "npm run build:models && jest --forceExit",
+    "test": "npm run build:models && npm run gen:dex-client && jest",
+    "test:pattern": "npm run build:models && npm run gen:dex-client && jest --forceExit",
     "types": "tsc --noEmit",
     "prepare": "husky install",
     "watch": "npm-watch",

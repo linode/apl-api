@@ -1293,10 +1293,14 @@ export default class OtomiStack {
     if (env.AUTH_PROVIDER !== 'dex' || !suppliedPassword) {
       return this.generateInitialPassword()
     }
-    if (suppliedPassword.length < MIN_USER_PASSWORD_LENGTH) {
+    this.assertPasswordLength(suppliedPassword)
+    return suppliedPassword
+  }
+
+  private assertPasswordLength(password: string): void {
+    if (password.length < MIN_USER_PASSWORD_LENGTH) {
       throw new HttpError(400, `Password must be at least ${MIN_USER_PASSWORD_LENGTH} characters.`)
     }
-    return suppliedPassword
   }
 
   private generateInitialPassword(): string {
@@ -1390,15 +1394,20 @@ export default class OtomiStack {
 
   private async editDexUser(id: string, data: User): Promise<User> {
     const { match, user: existingUser } = await this.lookupDexUser(id)
-    const user: User = { ...existingUser, ...data, id }
+    // Dex's UpdatePasswordReq has no field to change the record's email — it's the lookup key
+    // and is documented as immutable — so an email in `data` is not applied. Keeping the
+    // original here (rather than merging data.email in) stops the response from claiming an
+    // email change that was never sent to Dex and never took effect.
+    const user: User = { ...existingUser, ...data, id, email: existingUser.email }
     this.validateUserTeamsExist(user)
 
     // Dex already holds a real hash from creation — there's nothing to back-fill, and a hash
     // is only ever recomputed here when the caller actually supplied a new plaintext password.
+    if (data.initialPassword) {
+      this.assertPasswordLength(data.initialPassword)
+    }
     const newHash = data.initialPassword ? await hashPassword(data.initialPassword) : undefined
     await updateDexPassword({
-      // The lookup key: Dex's UpdatePasswordReq documents email as immutable, so an email change
-      // in `data` is not something this call can express - it targets the record as it exists today.
       email: match.email,
       newHash,
       newGroups: deriveDexGroups(user),
