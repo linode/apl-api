@@ -1916,6 +1916,9 @@ export default class OtomiStack {
 
   async connectCloudtty(teamId: string, sessionUser: SessionUser): Promise<Cloudtty> {
     const isAdmin = sessionUser.isPlatformAdmin
+    if (!isAdmin && !sessionUser.teams.includes(teamId)) {
+      throw new ForbiddenError('Cannot open a cloud shell in a team you are not a member of.')
+    }
     const targetNamespace = isAdmin ? 'team-admin' : `team-${teamId}`
     if (!sessionUser.sub) {
       debug('No user sub found, cannot connect to shell.')
@@ -1961,6 +1964,9 @@ export default class OtomiStack {
   }
 
   async deleteCloudtty(teamId: string, sessionUser: SessionUser): Promise<void> {
+    if (!sessionUser.isPlatformAdmin && !sessionUser.teams.includes(teamId)) {
+      throw new ForbiddenError('Cannot delete a cloud shell in a team you are not a member of.')
+    }
     await this.getCloudTty().deleteTty(teamId, sessionUser)
   }
 
