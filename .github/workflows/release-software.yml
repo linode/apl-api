@@ -31,7 +31,7 @@ jobs:
       release_tag: ${{ steps.compute-tag.outputs.tag }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.ref_name }}
           fetch-depth: 1
@@ -59,7 +59,7 @@ jobs:
       GIT_TAG: ${{ needs.release-get-tag.outputs.release_tag }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.RELEASE_BRANCH }}
           fetch-depth: 1

@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.base_branch }}
           # This is required to fetch all tags so that the derive-branch action can find the highest stable tag
