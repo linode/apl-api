@@ -9,6 +9,7 @@ AppList:
     - cert-manager
     - cnpg
     - external-dns
+    - external-secrets
     - gitea
     - grafana
     - harbor
