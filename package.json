@@ -48,7 +48,7 @@
   "description": "The brain of the Otomi Container Platform. Handling console input and talking to core, it knows what to do.",
   "devDependencies": {
     "@babel/core": "7.29.0",
-    "@babel/preset-env": "7.29.3",
+    "@babel/preset-env": "8.0.2",
     "@babel/preset-typescript": "7.28.5",
     "@commitlint/cli": "21.2.1",
     "@commitlint/config-conventional": "21.2.0",
