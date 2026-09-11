@@ -1,5 +1,5 @@
 import { mockDeep } from 'jest-mock-extended'
-import { DEX_NO_GROUPS_SENTINEL } from 'src/clients/dexClient'
+import { DEX_NO_GROUPS_SENTINEL } from 'src/clients/dexConstants'
 import { JWT } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { loadSpec } from '../app'

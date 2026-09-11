@@ -1519,8 +1519,6 @@ export default class OtomiStack {
       : this.editGitTeamUsers(data, sessionUser)
   }
 
-  // Dex has no Git counterpart to keep in sync, so there's no two-pass ordering to worry about
-  // here — each update either lands in Dex or the whole request rejects.
   private async editDexTeamUsers(
     data: Pick<User, 'id' | 'teams'>[],
     sessionUser: SessionUser,
@@ -1540,7 +1538,7 @@ export default class OtomiStack {
     dexPasswords: Password[],
   ): Promise<Pick<User, 'id' | 'teams'>> {
     if (!userData.id) {
-      throw new NotExistError(`User ${userData.id} not found`)
+      throw new NotExistError(`User id is required`)
     }
     const match = dexPasswords.find((p) => p.userId === userData.id)
     if (!match) {
@@ -1563,7 +1561,7 @@ export default class OtomiStack {
 
     for (const userData of data) {
       if (!userData.id) {
-        throw new NotExistError(`User ${userData.id} not found`)
+        throw new NotExistError(`User id is required`)
       }
       const existingData = await this.requireUserSecretData(userData.id)
       const existingUser = userSecretDataToUser(existingData)

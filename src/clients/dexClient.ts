@@ -2,19 +2,11 @@ import { ChannelCredentials, ServiceError } from '@grpc/grpc-js'
 import retry from 'async-retry'
 import { CreatePasswordResp, DeletePasswordResp, DexClient, Password, UpdatePasswordResp } from 'src/generated/dex/api'
 import { cleanEnv, DEX_GRPC_ADDRESS } from 'src/validators'
+import { DEX_NO_GROUPS_SENTINEL } from 'src/clients/dexConstants'
 
 export type { Password }
 
 const env = cleanEnv({ DEX_GRPC_ADDRESS })
-
-// Dex's UpdatePassword handler (server/apiserver/passwords.go in the fork) only replaces
-// stored groups when the incoming field is non-nil (`if req.NewGroups != nil`). Proto3 repeated
-// fields carry no wire presence, so an empty array and an omitted field both unmarshal to nil on
-// the server - an empty groups list from us is silently ignored instead of clearing the user's
-// groups. Sending this sentinel instead of an empty array gives the field a non-nil, one-element
-// value, so a demotion to "no groups" actually reaches Dex. getUser() in src/middleware/jwt.ts
-// strips it back out before deriving roles/teams from a token.
-export const DEX_NO_GROUPS_SENTINEL = '__no_groups__'
 
 function toDexGroups(groups: string[]): string[] {
   return groups.length > 0 ? groups : [DEX_NO_GROUPS_SENTINEL]
@@ -37,7 +29,7 @@ function getDexClient(): DexClient {
     throw new DexProvisionError('DEX_GRPC_ADDRESS must be set when AUTH_PROVIDER=dex')
   }
   if (!client) {
-    // TODO(#3536): createInsecure() is a known temporary gap pending TLS wiring in apl-core.
+    // Secured by Istio mtls and Authorization policy
     client = new DexClient(env.DEX_GRPC_ADDRESS, ChannelCredentials.createInsecure())
   }
   return client

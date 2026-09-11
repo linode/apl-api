@@ -12,13 +12,8 @@ jest.mock('src/generated/dex/api', () => ({
 
 process.env.DEX_GRPC_ADDRESS = 'localhost:5557'
 
-import {
-  createDexPassword,
-  DEX_NO_GROUPS_SENTINEL,
-  deleteDexPassword,
-  DexProvisionError,
-  updateDexPassword,
-} from './dexClient'
+import { DEX_NO_GROUPS_SENTINEL } from './dexConstants'
+import { createDexPassword, deleteDexPassword, DexProvisionError, updateDexPassword } from './dexClient'
 
 describe('dexClient', () => {
   beforeEach(() => {
