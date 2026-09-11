@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs'
 import { mockDeep } from 'jest-mock-extended'
 import {
   AplCodeRepoResponse,
@@ -60,6 +61,20 @@ jest.mock('./k8s-operations', () => {
     getSecretValues: jest.fn().mockResolvedValue({ adminPassword: 'test-admin-password' }),
   }
 })
+
+const mockCreateDexPassword = jest.fn().mockResolvedValue(undefined)
+const mockUpdateDexPassword = jest.fn().mockResolvedValue(undefined)
+const mockDeleteDexPassword = jest.fn().mockResolvedValue(undefined)
+const mockListDexPasswords = jest.fn().mockResolvedValue([])
+jest.mock('./clients/dexClient', () => ({
+  __esModule: true,
+  createDexPassword: (...args: any[]) => mockCreateDexPassword(...args),
+  updateDexPassword: (...args: any[]) => mockUpdateDexPassword(...args),
+  deleteDexPassword: (...args: any[]) => mockDeleteDexPassword(...args),
+  listDexPasswords: (...args: any[]) => mockListDexPasswords(...args),
+  DEX_NO_GROUPS_SENTINEL: '__no_groups__',
+  DexProvisionError: class DexProvisionError extends Error {},
+}))
 
 jest.mock('./utils/sealedSecretUtils', () => {
   const originalModule = jest.requireActual('./utils/sealedSecretUtils')
@@ -564,6 +579,14 @@ describe('Users tests', () => {
         expect(mockGit.writeTextFile).toHaveBeenCalled()
         expect(otomiStack.doDeployment).toHaveBeenCalled()
       })
+
+      it('should allow creating a user without a firstName or lastName', async () => {
+        const result = await otomiStack.createUser({ email: 'no-name-user@dev.linode-apl.net' } as User)
+
+        expect(result.email).toEqual('no-name-user@dev.linode-apl.net')
+        expect(mockGit.writeTextFile).toHaveBeenCalled()
+        expect(otomiStack.doDeployment).toHaveBeenCalled()
+      })
     })
 
     describe('Reserved Username Validation', () => {
@@ -799,6 +822,334 @@ describe('Users tests', () => {
           publicMessage: "Only platform admins or team admins can modify a user's team memberships.",
         })
       })
+    })
+  })
+
+  describe('Dex provisioning', () => {
+    const originalAuthProvider = process.env.AUTH_PROVIDER
+
+    afterEach(() => {
+      process.env.AUTH_PROVIDER = originalAuthProvider
+      jest.clearAllMocks()
+    })
+
+    // env.AUTH_PROVIDER is captured once, at module-load time, by otomi-stack.ts's own cleanEnv() call.
+    // Toggling process.env.AUTH_PROVIDER between tests only takes effect if we reset the module registry
+    // and re-import otomi-stack (and its FileStore dependency) fresh, mirroring the pattern already used
+    // for env-dependent module behavior in src/middleware/session.test.ts.
+    async function getTestStack(authProvider: 'keycloak' | 'dex'): Promise<OtomiStack> {
+      process.env.AUTH_PROVIDER = authProvider
+
+      // jest.isolateModules(Async) loads a private, sandboxed copy of the module graph for the
+      // duration of the callback and then restores the file's shared module registry — unlike
+      // jest.resetModules(), it does not leave later describe blocks in this file (which `require()`
+      // 'src/middleware' etc. ad hoc) pointing at a different module instance than the one
+      // statically imported at the top of this file.
+      let stack!: OtomiStack
+      await jest.isolateModulesAsync(async () => {
+        const FreshOtomiStack = require('src/otomi-stack').default
+
+        const FreshFileStore = require('./fileStore/file-store').FileStore
+
+        stack = new FreshOtomiStack() as OtomiStack
+        await stack.init()
+        stack.fileStore = new FreshFileStore()
+      })
+      stack.git = mockDeep<Git>()
+
+      jest.spyOn(stack, 'doDeleteDeployment').mockResolvedValue()
+      jest.spyOn(stack, 'doDeployment').mockResolvedValue()
+      jest.spyOn(stack, 'doDeployments').mockResolvedValue()
+      jest.spyOn(stack, 'getSettings').mockResolvedValue({
+        cluster: { name: 'default-cluster', domainSuffix, provider: 'linode' },
+      })
+      jest.spyOn(stack, 'getApp').mockReturnValue({ id: 'keycloak' })
+
+      return stack
+    }
+
+    // A Dex Password record, as returned by ListPasswords — this is the only source of truth
+    // for a dex-provisioned user's email/groups once AUTH_PROVIDER=dex (no SealedSecret exists).
+    function dexPassword(overrides: Partial<{ userId: string; email: string; groups: string[] }> = {}) {
+      return {
+        email: 'existing@example.com',
+        hash: Buffer.from('$2a$10$existinghash'),
+        username: 'existing',
+        userId: 'uuid-1',
+        groups: ['team-blue'],
+        ...overrides,
+      }
+    }
+
+    it('createUser does not call Dex when AUTH_PROVIDER is keycloak (default)', async () => {
+      const otomi = await getTestStack('keycloak')
+      await otomi.createUser({
+        email: 'newuser@example.com',
+        firstName: 'New',
+        lastName: 'User',
+        isPlatformAdmin: false,
+        isTeamAdmin: false,
+        teams: [],
+      } as User)
+
+      expect(mockCreateDexPassword).not.toHaveBeenCalled()
+    })
+
+    it('createUser calls Dex CreatePassword with derived groups and a bcrypt hash, and writes nothing to Git, when AUTH_PROVIDER is dex', async () => {
+      const otomi = await getTestStack('dex')
+      createTestTeam(otomi, 'blue')
+
+      await otomi.createUser({
+        email: 'newuser@example.com',
+        firstName: 'New',
+        lastName: 'User',
+        isPlatformAdmin: true,
+        isTeamAdmin: false,
+        teams: ['blue'],
+      } as User)
+
+      expect(mockCreateDexPassword).toHaveBeenCalledTimes(1)
+      const call = mockCreateDexPassword.mock.calls[0][0]
+      expect(call.email).toEqual('newuser@example.com')
+      expect(call.username).toEqual('newuser')
+      expect(call.groups).toEqual(['platform-admin', 'team-blue'])
+      expect(typeof call.passwordHash).toEqual('string')
+      expect(call.passwordHash.length).toBeGreaterThan(0)
+
+      expect(otomi.git.writeTextFile).not.toHaveBeenCalled()
+      expect(otomi.doDeployment).not.toHaveBeenCalled()
+    })
+
+    it('createUser uses an admin-supplied initialPassword when AUTH_PROVIDER is dex', async () => {
+      const otomi = await getTestStack('dex')
+
+      const user = await otomi.createUser({
+        email: 'chosen@example.com',
+        isPlatformAdmin: false,
+        isTeamAdmin: false,
+        teams: [],
+        initialPassword: 'a-chosen-password',
+      } as User)
+
+      expect(user.initialPassword).toEqual('a-chosen-password')
+      const call = mockCreateDexPassword.mock.calls[0][0]
+      expect(await bcrypt.compare('a-chosen-password', call.passwordHash)).toBe(true)
+    })
+
+    it('createUser rejects an admin-supplied initialPassword shorter than the minimum, when AUTH_PROVIDER is dex', async () => {
+      const otomi = await getTestStack('dex')
+
+      await expect(
+        otomi.createUser({
+          email: 'tooshort@example.com',
+          isPlatformAdmin: false,
+          isTeamAdmin: false,
+          teams: [],
+          initialPassword: 'short',
+        } as User),
+      ).rejects.toMatchObject({ code: 400 })
+
+      expect(mockCreateDexPassword).not.toHaveBeenCalled()
+    })
+
+    it('createUser ignores a caller-supplied initialPassword and generates one when AUTH_PROVIDER is keycloak', async () => {
+      const otomi = await getTestStack('keycloak')
+
+      const user = await otomi.createUser({
+        email: 'ignored@example.com',
+        firstName: 'I',
+        lastName: 'G',
+        isPlatformAdmin: false,
+        isTeamAdmin: false,
+        teams: [],
+        initialPassword: 'attempted-password',
+      } as User)
+
+      expect(user.initialPassword).not.toEqual('attempted-password')
+      expect(user.initialPassword!.length).toBeGreaterThan(0)
+    })
+
+    it('createUser aborts and writes nothing to Git when Dex provisioning fails', async () => {
+      mockCreateDexPassword.mockRejectedValueOnce(new Error('dex unavailable'))
+      const otomi = await getTestStack('dex')
+
+      await expect(
+        otomi.createUser({
+          email: 'newuser@example.com',
+          firstName: 'New',
+          lastName: 'User',
+          isPlatformAdmin: false,
+          isTeamAdmin: false,
+          teams: [],
+        } as User),
+      ).rejects.toThrow()
+
+      expect(otomi.git.writeTextFile).not.toHaveBeenCalled()
+    })
+
+    it('createUser dedupes against Dex, not Git, when AUTH_PROVIDER is dex', async () => {
+      mockListDexPasswords.mockResolvedValue([dexPassword({ email: 'dupe@example.com' })])
+      const otomi = await getTestStack('dex')
+
+      await expect(
+        otomi.createUser({ email: 'dupe@example.com', isPlatformAdmin: false, isTeamAdmin: false, teams: [] } as User),
+      ).rejects.toMatchObject({ publicMessage: 'User email already exists' })
+
+      expect(mockCreateDexPassword).not.toHaveBeenCalled()
+    })
+
+    it('getUser reads the record back from Dex when AUTH_PROVIDER is dex', async () => {
+      mockListDexPasswords.mockResolvedValue([
+        dexPassword({ userId: 'uuid-1', groups: ['platform-admin', 'team-blue'] }),
+      ])
+      const otomi = await getTestStack('dex')
+      const sessionUserArg = { isPlatformAdmin: true } as unknown as SessionUser
+
+      const user = await otomi.getUser('uuid-1', sessionUserArg)
+
+      expect(user).toMatchObject({
+        id: 'uuid-1',
+        email: 'existing@example.com',
+        isPlatformAdmin: true,
+        isTeamAdmin: false,
+        teams: ['blue'],
+      })
+    })
+
+    it('getAllUsers reads the full list back from Dex when AUTH_PROVIDER is dex', async () => {
+      mockListDexPasswords.mockResolvedValue([
+        dexPassword({ userId: 'uuid-1', email: 'a@example.com', groups: ['team-blue'] }),
+        dexPassword({ userId: 'uuid-2', email: 'b@example.com', groups: ['platform-admin'] }),
+      ])
+      const otomi = await getTestStack('dex')
+      const sessionUserArg = { isPlatformAdmin: true } as unknown as SessionUser
+
+      const users = await otomi.getAllUsers(sessionUserArg)
+
+      expect(users).toHaveLength(2)
+      expect(users.map((u) => u.email)).toEqual(['a@example.com', 'b@example.com'])
+    })
+
+    it('editUser looks the record up in Dex, sends newGroups, and writes nothing to Git when AUTH_PROVIDER is dex', async () => {
+      mockListDexPasswords.mockResolvedValue([
+        dexPassword({ userId: 'uuid-2', email: 'legacy@example.com', groups: [] }),
+      ])
+      const otomi = await getTestStack('dex')
+      const sessionUserArg = { isPlatformAdmin: true } as unknown as SessionUser
+
+      const user = await otomi.editUser('uuid-2', { isTeamAdmin: true } as User, sessionUserArg)
+
+      expect(mockUpdateDexPassword).toHaveBeenCalledTimes(1)
+      const call = mockUpdateDexPassword.mock.calls[0][0]
+      expect(call.email).toEqual('legacy@example.com')
+      expect(call.newHash).toBeUndefined()
+      expect(call.newGroups).toEqual(['team-admin'])
+      expect(user.isTeamAdmin).toBe(true)
+
+      expect(otomi.git.writeTextFile).not.toHaveBeenCalled()
+      expect(otomi.doDeployment).not.toHaveBeenCalled()
+    })
+
+    it('editUser recomputes the hash and sends it as newHash when a new initialPassword is supplied, in dex mode', async () => {
+      mockListDexPasswords.mockResolvedValue([
+        dexPassword({ userId: 'uuid-5', email: 'changing@example.com', groups: [] }),
+      ])
+      const otomi = await getTestStack('dex')
+      const sessionUserArg = { isPlatformAdmin: true } as unknown as SessionUser
+
+      await otomi.editUser('uuid-5', { initialPassword: 'brand-new-plaintext' } as User, sessionUserArg)
+
+      expect(mockUpdateDexPassword).toHaveBeenCalledTimes(1)
+      const call = mockUpdateDexPassword.mock.calls[0][0]
+      expect(call.email).toEqual('changing@example.com')
+      expect(typeof call.newHash).toEqual('string')
+      expect(call.newHash.length).toBeGreaterThan(0)
+    })
+
+    it('editUser ignores an attempted email change in dex mode, since Dex has no way to apply it', async () => {
+      mockListDexPasswords.mockResolvedValue([
+        dexPassword({ userId: 'uuid-6', email: 'original@example.com', groups: [] }),
+      ])
+      const otomi = await getTestStack('dex')
+      const sessionUserArg = { isPlatformAdmin: true } as unknown as SessionUser
+
+      const user = await otomi.editUser('uuid-6', { email: 'changed@example.com' } as User, sessionUserArg)
+
+      expect(user.email).toEqual('original@example.com')
+      expect(mockUpdateDexPassword).toHaveBeenCalledWith(expect.objectContaining({ email: 'original@example.com' }))
+    })
+
+    it('editUser rejects a too-short initialPassword in dex mode without calling Dex', async () => {
+      mockListDexPasswords.mockResolvedValue([
+        dexPassword({ userId: 'uuid-7', email: 'shortpw@example.com', groups: [] }),
+      ])
+      const otomi = await getTestStack('dex')
+      const sessionUserArg = { isPlatformAdmin: true } as unknown as SessionUser
+
+      await expect(
+        otomi.editUser('uuid-7', { initialPassword: 'short' } as User, sessionUserArg),
+      ).rejects.toMatchObject({ code: 400 })
+
+      expect(mockUpdateDexPassword).not.toHaveBeenCalled()
+    })
+
+    it('editTeamUsers looks users up in Dex, calls Dex UpdatePassword with the new groups, and writes nothing to Git', async () => {
+      mockListDexPasswords.mockResolvedValue([dexPassword({ userId: 'uuid-1', groups: ['team-blue'] })])
+      const otomi = await getTestStack('dex')
+      const sessionUserArg = { isPlatformAdmin: true, isTeamAdmin: false, teams: [] } as unknown as SessionUser
+
+      const result = await otomi.editTeamUsers([{ id: 'uuid-1', teams: ['blue', 'red'] }], sessionUserArg)
+
+      expect(mockUpdateDexPassword).toHaveBeenCalledWith(
+        expect.objectContaining({ email: 'existing@example.com', newGroups: ['team-blue', 'team-red'] }),
+      )
+      expect(result).toEqual([{ id: 'uuid-1', teams: ['blue', 'red'] }])
+      expect(otomi.git.writeTextFile).not.toHaveBeenCalled()
+      expect(otomi.doDeployments).not.toHaveBeenCalled()
+    })
+
+    it('editTeamUsers rejects and writes nothing to Git when a Dex call fails partway through a batch', async () => {
+      mockListDexPasswords.mockResolvedValue([
+        dexPassword({ userId: 'user-a', email: 'user-a@example.com', groups: ['team-blue'] }),
+        dexPassword({ userId: 'user-b', email: 'user-b@example.com', groups: ['team-blue'] }),
+      ])
+      mockUpdateDexPassword.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('dex unavailable'))
+      const otomi = await getTestStack('dex')
+      const sessionUserArg = { isPlatformAdmin: true, isTeamAdmin: false, teams: [] } as unknown as SessionUser
+
+      await expect(
+        otomi.editTeamUsers(
+          [
+            { id: 'user-a', teams: ['blue', 'red'] },
+            { id: 'user-b', teams: ['blue', 'red'] },
+          ],
+          sessionUserArg,
+        ),
+      ).rejects.toThrow()
+
+      expect(mockUpdateDexPassword).toHaveBeenCalledTimes(2)
+      expect(otomi.git.writeTextFile).not.toHaveBeenCalled()
+      expect(otomi.doDeployments).not.toHaveBeenCalled()
+    })
+
+    it('deleteUser looks the record up in Dex, calls Dex DeletePassword, and removes nothing from Git', async () => {
+      mockListDexPasswords.mockResolvedValue([dexPassword({ userId: 'uuid-3', email: 'todelete@example.com' })])
+      const otomi = await getTestStack('dex')
+
+      await otomi.deleteUser('uuid-3')
+
+      expect(mockDeleteDexPassword).toHaveBeenCalledWith('todelete@example.com')
+      expect(otomi.git.removeFile).not.toHaveBeenCalled()
+    })
+
+    it('deleteUser aborts and calls nothing else when Dex provisioning fails', async () => {
+      mockListDexPasswords.mockResolvedValue([dexPassword({ userId: 'uuid-4', email: 'todelete-fail@example.com' })])
+      mockDeleteDexPassword.mockRejectedValueOnce(new Error('dex unavailable'))
+      const otomi = await getTestStack('dex')
+
+      await expect(otomi.deleteUser('uuid-4')).rejects.toThrow()
+
+      expect(otomi.git.removeFile).not.toHaveBeenCalled()
     })
   })
 })

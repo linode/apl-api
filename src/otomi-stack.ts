@@ -105,6 +105,7 @@ import {
 import { deepQuote } from 'src/utils/yamlUtils'
 import {
   API_NAMESPACE,
+  AUTH_PROVIDER,
   CATALOG_CACHE_PATH,
   cleanEnv,
   CUSTOM_ROOT_CA,
@@ -146,9 +147,17 @@ import {
   mergeCanaryServices,
   setApiStatusInConfigMap,
   toK8sService,
+  UserSecretData,
   watchPodUntilRunning,
 } from './k8s-operations'
 import CloudTty from './tty'
+import {
+  createDexPassword,
+  deleteDexPassword,
+  listDexPasswords,
+  Password,
+  updateDexPassword,
+} from './clients/dexClient'
 import {
   extractRepositoryRefs,
   getAuthenticatedGitClient,
@@ -157,6 +166,7 @@ import {
 } from './utils/codeRepoUtils'
 import { isKnativeSupported } from './utils/k8sUtils'
 import { getV1ObjectFromApl } from './utils/manifests'
+import { hashPassword } from './utils/passwordUtils'
 import {
   createUserSealedSecret,
   encryptAndMergeSecrets,
@@ -170,6 +180,8 @@ import {
   sealedSecretManifest,
 } from './utils/sealedSecretUtils'
 import {
+  deriveDexGroups,
+  dexPasswordToUser,
   getKeycloakUsers,
   getUserSecretData,
   isValidUsername,
@@ -187,6 +199,7 @@ const debug = Debug('otomi:otomi-stack')
 
 const env = cleanEnv({
   API_NAMESPACE,
+  AUTH_PROVIDER,
   CATALOG_CACHE_PATH,
   CUSTOM_ROOT_CA,
   DEFAULT_PLATFORM_ADMIN_EMAIL,
@@ -214,6 +227,7 @@ const env = cleanEnv({
 
 export const rootPath = '/tmp/otomi/values'
 const clusterSettingsFilePath = 'env/settings/cluster.yaml'
+const MIN_USER_PASSWORD_LENGTH = 8
 
 function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: string): string {
   return `env/teams/${teamId}/sealedsecrets/${sealedSecretsName}.yaml`
@@ -1230,17 +1244,25 @@ export default class OtomiStack {
   }
 
   async getAllUsers(sessionUser: SessionUser): Promise<Array<User>> {
-    const usersData = await listUserSecretData(this.getAplNamespaceSealedSecrets.bind(this))
-    const users: User[] = usersData.map((u) => userSecretDataToUser(u))
+    const users = await this.listAllUsers()
+    return users.map((user) => this.trimUserForSession(user, sessionUser))
+  }
 
+  private async listAllUsers(): Promise<User[]> {
+    if (env.AUTH_PROVIDER === 'dex') {
+      return (await listDexPasswords()).map(dexPasswordToUser)
+    }
+    const usersData = await listUserSecretData(this.getAplNamespaceSealedSecrets.bind(this))
+    return usersData.map((u) => userSecretDataToUser(u))
+  }
+
+  private trimUserForSession(user: User, sessionUser: SessionUser): User {
     if (sessionUser.isPlatformAdmin) {
-      return users
-    } else if (sessionUser.isTeamAdmin) {
-      const usersWithBasicInfo = users.map((user) => {
-        const { id, email, isPlatformAdmin, isTeamAdmin, teams } = user
-        return { id, email, isPlatformAdmin, isTeamAdmin, teams } as User
-      })
-      return usersWithBasicInfo
+      return user
+    }
+    if (sessionUser.isTeamAdmin) {
+      const { id, email, isPlatformAdmin, isTeamAdmin, teams } = user
+      return { id, email, isPlatformAdmin, isTeamAdmin, teams } as User
     }
     throw new ForbiddenError()
   }
@@ -1251,41 +1273,15 @@ export default class OtomiStack {
       throw new HttpError(400, error as string)
     }
 
-    const initialPassword = generatePassword({
-      length: 16,
-      numbers: true,
-      symbols: '!@#$%&*',
-      lowercase: true,
-      uppercase: true,
-      strict: true,
-    })
-
-    const userId = uuidv4()
-    const user: User = { ...data, id: userId, initialPassword }
+    const initialPassword = this.resolveInitialPassword(data.initialPassword)
+    const user: User = { ...data, id: uuidv4(), initialPassword }
 
     this.validateUserTeamsExist(user)
+    await this.assertUserEmailAvailable(user.email)
 
-    const existingUsers = await listUserSecretData(this.getAplNamespaceSealedSecrets.bind(this))
-    const existingUsersEmail = existingUsers.map((u) => u.email)
-
-    if (!env.isDev) {
-      // In production, also check Keycloak for existing users
-      const { cluster } = await this.getSettings(['cluster'])
-      const keycloak = this.getApp('keycloak')
-      const keycloakBaseUrl = `https://keycloak.${cluster?.domainSuffix}`
-      const realm = 'otomi'
-      const username = keycloak?.values?.adminUsername as string
-      const platformSecrets = await getSecretValues(PLATFORM_SECRETS_NAME, APL_SECRETS_NAMESPACE)
-      const adminPassword = platformSecrets?.adminPassword
-      if (!adminPassword) {
-        throw new HttpError(500, 'Admin password not found in platform secrets')
-      }
-      const keycloakEmails = await getKeycloakUsers(keycloakBaseUrl, realm, username, adminPassword)
-      existingUsersEmail.push(...keycloakEmails.filter((e) => !existingUsersEmail.includes(e)))
-    }
-
-    if (existingUsersEmail.some((existingUser) => existingUser === user.email)) {
-      throw new AlreadyExists('User email already exists')
+    if (env.AUTH_PROVIDER === 'dex') {
+      await this.provisionDexUser(user, initialPassword)
+      return user
     }
 
     const aplRecord = await this.saveUser(user)
@@ -1293,21 +1289,99 @@ export default class OtomiStack {
     return user
   }
 
+  private resolveInitialPassword(suppliedPassword?: string): string {
+    if (env.AUTH_PROVIDER !== 'dex' || !suppliedPassword) {
+      return this.generateInitialPassword()
+    }
+    this.assertPasswordLength(suppliedPassword)
+    return suppliedPassword
+  }
+
+  private assertPasswordLength(password: string): void {
+    if (password.length < MIN_USER_PASSWORD_LENGTH) {
+      throw new HttpError(400, `Password must be at least ${MIN_USER_PASSWORD_LENGTH} characters.`)
+    }
+  }
+
+  private generateInitialPassword(): string {
+    return generatePassword({
+      length: 16,
+      numbers: true,
+      symbols: '!@#$%&*',
+      lowercase: true,
+      uppercase: true,
+      strict: true,
+    })
+  }
+
+  private async assertUserEmailAvailable(email: string): Promise<void> {
+    const existingEmails = await this.listExistingUserEmails()
+    if (existingEmails.includes(email)) {
+      throw new AlreadyExists('User email already exists')
+    }
+  }
+
+  private async listExistingUserEmails(): Promise<string[]> {
+    if (env.AUTH_PROVIDER === 'dex') {
+      return (await listDexPasswords()).map((p) => p.email)
+    }
+
+    const existingUsers = await listUserSecretData(this.getAplNamespaceSealedSecrets.bind(this))
+    const emails = existingUsers.map((u) => u.email)
+    if (!env.isDev) {
+      emails.push(...(await this.fetchKeycloakEmailsNotIn(emails)))
+    }
+    return emails
+  }
+
+  private async fetchKeycloakEmailsNotIn(existingEmails: string[]): Promise<string[]> {
+    const { cluster } = await this.getSettings(['cluster'])
+    const keycloak = this.getApp('keycloak')
+    const keycloakBaseUrl = `https://keycloak.${cluster?.domainSuffix}`
+    const realm = 'otomi'
+    const username = keycloak?.values?.adminUsername as string
+    const platformSecrets = await getSecretValues(PLATFORM_SECRETS_NAME, APL_SECRETS_NAMESPACE)
+    const adminPassword = platformSecrets?.adminPassword
+    if (!adminPassword) {
+      throw new HttpError(500, 'Admin password not found in platform secrets')
+    }
+    const keycloakEmails = await getKeycloakUsers(keycloakBaseUrl, realm, username, adminPassword)
+    return keycloakEmails.filter((email) => !existingEmails.includes(email))
+  }
+
+  private async provisionDexUser(user: User, plaintextPassword: string): Promise<void> {
+    const passwordHash = await hashPassword(plaintextPassword)
+    await createDexPassword({
+      id: user.id as string,
+      email: user.email,
+      passwordHash,
+      username: user.email.split('@')[0],
+      groups: deriveDexGroups(user),
+    })
+  }
+
   async getUser(id: string, sessionUser: SessionUser): Promise<User> {
+    const user =
+      env.AUTH_PROVIDER === 'dex'
+        ? (await this.lookupDexUser(id)).user
+        : userSecretDataToUser(await this.requireUserSecretData(id))
+    return this.trimUserForSession(user, sessionUser)
+  }
+
+  private async requireUserSecretData(id: string): Promise<UserSecretData> {
     const userData = await getUserSecretData(id, this.fileStore)
     if (!userData) {
       throw new NotExistError(`User ${id} not found`)
     }
-    const user = userSecretDataToUser(userData)
+    return userData
+  }
 
-    if (sessionUser.isPlatformAdmin) {
-      return user
+  private async lookupDexUser(id: string): Promise<{ match: Password; user: User }> {
+    const match = (await listDexPasswords()).find((p) => p.userId === id)
+    if (!match) {
+      throw new NotExistError(`User ${id} not found`)
     }
-    if (sessionUser.isTeamAdmin) {
-      const { email, isPlatformAdmin, isTeamAdmin, teams } = user
-      return { id, email, isPlatformAdmin, isTeamAdmin, teams } as User
-    }
-    throw new ForbiddenError()
+    return { match, user: dexPasswordToUser(match) }
   }
 
   async editUser(id: string, data: User, sessionUser: SessionUser): Promise<User> {
@@ -1315,25 +1389,40 @@ export default class OtomiStack {
       throw new ForbiddenError('Only platform admins can modify user details.')
     }
 
-    const existingData = await getUserSecretData(id, this.fileStore)
-    if (!existingData) {
-      throw new NotExistError(`User ${id} not found`)
-    }
+    return env.AUTH_PROVIDER === 'dex' ? this.editDexUser(id, data) : this.editGitUser(id, data)
+  }
 
+  private async editDexUser(id: string, data: User): Promise<User> {
+    const { match, user: existingUser } = await this.lookupDexUser(id)
+    // Dex's UpdatePasswordReq has no field to change the record's email — it's the lookup key
+    // and is documented as immutable — so an email in `data` is not applied. Keeping the
+    // original here (rather than merging data.email in) stops the response from claiming an
+    // email change that was never sent to Dex and never took effect.
+    const user: User = { ...existingUser, ...data, id, email: existingUser.email }
+    this.validateUserTeamsExist(user)
+
+    // Dex already holds a real hash from creation — there's nothing to back-fill, and a hash
+    // is only ever recomputed here when the caller actually supplied a new plaintext password.
+    if (data.initialPassword) {
+      this.assertPasswordLength(data.initialPassword)
+    }
+    const newHash = data.initialPassword ? await hashPassword(data.initialPassword) : undefined
+    await updateDexPassword({
+      email: match.email,
+      newHash,
+      newGroups: deriveDexGroups(user),
+    })
+    return user
+  }
+
+  private async editGitUser(id: string, data: User): Promise<User> {
+    const existingData = await this.requireUserSecretData(id)
     const existingUser = userSecretDataToUser(existingData)
-
-    const user: User = {
-      ...existingUser,
-      ...data,
-      id,
-      initialPassword: existingUser.initialPassword,
-    }
-
+    const user: User = { ...existingUser, ...data, id, initialPassword: existingUser.initialPassword }
     this.validateUserTeamsExist(user)
 
     const aplRecord = await this.saveUser(user)
     await this.doDeployment(aplRecord)
-
     return user
   }
 
@@ -1349,19 +1438,31 @@ export default class OtomiStack {
   }
 
   async deleteUser(id: string): Promise<void> {
-    const existingData = await getUserSecretData(id, this.fileStore)
-    if (!existingData) {
-      throw new NotExistError(`User ${id} not found`)
+    if (env.AUTH_PROVIDER === 'dex') {
+      await this.deleteDexUser(id)
+      return
     }
+    await this.deleteGitUser(id)
+  }
+
+  private async deleteDexUser(id: string): Promise<void> {
+    const { match } = await this.lookupDexUser(id)
+    if (match.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
+      throw new ForbiddenError('Cannot delete the default platform admin user')
+    }
+    // Dex is the only place a dex-provisioned user's record lives — no SealedSecret to remove.
+    await deleteDexPassword(match.email)
+  }
+
+  private async deleteGitUser(id: string): Promise<void> {
+    const existingData = await this.requireUserSecretData(id)
     if (existingData.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
       throw new ForbiddenError('Cannot delete the default platform admin user')
     }
 
-    // Remove SealedSecret manifest from git
     const sealedSecretPath = getNamespaceSealedSecretsValuesFilePath(APL_USERS_NAMESPACE, id)
     await this.git.removeFile(sealedSecretPath)
 
-    // Also remove legacy AplUser file if it exists
     const legacyFilePath = getResourceFilePath('AplUser', id)
     await this.git.removeFile(legacyFilePath)
     this.fileStore.delete(legacyFilePath)
@@ -1397,6 +1498,14 @@ export default class OtomiStack {
     return isValid
   }
 
+  private assertCanUpdateUserTeams(sessionUser: SessionUser, existingUser: User, newTeams: string[]): void {
+    if (!sessionUser.isPlatformAdmin && !this.canTeamAdminUpdateUserTeams(sessionUser, existingUser, newTeams)) {
+      throw new ForbiddenError(
+        'Team admins are permitted to add or remove users only within the teams they manage. However, they cannot remove themselves or other team admins from those teams.',
+      )
+    }
+  }
+
   async editTeamUsers(
     data: Pick<User, 'id' | 'teams'>[],
     sessionUser: SessionUser,
@@ -1405,27 +1514,58 @@ export default class OtomiStack {
       throw new ForbiddenError("Only platform admins or team admins can modify a user's team memberships.")
     }
 
+    return env.AUTH_PROVIDER === 'dex'
+      ? this.editDexTeamUsers(data, sessionUser)
+      : this.editGitTeamUsers(data, sessionUser)
+  }
+
+  private async editDexTeamUsers(
+    data: Pick<User, 'id' | 'teams'>[],
+    sessionUser: SessionUser,
+  ): Promise<Pick<User, 'id' | 'teams'>[]> {
+    const dexPasswords = await listDexPasswords()
+    const updatedUsers: Pick<User, 'id' | 'teams'>[] = []
+
+    for (const userData of data) {
+      updatedUsers.push(await this.applyDexTeamUpdate(userData, sessionUser, dexPasswords))
+    }
+    return updatedUsers
+  }
+
+  private async applyDexTeamUpdate(
+    userData: Pick<User, 'id' | 'teams'>,
+    sessionUser: SessionUser,
+    dexPasswords: Password[],
+  ): Promise<Pick<User, 'id' | 'teams'>> {
+    if (!userData.id) {
+      throw new NotExistError(`User id is required`)
+    }
+    const match = dexPasswords.find((p) => p.userId === userData.id)
+    if (!match) {
+      throw new NotExistError(`User ${userData.id} not found`)
+    }
+    const existingUser = dexPasswordToUser(match)
+    this.assertCanUpdateUserTeams(sessionUser, existingUser, userData.teams as string[])
+
+    const updatedUser: User = { ...existingUser, teams: userData.teams }
+    await updateDexPassword({ email: match.email, newGroups: deriveDexGroups(updatedUser) })
+    return { id: updatedUser.id!, teams: updatedUser.teams || [] }
+  }
+
+  private async editGitTeamUsers(
+    data: Pick<User, 'id' | 'teams'>[],
+    sessionUser: SessionUser,
+  ): Promise<Pick<User, 'id' | 'teams'>[]> {
     const aplRecords: AplRecord[] = []
     const updatedUsers: Pick<User, 'id' | 'teams'>[] = []
 
     for (const userData of data) {
       if (!userData.id) {
-        throw new NotExistError(`User ${userData.id} not found`)
+        throw new NotExistError(`User id is required`)
       }
-      const existingData = await getUserSecretData(userData.id, this.fileStore)
-      if (!existingData) {
-        throw new NotExistError(`User ${userData.id} not found`)
-      }
+      const existingData = await this.requireUserSecretData(userData.id)
       const existingUser = userSecretDataToUser(existingData)
-
-      if (
-        !sessionUser.isPlatformAdmin &&
-        !this.canTeamAdminUpdateUserTeams(sessionUser, existingUser, userData.teams as string[])
-      ) {
-        throw new ForbiddenError(
-          'Team admins are permitted to add or remove users only within the teams they manage. However, they cannot remove themselves or other team admins from those teams.',
-        )
-      }
+      this.assertCanUpdateUserTeams(sessionUser, existingUser, userData.teams as string[])
 
       const updatedUser: User = { ...existingUser, teams: userData.teams }
       const aplRecord = await this.saveUser(updatedUser)
@@ -1434,7 +1574,6 @@ export default class OtomiStack {
     }
 
     await this.doDeployments(aplRecords)
-
     return updatedUsers
   }
 

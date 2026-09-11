@@ -10,9 +10,10 @@ WORKDIR /app
 
 # Install dependencies before copying the full source code to take advantage of Docker layer caching
 COPY package*.json ./
-# Needed for postinstall (build:models) during npm ci
+# Needed for postinstall (build:models, gen:dex-client) during npm ci
 COPY src/build-spec.ts ./src/build-spec.ts
 COPY src/openapi ./src/openapi
+COPY src/proto ./src/proto
 RUN npm ci
 
 COPY . .* ./

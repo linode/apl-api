@@ -17,6 +17,7 @@ export default defineConfig([
     'node_modules/*',
     'vendors/*',
     'src/generated-schema.ts',
+    'src/generated/*',
   ]),
   {
     files: ['**/*.ts'],
