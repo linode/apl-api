@@ -1546,6 +1546,9 @@ export default class OtomiStack {
     if (!userData.id) {
       throw new NotExistError(`User id is required`)
     }
+    if (!userData.teams) {
+      throw new BadRequestError(`User teams is required`)
+    }
     const match = dexPasswords.find((p) => p.userId === userData.id)
     if (!match) {
       throw new NotExistError(`User ${userData.id} not found`)
@@ -1568,6 +1571,9 @@ export default class OtomiStack {
     for (const userData of data) {
       if (!userData.id) {
         throw new NotExistError(`User id is required`)
+      }
+      if (!userData.teams) {
+        throw new BadRequestError(`User teams is required`)
       }
       const existingData = await this.requireUserSecretData(userData.id)
       const existingUser = userSecretDataToUser(existingData)

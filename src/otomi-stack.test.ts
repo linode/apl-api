@@ -805,6 +805,12 @@ describe('Users tests', () => {
         await expect(otomiStack.editTeamUsers(data, sessionUser)).rejects.toThrow()
       })
 
+      it('should reject a request that omits teams instead of silently dropping all memberships', async () => {
+        const platformAdmin = { ...sessionUser, isPlatformAdmin: true, isTeamAdmin: false }
+        const data = [{ id: teamMember1.id }] as Pick<User, 'id' | 'teams'>[]
+        await expect(otomiStack.editTeamUsers(data, platformAdmin)).rejects.toMatchObject({ code: 400 })
+      })
+
       it('should not allow regular user to update teams', async () => {
         const regularUser = {
           name: 'Regular User',
@@ -1122,6 +1128,18 @@ describe('Users tests', () => {
       expect(result).toEqual([{ id: 'uuid-1', teams: ['blue', 'red'] }])
       expect(otomi.git.writeTextFile).not.toHaveBeenCalled()
       expect(otomi.doDeployments).not.toHaveBeenCalled()
+    })
+
+    it('editTeamUsers rejects a request that omits teams instead of wiping all groups in Dex', async () => {
+      mockListDexPasswords.mockResolvedValue([dexPassword({ userId: 'uuid-1', groups: ['team-blue'] })])
+      const otomi = await getTestStack('dex')
+      const sessionUserArg = { isPlatformAdmin: true, isTeamAdmin: false, teams: [] } as unknown as SessionUser
+
+      await expect(
+        otomi.editTeamUsers([{ id: 'uuid-1' } as Pick<User, 'id' | 'teams'>], sessionUserArg),
+      ).rejects.toMatchObject({ code: 400 })
+
+      expect(mockUpdateDexPassword).not.toHaveBeenCalled()
     })
 
     it('editTeamUsers rejects and writes nothing to Git when a Dex call fails partway through a batch', async () => {
