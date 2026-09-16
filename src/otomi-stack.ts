@@ -228,6 +228,7 @@ const env = cleanEnv({
 export const rootPath = '/tmp/otomi/values'
 const clusterSettingsFilePath = 'env/settings/cluster.yaml'
 const MIN_USER_PASSWORD_LENGTH = 8
+const MAX_USER_PASSWORD_BYTES = 72
 
 function getTeamSealedSecretsValuesFilePath(teamId: string, sealedSecretsName: string): string {
   return `env/teams/${teamId}/sealedsecrets/${sealedSecretsName}.yaml`
@@ -1300,6 +1301,11 @@ export default class OtomiStack {
   private assertPasswordLength(password: string): void {
     if (password.length < MIN_USER_PASSWORD_LENGTH) {
       throw new HttpError(400, `Password must be at least ${MIN_USER_PASSWORD_LENGTH} characters.`)
+    }
+    // bcrypt only consumes the first 72 UTF-8 bytes; anything beyond that is silently ignored,
+    // so bytes past this point would authenticate identically regardless of their value.
+    if (Buffer.byteLength(password, 'utf-8') > MAX_USER_PASSWORD_BYTES) {
+      throw new HttpError(400, `Password must be at most ${MAX_USER_PASSWORD_BYTES} bytes.`)
     }
   }
 

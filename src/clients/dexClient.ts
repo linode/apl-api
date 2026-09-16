@@ -3,6 +3,7 @@ import retry from 'async-retry'
 import { CreatePasswordResp, DeletePasswordResp, DexClient, Password, UpdatePasswordResp } from 'src/generated/dex/api'
 import { cleanEnv, DEX_GRPC_ADDRESS } from 'src/validators'
 import { DEX_NO_GROUPS_SENTINEL } from 'src/clients/dexConstants'
+import { AlreadyExists, NotExistError } from 'src/error'
 
 export type { Password }
 
@@ -68,7 +69,7 @@ export async function createDexPassword(input: CreateDexPasswordInput): Promise<
               return
             }
             if (resp?.alreadyExists) {
-              reject(new DexProvisionError(`Dex already has a password record for ${input.email}`))
+              reject(new AlreadyExists(`Dex already has a password record for ${input.email}`))
               return
             }
             resolve()
@@ -103,7 +104,7 @@ export async function updateDexPassword(input: UpdateDexPasswordInput): Promise<
               return
             }
             if (resp?.notFound) {
-              reject(new DexProvisionError(`Dex has no password record for ${input.email}`))
+              reject(new NotExistError(`Dex has no password record for ${input.email}`))
               return
             }
             resolve()

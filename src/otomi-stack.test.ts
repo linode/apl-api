@@ -952,6 +952,22 @@ describe('Users tests', () => {
       expect(mockCreateDexPassword).not.toHaveBeenCalled()
     })
 
+    it('createUser rejects an admin-supplied initialPassword over 72 bytes, when AUTH_PROVIDER is dex', async () => {
+      const otomi = await getTestStack('dex')
+
+      await expect(
+        otomi.createUser({
+          email: 'toolong@example.com',
+          isPlatformAdmin: false,
+          isTeamAdmin: false,
+          teams: [],
+          initialPassword: 'a'.repeat(73),
+        } as User),
+      ).rejects.toMatchObject({ code: 400 })
+
+      expect(mockCreateDexPassword).not.toHaveBeenCalled()
+    })
+
     it('createUser ignores a caller-supplied initialPassword and generates one when AUTH_PROVIDER is keycloak', async () => {
       const otomi = await getTestStack('keycloak')
 

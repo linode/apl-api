@@ -13,6 +13,7 @@ jest.mock('src/generated/dex/api', () => ({
 process.env.DEX_GRPC_ADDRESS = 'localhost:5557'
 
 import { DEX_NO_GROUPS_SENTINEL } from './dexConstants'
+import { AlreadyExists, NotExistError } from 'src/error'
 import { createDexPassword, deleteDexPassword, DexProvisionError, updateDexPassword } from './dexClient'
 
 describe('dexClient', () => {
@@ -64,12 +65,12 @@ describe('dexClient', () => {
     ).rejects.toBeInstanceOf(DexProvisionError)
   })
 
-  it('createDexPassword rejects with DexProvisionError when Dex reports alreadyExists', async () => {
+  it('createDexPassword rejects with AlreadyExists (409) when Dex reports alreadyExists', async () => {
     mockCreatePassword.mockImplementation((_req, cb) => cb(null, { alreadyExists: true }))
 
     await expect(
       createDexPassword({ id: 'uuid-1', email: 'a@b.com', passwordHash: 'h', username: 'a', groups: [] }),
-    ).rejects.toBeInstanceOf(DexProvisionError)
+    ).rejects.toBeInstanceOf(AlreadyExists)
   })
 
   it('updateDexPassword only sets provided fields', async () => {
@@ -102,10 +103,10 @@ describe('dexClient', () => {
     expect(mockUpdatePassword).toHaveBeenCalledWith(expect.objectContaining({ newGroups: [] }), expect.any(Function))
   })
 
-  it('updateDexPassword rejects with DexProvisionError when the record is not found', async () => {
+  it('updateDexPassword rejects with NotExistError (404) when the record is not found', async () => {
     mockUpdatePassword.mockImplementation((_req, cb) => cb(null, { notFound: true }))
 
-    await expect(updateDexPassword({ email: 'ghost@b.com' })).rejects.toBeInstanceOf(DexProvisionError)
+    await expect(updateDexPassword({ email: 'ghost@b.com' })).rejects.toBeInstanceOf(NotExistError)
   })
 
   it('deleteDexPassword resolves even when Dex reports not found (idempotent)', async () => {
