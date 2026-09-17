@@ -66,12 +66,16 @@ const mockCreateDexPassword = jest.fn().mockResolvedValue(undefined)
 const mockUpdateDexPassword = jest.fn().mockResolvedValue(undefined)
 const mockDeleteDexPassword = jest.fn().mockResolvedValue(undefined)
 const mockListDexPasswords = jest.fn().mockResolvedValue([])
+const mockListUserIdentitiesByUserId = jest.fn().mockResolvedValue([])
+const mockDeleteDexUserIdentity = jest.fn().mockResolvedValue(undefined)
 jest.mock('./clients/dexClient', () => ({
   __esModule: true,
   createDexPassword: (...args: any[]) => mockCreateDexPassword(...args),
   updateDexPassword: (...args: any[]) => mockUpdateDexPassword(...args),
   deleteDexPassword: (...args: any[]) => mockDeleteDexPassword(...args),
   listDexPasswords: (...args: any[]) => mockListDexPasswords(...args),
+  listUserIdentitiesByUserId: (...args: any[]) => mockListUserIdentitiesByUserId(...args),
+  deleteDexUserIdentity: (...args: any[]) => mockDeleteDexUserIdentity(...args),
   DEX_NO_GROUPS_SENTINEL: '__no_groups__',
   DexProvisionError: class DexProvisionError extends Error {},
 }))
@@ -1088,6 +1092,29 @@ describe('Users tests', () => {
       expect(call.newHash.length).toBeGreaterThan(0)
     })
 
+    it("editUser preserves an existing user's privileges on a password-only reset, in dex mode", async () => {
+      mockListDexPasswords.mockResolvedValue([
+        dexPassword({
+          userId: 'uuid-priv',
+          email: 'privileged@example.com',
+          groups: ['platform-admin', 'team-admin'],
+        }),
+      ])
+      const otomi = await getTestStack('dex')
+      const sessionUserArg = { isPlatformAdmin: true } as unknown as SessionUser
+
+      await otomi.editUser('uuid-priv', { initialPassword: 'brand-new-plaintext' } as User, sessionUserArg)
+
+      expect(mockUpdateDexPassword).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: 'privileged@example.com',
+          newGroups: expect.arrayContaining(['platform-admin', 'team-admin']),
+        }),
+      )
+      const call = mockUpdateDexPassword.mock.calls[0][0]
+      expect(call.newGroups).toHaveLength(2)
+    })
+
     it('editUser ignores an attempted email change in dex mode, since Dex has no way to apply it', async () => {
       mockListDexPasswords.mockResolvedValue([
         dexPassword({ userId: 'uuid-6', email: 'original@example.com', groups: [] }),
@@ -1174,6 +1201,18 @@ describe('Users tests', () => {
 
       expect(mockDeleteDexPassword).toHaveBeenCalledWith('todelete@example.com')
       expect(otomi.git.removeFile).not.toHaveBeenCalled()
+    })
+
+    it('deleteUser purges the Dex identity (session/token cascade) before deleting the password', async () => {
+      mockListDexPasswords.mockResolvedValue([dexPassword({ userId: 'uuid-5', email: 'loggedin@example.com' })])
+      mockListUserIdentitiesByUserId.mockResolvedValueOnce([{ userId: 'uuid-5', connectorId: 'local' }])
+      const otomi = await getTestStack('dex')
+
+      await otomi.deleteUser('uuid-5')
+
+      expect(mockListUserIdentitiesByUserId).toHaveBeenCalledWith('uuid-5')
+      expect(mockDeleteDexUserIdentity).toHaveBeenCalledWith('uuid-5', 'local')
+      expect(mockDeleteDexPassword).toHaveBeenCalledWith('loggedin@example.com')
     })
 
     it('deleteUser aborts and calls nothing else when Dex provisioning fails', async () => {

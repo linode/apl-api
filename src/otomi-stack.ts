@@ -154,7 +154,9 @@ import CloudTty from './tty'
 import {
   createDexPassword,
   deleteDexPassword,
+  deleteDexUserIdentity,
   listDexPasswords,
+  listUserIdentitiesByUserId,
   Password,
   updateDexPassword,
 } from './clients/dexClient'
@@ -1302,8 +1304,7 @@ export default class OtomiStack {
     if (password.length < MIN_USER_PASSWORD_LENGTH) {
       throw new HttpError(400, `Password must be at least ${MIN_USER_PASSWORD_LENGTH} characters.`)
     }
-    // bcrypt only consumes the first 72 UTF-8 bytes; anything beyond that is silently ignored,
-    // so bytes past this point would authenticate identically regardless of their value.
+    // bcrypt only reads the first 72 bytes.
     if (Buffer.byteLength(password, 'utf-8') > MAX_USER_PASSWORD_BYTES) {
       throw new HttpError(400, `Password must be at most ${MAX_USER_PASSWORD_BYTES} bytes.`)
     }
@@ -1400,11 +1401,16 @@ export default class OtomiStack {
 
   private async editDexUser(id: string, data: User): Promise<User> {
     const { match, user: existingUser } = await this.lookupDexUser(id)
-    // Dex's UpdatePasswordReq has no field to change the record's email — it's the lookup key
-    // and is documented as immutable — so an email in `data` is not applied. Keeping the
-    // original here (rather than merging data.email in) stops the response from claiming an
-    // email change that was never sent to Dex and never took effect.
-    const user: User = { ...existingUser, ...data, id, email: existingUser.email }
+    // email is immutable in Dex; groups are merged individually so an omitted field is kept, not wiped.
+    const user: User = {
+      ...existingUser,
+      ...data,
+      id,
+      email: existingUser.email,
+      isPlatformAdmin: data.isPlatformAdmin ?? existingUser.isPlatformAdmin,
+      isTeamAdmin: data.isTeamAdmin ?? existingUser.isTeamAdmin,
+      teams: data.teams ?? existingUser.teams,
+    }
     this.validateUserTeamsExist(user)
 
     // Dex already holds a real hash from creation — there's nothing to back-fill, and a hash
@@ -1456,7 +1462,12 @@ export default class OtomiStack {
     if (match.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
       throw new ForbiddenError('Cannot delete the default platform admin user')
     }
-    // Dex is the only place a dex-provisioned user's record lives — no SealedSecret to remove.
+    // Purge identities first: it cascades to sessions, refresh/offline tokens, and the password
+    // record. A user who never logged in has no identity, so deleteDexPassword below still runs.
+    const identities = await listUserIdentitiesByUserId(match.userId)
+    for (const identity of identities) {
+      await deleteDexUserIdentity(identity.userId, identity.connectorId)
+    }
     await deleteDexPassword(match.email)
   }
 
@@ -1551,7 +1562,7 @@ export default class OtomiStack {
     }
     const match = dexPasswords.find((p) => p.userId === userData.id)
     if (!match) {
-      throw new NotExistError(`User ${userData.id} not found`)
+      throw new NotExistError(`User not found`)
     }
     const existingUser = dexPasswordToUser(match)
     this.assertCanUpdateUserTeams(sessionUser, existingUser, userData.teams as string[])

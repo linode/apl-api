@@ -1,6 +1,14 @@
 import { ChannelCredentials, ServiceError } from '@grpc/grpc-js'
 import retry from 'async-retry'
-import { CreatePasswordResp, DeletePasswordResp, DexClient, Password, UpdatePasswordResp } from 'src/generated/dex/api'
+import {
+  CreatePasswordResp,
+  DeletePasswordResp,
+  DeleteUserIdentityResp,
+  DexClient,
+  Password,
+  UpdatePasswordResp,
+  UserIdentity,
+} from 'src/generated/dex/api'
 import { cleanEnv, DEX_GRPC_ADDRESS } from 'src/validators'
 import { DEX_NO_GROUPS_SENTINEL } from 'src/clients/dexConstants'
 import { AlreadyExists, NotExistError } from 'src/error'
@@ -142,6 +150,42 @@ export async function deleteDexPassword(email: string): Promise<void> {
           }
           // notFound is treated as success: deleting an already-absent record is a no-op,
           // matching deleteUser's existing idempotent-delete behavior for the Git side.
+          void resp
+          resolve()
+        })
+      }),
+  )
+}
+
+export async function listUserIdentitiesByUserId(userId: string): Promise<UserIdentity[]> {
+  const dex = getDexClient()
+  const identities = await callWithRetry(
+    () =>
+      new Promise<UserIdentity[]>((resolve, reject) => {
+        dex.listUserIdentities({}, (err: ServiceError | null, resp: { identities: UserIdentity[] }) => {
+          if (err) {
+            reject(new DexProvisionError('Dex ListUserIdentities failed', err))
+            return
+          }
+          resolve(resp?.identities ?? [])
+        })
+      }),
+  )
+  return identities.filter((identity) => identity.userId === userId)
+}
+
+// Cascades to the identity's auth session, refresh/offline sessions, its password record, and
+// the identity itself (see DeleteUserIdentityReq in src/proto/dex/api.proto).
+export async function deleteDexUserIdentity(userId: string, connectorId: string): Promise<void> {
+  const dex = getDexClient()
+  await callWithRetry(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        dex.deleteUserIdentity({ userId, connectorId }, (err: ServiceError | null, resp: DeleteUserIdentityResp) => {
+          if (err) {
+            reject(new DexProvisionError(`Dex DeleteUserIdentity failed for ${userId}/${connectorId}`, err))
+            return
+          }
           void resp
           resolve()
         })
