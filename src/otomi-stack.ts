@@ -1362,11 +1362,6 @@ export default class OtomiStack {
     const sealedSecretPath = getNamespaceSealedSecretsValuesFilePath(APL_USERS_NAMESPACE, id)
     await this.git.removeFile(sealedSecretPath)
 
-    // Also remove legacy AplUser file if it exists
-    const legacyFilePath = getResourceFilePath('AplUser', id)
-    await this.git.removeFile(legacyFilePath)
-    this.fileStore.delete(legacyFilePath)
-
     await this.doDeleteDeployment([sealedSecretPath])
   }
 
