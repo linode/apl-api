@@ -198,7 +198,7 @@ export class FileStore {
     return filePath
   }
 
-  // Get platform resources (no team scope - e.g., AplUser, settings)
+  // Get platform resources (no team scope - e.g. settings)
   getPlatformResourcesByKind(kind: AplKind): Map<string, AplObject> {
     const fileMap = getFileMapForKind(kind)
     if (!fileMap) {

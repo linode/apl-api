@@ -103,11 +103,6 @@ beforeEach(() => {
 
 // Helper functions for FileStore-based tests
 function createTestUser(otomiStack: OtomiStack, user: User): void {
-  const { buildPlatformObject } = require('./otomi-models')
-  const aplUser = buildPlatformObject('AplUser', user.id!, user as any)
-  otomiStack.fileStore.setPlatformResource(aplUser)
-
-  // Also register in K8s mock for getAllUsers/getUser
   const k8sUser = {
     id: user.id,
     email: user.email,
