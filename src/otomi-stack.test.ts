@@ -252,6 +252,38 @@ describe('Data validation', () => {
     expect(teamSettings).toBeDefined()
     expect(teamSettings?.metadata.name).toBe('short')
   })
+
+  describe('Reserved service names', () => {
+    const buildService = (name: string): AplServiceRequest => ({
+      kind: 'AplTeamService',
+      metadata: { name, labels: { 'apl.io/teamId': teamId } },
+      spec: {},
+    })
+
+    it('rejects a reserved name on create', async () => {
+      await expect(otomiStack.createAplService(teamId, buildService('grafana'))).rejects.toMatchObject({
+        code: 422,
+      })
+    })
+
+    it('rejects a reserved name case-insensitively and trims whitespace', async () => {
+      await expect(otomiStack.createAplService(teamId, buildService(' Grafana '))).rejects.toMatchObject({
+        code: 422,
+      })
+    })
+
+    it('allows a non-reserved name on create', async () => {
+      await expect(otomiStack.createAplService(teamId, buildService('my-service'))).resolves.not.toThrow()
+    })
+
+    it('rejects a reserved name on update', async () => {
+      createTestService(otomiStack, teamId, 'alertmanager', { domain: 'alertmanager.example.com' })
+
+      await expect(otomiStack.editAplService(teamId, 'alertmanager', { spec: { port: 8080 } })).rejects.toMatchObject({
+        code: 422,
+      })
+    })
+  })
 })
 
 describe('Work with values', () => {

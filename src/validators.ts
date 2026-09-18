@@ -219,6 +219,10 @@ export const TTY_IMAGE_TAG = str({
   desc: 'Tag of the cloud shell image',
   default: '1.2.8',
 })
+export const RESERVED_SERVICE_NAMES = str({
+  desc: 'Comma-separated team service names that are rejected because they collide with per-team platform hostnames (<name>-<teamId>.<domainSuffix>)',
+  default: 'grafana,alertmanager,tekton',
+})
 const { env } = process
 export function cleanEnv<T>(validators: { [K in keyof T]: ValidatorSpec<T[K]> }, options: CleanOptions<T> = {}) {
   if (env.NODE_ENV === 'test') {
