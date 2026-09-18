@@ -102,6 +102,7 @@ import {
   getValuesSchema,
   removeBlankAttributes,
 } from 'src/utils'
+import { assertServiceNameNotReserved } from 'src/utils/serviceUtils'
 import { deepQuote } from 'src/utils/yamlUtils'
 import {
   API_NAMESPACE,
@@ -2107,6 +2108,7 @@ export default class OtomiStack {
   }
 
   async createAplService(teamId: string, data: AplServiceRequest): Promise<AplServiceResponse> {
+    assertServiceNameNotReserved(data.metadata.name)
     if (data.metadata.name.length < 2) throw new ValidationError('Service name must be at least 2 characters long')
     if (data.spec.cname?.tlsSecretName && data.spec.cname?.tlsSecretName.length < 2)
       throw new ValidationError('Secret name must be at least 2 characters long')
@@ -2133,6 +2135,7 @@ export default class OtomiStack {
     data: DeepPartial<AplServiceRequest>,
     patch = false,
   ): Promise<AplServiceResponse> {
+    assertServiceNameNotReserved(name)
     const existing = this.getAplService(teamId, name)
     const updatedSpec = patch ? merge(cloneDeep(existing.spec), data.spec) : { ...existing.spec, ...data.spec }
 
