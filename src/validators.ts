@@ -69,6 +69,17 @@ export const SSO_JWKS_URI = str({
   example: 'https://keycloak.example.com/realms/otomi/protocol/openid-connect/certs',
   devDefault: 'https://keycloak.example.com/realms/otomi/protocol/openid-connect/certs',
 })
+export const AUTH_PROVIDER = str({
+  desc: 'Identity provider apl-api provisions users into: keycloak (default, no-op here) or dex',
+  choices: ['keycloak', 'dex'],
+  default: 'keycloak',
+})
+export const DEX_GRPC_ADDRESS = str({
+  desc: 'host:port of the Dex gRPC API. Required when AUTH_PROVIDER=dex.',
+  example: 'dex-grpc.dex.svc:5557',
+  devDefault: 'localhost:5557',
+  default: undefined,
+})
 export const JWT_AUDIENCE = str({
   desc: 'Expected JWT audience',
   example: 'otomi',

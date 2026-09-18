@@ -292,7 +292,7 @@ describe('API authz tests', () => {
 
       await agent
         .put(`/v1/teams/${teamId}/users`)
-        .send([{ ...userData }])
+        .send([{ id: 'user1', teams: ['team1'] }])
         .set('Authorization', `Bearer ${teamAdminToken}`)
         .expect(200)
     })
