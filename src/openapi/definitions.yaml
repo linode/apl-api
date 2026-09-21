@@ -850,8 +850,8 @@ labels:
   description: A set of labels.
 kubernetesLabelName:
   type: string
-  maxLength: 63
-  pattern: '^(?![\s\S]*[\r\n])[A-Za-z0-9](?:[-._A-Za-z0-9]{0,61}[A-Za-z0-9])?$'
+  maxLength: 317
+  pattern: '^(?![\s\S]*[\r\n])(?:(?=[^/]{1,253}/)[a-z0-9](?:[-a-z0-9]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[-a-z0-9]{0,61}[a-z0-9])?)*/)?[A-Za-z0-9](?:[-._A-Za-z0-9]{0,61}[A-Za-z0-9])?$'
 kubernetesLabelValue:
   type: string
   maxLength: 63
