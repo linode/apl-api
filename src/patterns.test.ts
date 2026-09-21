@@ -278,7 +278,16 @@ describe('OpenAPI definition regex patterns', () => {
 
   describe('kubernetesLabelName', () => {
     it('accepts valid Kubernetes label names', () => {
-      expectValid('kubernetesLabelName', ['app', 'my-app', 'my_app', 'my.app', 'APP123', 'a'.repeat(63)])
+      expectValid('kubernetesLabelName', [
+        'app',
+        'my-app',
+        'my_app',
+        'my.app',
+        'APP123',
+        'a'.repeat(63),
+        'app.kubernetes.io/instance',
+        'example.com/app',
+      ])
     })
 
     it('rejects invalid Kubernetes label names', () => {
@@ -299,6 +308,9 @@ describe('OpenAPI definition regex patterns', () => {
         'foo: bar',
         '---',
         'a'.repeat(64),
+        '/app',
+        'example.com/',
+        'example.com/app/extra',
       ])
     })
   })
