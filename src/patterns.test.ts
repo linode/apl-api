@@ -287,6 +287,7 @@ describe('OpenAPI definition regex patterns', () => {
         'a'.repeat(63),
         'app.kubernetes.io/instance',
         'example.com/app',
+        `${'a'.repeat(63)}.${'b'.repeat(63)}.${'c'.repeat(63)}.${'d'.repeat(61)}/app`,
       ])
     })
 
@@ -311,6 +312,11 @@ describe('OpenAPI definition regex patterns', () => {
         '/app',
         'example.com/',
         'example.com/app/extra',
+        'example..com/app',
+        'example.-com/app',
+        'example-.com/app',
+        `${'a'.repeat(64)}.com/app`,
+        `${'a'.repeat(254)}/app`,
       ])
     })
   })
