@@ -12,11 +12,6 @@ describe('getResourceFilePath', () => {
       expect(result).toBe('env/apps/harbor.yaml')
     })
 
-    it('accepts undefined teamId for resources that do not use it', () => {
-      const result = getResourceFilePath('AplUser', 'alice')
-      expect(result).toBe('env/users/alice.yaml')
-    })
-
     it('accepts valid names with hyphens and digits', () => {
       const result = getResourceFilePath('AplTeamService', 'svc-01', 'team-01')
       expect(result).toBe('env/teams/team-01/services/svc-01.yaml')

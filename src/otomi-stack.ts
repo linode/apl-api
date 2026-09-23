@@ -2781,14 +2781,6 @@ export default class OtomiStack {
     return { filePath: sealedSecretPath, content }
   }
 
-  async deleteUserFile(userId: string): Promise<void> {
-    debug(`Deleting user ${userId}`)
-    const filePath = getResourceFilePath('AplUser', userId)
-
-    this.fileStore.delete(filePath)
-    await this.git.removeFile(filePath)
-  }
-
   async saveTeam(aplTeamObject: AplTeamObject): Promise<AplRecord> {
     const teamId = aplTeamObject.metadata.labels['apl.io/teamId']
     debug(`Saving team ${teamId}`)
