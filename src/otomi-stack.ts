@@ -1481,10 +1481,6 @@ export default class OtomiStack {
     const sealedSecretPath = getNamespaceSealedSecretsValuesFilePath(APL_USERS_NAMESPACE, id)
     await this.git.removeFile(sealedSecretPath)
 
-    const legacyFilePath = getResourceFilePath('AplUser', id)
-    await this.git.removeFile(legacyFilePath)
-    this.fileStore.delete(legacyFilePath)
-
     await this.doDeleteDeployment([sealedSecretPath])
   }
 
@@ -2946,14 +2942,6 @@ export default class OtomiStack {
     const content = parseYaml(sealedSecretYaml) as unknown as AplObject
 
     return { filePath: sealedSecretPath, content }
-  }
-
-  async deleteUserFile(userId: string): Promise<void> {
-    debug(`Deleting user ${userId}`)
-    const filePath = getResourceFilePath('AplUser', userId)
-
-    this.fileStore.delete(filePath)
-    await this.git.removeFile(filePath)
   }
 
   async saveTeam(aplTeamObject: AplTeamObject): Promise<AplRecord> {
