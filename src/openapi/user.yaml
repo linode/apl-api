@@ -115,9 +115,9 @@ User:
       uniqueItems: true
     initialPassword:
       type: string
-      description: The initial password of the user
+      minLength: 8
+      maxLength: 72
+      description: The initial password of the user. With Dex as issuer, an admin may set this on create; otherwise one is generated. Must be between 8 and 72 bytes UTF-8 encoded (bcrypt only consumes the first 72 bytes).
   required:
     - email
-    - firstName
-    - lastName
   type: object
