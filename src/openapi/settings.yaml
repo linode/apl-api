@@ -213,6 +213,10 @@ Settings:
           type: string
           description: Set OIDC claim to be passed by Keycloak as a unique user identifier. It is advised to not change the default.
           default: sub
+        groupsClaimMapper:
+          type: string
+          description: Claim name the identity provider uses for group membership. Some providers require a namespaced name instead of "groups".
+          default: groups
       type: object
       x-externalDocsPath: oidc-settings
       x-acl:
