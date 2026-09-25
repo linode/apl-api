@@ -55,7 +55,8 @@ export function authorize(req: OpenApiRequestExt, authz: Authz): void {
     const permissionMap: Record<string, string> = {
       'read:Kubecfg': 'downloadKubeconfig',
       'read:DockerConfig': 'downloadDockerLogin',
-      'create:Cloudtty': 'useCloudShell',
+      'read:Cloudtty': 'useCloudShell',
+      'delete:Cloudtty': 'useCloudShell',
       'update:Policy': 'editSecurityPolicies',
       'create:Service': 'createServices',
     }
