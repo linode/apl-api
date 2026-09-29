@@ -1172,6 +1172,8 @@ describe('Users tests', () => {
     it('editTeamUsers looks users up in Dex, calls Dex UpdatePassword with the new groups, and writes nothing to Git', async () => {
       mockListDexPasswords.mockResolvedValue([dexPassword({ userId: 'uuid-1', groups: ['team-blue'] })])
       const otomi = await getTestStack('dex')
+      createTestTeam(otomi, 'blue')
+      createTestTeam(otomi, 'red')
       const sessionUserArg = { isPlatformAdmin: true, isTeamAdmin: false, teams: [] } as unknown as SessionUser
 
       const result = await otomi.editTeamUsers([{ id: 'uuid-1', teams: ['blue', 'red'] }], sessionUserArg)
@@ -1196,6 +1198,19 @@ describe('Users tests', () => {
       expect(mockUpdateDexPassword).not.toHaveBeenCalled()
     })
 
+    it('editTeamUsers rejects a request naming a team that does not exist instead of persisting it as a Dex group', async () => {
+      mockListDexPasswords.mockResolvedValue([dexPassword({ userId: 'uuid-1', groups: ['team-blue'] })])
+      const otomi = await getTestStack('dex')
+      createTestTeam(otomi, 'blue')
+      const sessionUserArg = { isPlatformAdmin: true, isTeamAdmin: false, teams: [] } as unknown as SessionUser
+
+      await expect(
+        otomi.editTeamUsers([{ id: 'uuid-1', teams: ['blue', 'does-not-exist'] }], sessionUserArg),
+      ).rejects.toMatchObject({ code: 404 })
+
+      expect(mockUpdateDexPassword).not.toHaveBeenCalled()
+    })
+
     it('editTeamUsers rejects and writes nothing to Git when a Dex call fails partway through a batch', async () => {
       mockListDexPasswords.mockResolvedValue([
         dexPassword({ userId: 'user-a', email: 'user-a@example.com', groups: ['team-blue'] }),
@@ -1203,6 +1218,8 @@ describe('Users tests', () => {
       ])
       mockUpdateDexPassword.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('dex unavailable'))
       const otomi = await getTestStack('dex')
+      createTestTeam(otomi, 'blue')
+      createTestTeam(otomi, 'red')
       const sessionUserArg = { isPlatformAdmin: true, isTeamAdmin: false, teams: [] } as unknown as SessionUser
 
       await expect(
@@ -1240,6 +1257,32 @@ describe('Users tests', () => {
       expect(mockListUserIdentitiesByUserId).toHaveBeenCalledWith('uuid-5')
       expect(mockDeleteDexUserIdentity).toHaveBeenCalledWith('uuid-5', 'local')
       expect(mockDeleteDexPassword).toHaveBeenCalledWith('loggedin@example.com')
+    })
+
+    it('deleteUser resumes purging remaining identities when a prior partial purge already deleted the password', async () => {
+      // Simulates a retry after DeleteUserIdentity's cascade already removed the password
+      // record on a previous attempt, before a later identity's deletion failed.
+      mockListDexPasswords.mockResolvedValue([])
+      mockListUserIdentitiesByUserId.mockResolvedValueOnce([
+        { userId: 'uuid-6', connectorId: 'google', email: 'resumed@example.com' },
+      ])
+      const otomi = await getTestStack('dex')
+
+      await otomi.deleteUser('uuid-6')
+
+      expect(mockDeleteDexUserIdentity).toHaveBeenCalledWith('uuid-6', 'google')
+      expect(mockDeleteDexPassword).toHaveBeenCalledWith('resumed@example.com')
+    })
+
+    it('deleteUser is a no-op when neither a password nor an identity remains (already fully purged)', async () => {
+      mockListDexPasswords.mockResolvedValue([])
+      mockListUserIdentitiesByUserId.mockResolvedValueOnce([])
+      const otomi = await getTestStack('dex')
+
+      await expect(otomi.deleteUser('uuid-7')).resolves.toBeUndefined()
+
+      expect(mockDeleteDexUserIdentity).not.toHaveBeenCalled()
+      expect(mockDeleteDexPassword).not.toHaveBeenCalled()
     })
 
     it('deleteUser aborts and calls nothing else when Dex provisioning fails', async () => {

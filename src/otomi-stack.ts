@@ -1459,17 +1459,19 @@ export default class OtomiStack {
   }
 
   private async deleteDexUser(id: string): Promise<void> {
-    const { match } = await this.lookupDexUser(id)
-    if (match.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
+    // Deleting an identity cascades to its password record, so on retry the password may
+    // already be gone. Look up both instead of gating on the password alone.
+    const [passwords, identities] = await Promise.all([listDexPasswords(), listUserIdentitiesByUserId(id)])
+    const email = passwords.find((p) => p.userId === id)?.email ?? identities[0]?.email
+    if (!email) return // already fully purged
+
+    if (email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
       throw new ForbiddenError('Cannot delete the default platform admin user')
     }
-    // Purge identities first: it cascades to sessions, refresh/offline tokens, and the password
-    // record. A user who never logged in has no identity, so deleteDexPassword below still runs.
-    const identities = await listUserIdentitiesByUserId(match.userId)
     for (const identity of identities) {
       await deleteDexUserIdentity(identity.userId, identity.connectorId)
     }
-    await deleteDexPassword(match.email)
+    await deleteDexPassword(email)
   }
 
   private async deleteGitUser(id: string): Promise<void> {
@@ -1565,6 +1567,7 @@ export default class OtomiStack {
     this.assertCanUpdateUserTeams(sessionUser, existingUser, userData.teams as string[])
 
     const updatedUser: User = { ...existingUser, teams: userData.teams }
+    this.validateUserTeamsExist(updatedUser)
     await updateDexPassword({ email: match.email, newGroups: deriveDexGroups(updatedUser) })
     return { id: updatedUser.id!, teams: updatedUser.teams || [] }
   }
