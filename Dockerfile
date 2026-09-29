@@ -9,10 +9,13 @@ RUN mkdir /app
 WORKDIR /app
 
 # Install dependencies before copying the full source code to take advantage of Docker layer caching
-COPY package*.json ./
+COPY package*.json .npmrc ./
 # Needed for postinstall (build:models) during npm ci
 COPY src/build-spec.ts ./src/build-spec.ts
 COPY src/openapi ./src/openapi
+# @linode/dex-client-grpc is hosted on GitHub Packages, which requires auth even for public pkg
+RUN --mount=type=secret,id=NPM_TOKEN \
+  echo "//npm.pkg.github.com/:_authToken=$(cat /run/secrets/NPM_TOKEN)" >> .npmrc
 RUN npm ci
 
 COPY . .* ./

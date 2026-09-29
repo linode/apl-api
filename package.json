@@ -1,7 +1,7 @@
 {
   "author": "RedKubes",
   "bugs": {
-    "url": "https://github.com/redkubes/otomi-api/issues"
+    "url": "https://github.com/linode/apl-api/issues"
   },
   "config": {
     "commitizen": {
@@ -114,7 +114,7 @@
     "node": ">=24 <25"
   },
   "engineStrict": true,
-  "homepage": "https://github.com/redkubes/otomi-api#readme",
+  "homepage": "https://github.com/linode/apl-api#readme",
   "license": "ISC",
   "lint-staged": {
     "*.{js,ts,json,md,yml,yaml}": [
@@ -122,14 +122,14 @@
     ]
   },
   "main": "dist/src/app.js",
-  "name": "@redkubes/otomi-api",
+  "name": "@linode/apl-api",
   "publishConfig": {
     "private": true,
     "registry": "https://npm.pkg.github.com"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/redkubes/otomi-api.git"
+    "url": "git+https://github.com/linode/apl-api.git"
   },
   "scripts": {
     "build": "npm run clean && npm run build:models && tsc && tsc-alias --dir dist -v && copyup --error src/generated-schema.json src/values-schema.yaml src/ttyManifests/*.yaml src/ttyManifests/adminTtyManifests/*.yaml dist/src && copyup --error ./src/license/license.pem ./dist/src",
