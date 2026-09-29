@@ -1,4 +1,4 @@
-import { Password } from 'src/generated/dex/api'
+import { Password } from '@linode/dex-client-grpc'
 import { deriveDexGroups, dexPasswordToUser } from './userUtils'
 
 function password(overrides: Partial<Password> = {}): Password {

@@ -7,7 +7,7 @@ import {
   Password,
   UpdatePasswordResp,
   UserIdentity,
-} from 'src/generated/dex/api'
+} from '@linode/dex-client-grpc'
 import { cleanEnv, DEX_GRPC_ADDRESS } from 'src/validators'
 import { DEX_NO_GROUPS_SENTINEL } from 'src/clients/dexConstants'
 import { AlreadyExists, NotExistError } from 'src/error'
@@ -155,7 +155,7 @@ export async function listUserIdentitiesByUserId(userId: string): Promise<UserId
 }
 
 // Cascades to the identity's auth session, refresh/offline sessions, its password record, and
-// the identity itself (see DeleteUserIdentityReq in src/proto/dex/api.proto).
+// the identity itself (see DeleteUserIdentityReq in @linode/dex-client-grpc's source .proto).
 export async function deleteDexUserIdentity(userId: string, connectorId: string): Promise<void> {
   const dex = getDexClient()
   await new Promise<void>((resolve, reject) => {

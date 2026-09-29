@@ -2,7 +2,7 @@ const mockCreatePassword = jest.fn()
 const mockUpdatePassword = jest.fn()
 const mockDeletePassword = jest.fn()
 
-jest.mock('src/generated/dex/api', () => ({
+jest.mock('@linode/dex-client-grpc', () => ({
   DexClient: jest.fn().mockImplementation(() => ({
     createPassword: mockCreatePassword,
     updatePassword: mockUpdatePassword,
@@ -10,7 +10,15 @@ jest.mock('src/generated/dex/api', () => ({
   })),
 }))
 
-process.env.DEX_GRPC_ADDRESS = 'localhost:5557'
+// dexClient.ts reads DEX_GRPC_ADDRESS at module load via cleanEnv(); override it here so the
+// value doesn't depend on process.env assignment order relative to this file's own imports.
+jest.mock('src/validators', () => ({
+  ...jest.requireActual('src/validators'),
+  cleanEnv: (validators: Record<string, unknown>) => ({
+    ...jest.requireActual('src/validators').cleanEnv(validators),
+    DEX_GRPC_ADDRESS: 'localhost:5557',
+  }),
+}))
 
 import { DEX_NO_GROUPS_SENTINEL } from './dexConstants'
 import { AlreadyExists, NotExistError } from 'src/error'
