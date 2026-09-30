@@ -704,7 +704,7 @@ export default class OtomiStack {
       if (remoteHasContent) {
         throw new BadRequestError(`Branch ${params.branch} in repository is not empty`)
       }
-      if (!params.repoUrl.includes('git-server.git-server.svc.cluster.local')) {
+      if (new URL(params.repoUrl).hostname !== new URL(GIT_DEFAULT_CONFIG.repoUrl).hostname) {
         // Deactivate the git-server app before pushing commit to new repo
         const filePath = getResourceFilePath('AplApp', 'git-server')
         const aplApp = this.fileStore.get(filePath)
