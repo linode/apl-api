@@ -708,7 +708,7 @@ export default class OtomiStack {
         // Deactivate the git-server app before pushing commit to new repo
         const filePath = getResourceFilePath('AplApp', 'git-server')
         const aplApp = this.fileStore.get(filePath)
-        if (aplApp?.spec?.enabled) {
+        if (aplApp && aplApp.spec?.enabled !== false) {
           set(aplApp, 'spec.enabled', false)
           await this.saveAppToggle(aplApp)
         }
