@@ -1461,7 +1461,13 @@ describe('APL code repositories tests', () => {
 
 describe('OtomiStack.migrateGitSettings', () => {
   let stack: OtomiStack
-  const mockFilestoreGet = jest.fn().mockReturnValue({ spec: { enabled: true } })
+  const mockFilestoreGet = jest.fn().mockImplementation(() => {
+    return {
+      spec: {
+        enabled: true,
+      },
+    }
+  })
   const mockSaveApp = jest.fn()
   const mockCommit = jest.fn().mockResolvedValue(undefined)
   const mockPushToNewRemote = jest.fn().mockResolvedValue(undefined)
@@ -1515,6 +1521,25 @@ describe('OtomiStack.migrateGitSettings', () => {
         password: 'pass',
         email: 'new@example.com',
         branch: 'main',
+      },
+      false,
+    )
+
+    expect(mockFilestoreGet).toHaveBeenCalled()
+    expect(mockSaveApp).toHaveBeenCalledWith({ spec: { enabled: false } })
+    expect(mockCommit).toHaveBeenCalled()
+    expect(mockPushToNewRemote).toHaveBeenCalled()
+    expect(mockRefreshGitClient).toHaveBeenCalled()
+  })
+
+  it('commits and pushes to new remote when branch changes and remote is empty', async () => {
+    await stack.migrateGitSettings(
+      {
+        repoUrl: 'https://old.example.com/repo.git',
+        username: 'user',
+        password: 'pass',
+        email: 'old@example.com',
+        branch: 'new-branch',
       },
       false,
     )
