@@ -109,14 +109,6 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
     name: 'platformBackups',
   })
 
-  maps.set('AplUser', {
-    kind: 'AplUser',
-    envDir,
-    pathGlob: `${envDir}/env/users/*.yaml`,
-    pathTemplate: 'env/users/{name}.yaml',
-    name: 'users',
-  })
-
   maps.set('AplVersion', {
     kind: 'AplVersion',
     envDir,

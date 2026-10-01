@@ -111,7 +111,6 @@ export const APL_KINDS = [
   'AplIdentityProvider',
   'AplCapabilitySet',
   'AplBackupCollection',
-  'AplUser',
   'AplPlatformSettingSet',
   'AkamaiKnowledgeBase',
   'AkamaiAgent',
