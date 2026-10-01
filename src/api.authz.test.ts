@@ -348,6 +348,75 @@ describe('API authz tests', () => {
     })
   })
 
+  describe('Cloud TTY endpoint tests', () => {
+    beforeEach(() => {
+      jest.spyOn(otomiStack, 'connectCloudtty').mockResolvedValue({ iFrameUrl: 'https://tty.example.com' } as any)
+      jest.spyOn(otomiStack, 'deleteCloudtty').mockResolvedValue(undefined)
+    })
+
+    test('platform admin can connect cloudtty', async () => {
+      await agent.get('/v1/cloudtty').query({ teamId }).set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
+    })
+
+    test('platform admin can delete cloudtty', async () => {
+      await agent
+        .delete('/v1/cloudtty')
+        .query({ teamId })
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(200)
+    })
+
+    test('team member can connect cloudtty for own team when useCloudShell is enabled', async () => {
+      await agent.get('/v1/cloudtty').query({ teamId }).set('Authorization', `Bearer ${teamMemberToken}`).expect(200)
+    })
+
+    test('team member can delete cloudtty for own team when useCloudShell is enabled', async () => {
+      await agent.delete('/v1/cloudtty').query({ teamId }).set('Authorization', `Bearer ${teamMemberToken}`).expect(200)
+    })
+
+    test('team member cannot connect cloudtty for own team when useCloudShell is disabled', async () => {
+      await agent
+        .get('/v1/cloudtty')
+        .query({ teamId: otherTeamId })
+        .set('Authorization', `Bearer ${team2MemberToken}`)
+        .expect(403)
+    })
+
+    test('team member cannot delete cloudtty for own team when useCloudShell is disabled', async () => {
+      await agent
+        .delete('/v1/cloudtty')
+        .query({ teamId: otherTeamId })
+        .set('Authorization', `Bearer ${team2MemberToken}`)
+        .expect(403)
+    })
+
+    test('team admin cannot connect cloudtty for own team when useCloudShell is disabled', async () => {
+      const team2AdminToken = getToken(['team-admin', 'team-team2'])
+      await agent
+        .get('/v1/cloudtty')
+        .query({ teamId: otherTeamId })
+        .set('Authorization', `Bearer ${team2AdminToken}`)
+        .expect(403)
+    })
+
+    test('team admin cannot delete cloudtty for own team when useCloudShell is disabled', async () => {
+      const team2AdminToken = getToken(['team-admin', 'team-team2'])
+      await agent
+        .delete('/v1/cloudtty')
+        .query({ teamId: otherTeamId })
+        .set('Authorization', `Bearer ${team2AdminToken}`)
+        .expect(403)
+    })
+
+    test('anonymous user cannot connect cloudtty', async () => {
+      await agent.get('/v1/cloudtty').query({ teamId }).expect(401)
+    })
+
+    test('anonymous user cannot delete cloudtty', async () => {
+      await agent.delete('/v1/cloudtty').query({ teamId }).expect(401)
+    })
+  })
+
   describe('Policy endpoint tests', () => {
     const data = { action: 'Enforce', severity: 'high' }
 
