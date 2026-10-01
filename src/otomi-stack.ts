@@ -2722,7 +2722,7 @@ export default class OtomiStack {
   async saveAppToggle(app: AplObject): Promise<void> {
     const platformObject = buildPlatformObject('AplApp', app.metadata.name, app.spec)
     const filePath = this.fileStore.setPlatformResource(platformObject)
-    await this.git.writeFile(filePath, app)
+    await this.git.writeFile(filePath, platformObject)
   }
 
   async saveAdminApp(app: App): Promise<void> {
