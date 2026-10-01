@@ -700,10 +700,19 @@ export default class OtomiStack {
     const { repoUrl, branch } = rootStack.gitConfig
     const isDifferentRepo = repoUrl !== params.repoUrl || branch !== params.branch
     if (isDifferentRepo) {
+      // Do not migrate on credential or identity change only
       if (remoteHasContent) {
         throw new BadRequestError(`Branch ${params.branch} in repository is not empty`)
       }
-      // Do not migrate only on credential or identity change
+      if (!params.repoUrl.includes('git-server.git-server.svc.cluster.local')) {
+        // Deactivate the git-server app before pushing commit to new repo
+        const filePath = getResourceFilePath('AplApp', 'git-server')
+        const aplApp = this.fileStore.get(filePath)
+        if (aplApp && aplApp.spec?.enabled !== false) {
+          set(aplApp, 'spec.enabled', false)
+          await this.saveAppToggle(aplApp)
+        }
+      }
       await this.commitAndPushMigration(params)
     }
     await this.storeGitConfig(params)
@@ -2711,8 +2720,9 @@ export default class OtomiStack {
   }
 
   async saveAppToggle(app: AplObject): Promise<void> {
-    const filePath = this.fileStore.setPlatformResource(app as AplPlatformObject)
-    await this.git.writeFile(filePath, app)
+    const platformObject = buildPlatformObject('AplApp', app.metadata.name, app.spec)
+    const filePath = this.fileStore.setPlatformResource(platformObject)
+    await this.git.writeFile(filePath, platformObject)
   }
 
   async saveAdminApp(app: App): Promise<void> {
