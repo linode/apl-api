@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { writeFile } from 'fs/promises'
-import simpleGit, { SimpleGit } from 'simple-git'
+import { simpleGit, SimpleGit } from 'simple-git'
 import { OtomiError } from 'src/error'
 import { v4 as uuidv4 } from 'uuid'
 import { getSecretValues } from '../k8s-operations'
@@ -15,7 +15,7 @@ import {
 
 jest.mock('simple-git', () => ({
   __esModule: true,
-  default: jest.fn(() => ({
+  simpleGit: jest.fn(() => ({
     env: jest.fn(),
     listRemote: jest.fn(),
   })),

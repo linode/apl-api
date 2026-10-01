@@ -1,7 +1,7 @@
 /* eslint-disable prefer-destructuring */
 import axios from 'axios'
 import { writeFile } from 'fs/promises'
-import simpleGit, { SimpleGit, SimpleGitOptions } from 'simple-git'
+import { simpleGit, SimpleGit, SimpleGitOptions } from 'simple-git'
 import { OtomiError } from 'src/error'
 import { v4 as uuidv4 } from 'uuid'
 import { getAuthenticatedUrl } from '../git/connect'
