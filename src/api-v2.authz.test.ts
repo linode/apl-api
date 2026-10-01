@@ -15,6 +15,7 @@ const platformAdminToken = getToken(['platform-admin'])
 const teamAdminToken = getToken(['team-admin', 'team-team1'])
 const teamMemberToken = getToken(['team-team1'])
 const team2MemberToken = getToken(['team-team2'])
+const team2AdminToken = getToken(['team-admin', 'team-team2'])
 
 function createTeamResource(kind: AplKind, spec: Record<string, any>) {
   return {
@@ -1837,6 +1838,22 @@ describe('API V2 authz tests', () => {
           .set('Authorization', `Bearer ${teamMemberToken}`)
           .expect(403)
       })
+
+      test('team member cannot connect cloudtty for own team when useCloudShell is disabled', async () => {
+        await agent
+          .get('/v2/cloudtty')
+          .query({ teamId: 'team2' })
+          .set('Authorization', `Bearer ${team2MemberToken}`)
+          .expect(403)
+      })
+
+      test('team member cannot delete cloudtty for own team when useCloudShell is disabled', async () => {
+        await agent
+          .delete('/v2/cloudtty')
+          .query({ teamId: 'team2' })
+          .set('Authorization', `Bearer ${team2MemberToken}`)
+          .expect(403)
+      })
     })
 
     describe('Team Admin', () => {
@@ -1861,6 +1878,22 @@ describe('API V2 authz tests', () => {
           .delete('/v2/cloudtty')
           .query({ teamId: 'team2' })
           .set('Authorization', `Bearer ${teamAdminToken}`)
+          .expect(403)
+      })
+
+      test('team admin cannot connect cloudtty for own team when useCloudShell is disabled', async () => {
+        await agent
+          .get('/v2/cloudtty')
+          .query({ teamId: 'team2' })
+          .set('Authorization', `Bearer ${team2AdminToken}`)
+          .expect(403)
+      })
+
+      test('team admin cannot delete cloudtty for own team when useCloudShell is disabled', async () => {
+        await agent
+          .delete('/v2/cloudtty')
+          .query({ teamId: 'team2' })
+          .set('Authorization', `Bearer ${team2AdminToken}`)
           .expect(403)
       })
     })
