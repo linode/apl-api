@@ -1120,9 +1120,9 @@ export default class OtomiStack {
   async saveCatalog(data: AplPlatformObject): Promise<AplRecord> {
     debug(`Saving catalog: ${data.metadata.name}`)
 
-    const content = buildPlatformObject(data.kind, data.metadata.name, data.spec)
-    const filePath = this.fileStore.setPlatformResource(content)
-    await this.git.writeFile(filePath, content)
+    const content = toPlatformObject(data.kind, data.metadata.name, data.spec)
+    const filePath = this.fileStore.setPlatformResource(data)
+    await this.git.writeFile(filePath, data)
 
     return { filePath, content }
   }
