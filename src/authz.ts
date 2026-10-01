@@ -1,4 +1,4 @@
-import { Ability, Subject, subject } from '@casl/ability'
+import { createMongoAbility, MongoAbility, Subject, subject } from '@casl/ability'
 import Debug from 'debug'
 import { each, forIn, get, isEmpty } from 'lodash'
 import { Acl, AclAction, OpenAPIDoc, Schema, SessionUser, TeamAuthz, UserAuthz } from 'src/otomi-models'
@@ -134,7 +134,7 @@ export default class Authz {
   user: SessionUser
   specRules: Record<string, Schema>
   // TODO: replace Ability as it's deprecated
-  rbac: Ability
+  rbac: MongoAbility
 
   constructor(apiDoc: OpenAPIDoc) {
     this.specRules = loadSpecRules(apiDoc)
@@ -185,7 +185,7 @@ export default class Authz {
       createRules(schemaName, schema)
     })
 
-    this.rbac = new Ability(canRules)
+    this.rbac = createMongoAbility(canRules)
     return this
   }
 
