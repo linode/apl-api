@@ -8,7 +8,7 @@ const config: Config.InitialOptions = {
     '^uuid$': '<rootDir>/src/stubs/uuid.ts',
   },
   transform: {
-    '^.+\\.tsx?$': 'babel-jest',
+    '^.+\\.tsx?$': 'ts-jest',
     '^.+\\.jsx?$': 'babel-jest',
   },
   transformIgnorePatterns: [
