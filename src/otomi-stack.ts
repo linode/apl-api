@@ -1121,8 +1121,8 @@ export default class OtomiStack {
     debug(`Saving catalog: ${data.metadata.name}`)
 
     const content = toPlatformObject(data.kind, data.metadata.name, data.spec)
-    const filePath = this.fileStore.setPlatformResource(data)
-    await this.git.writeFile(filePath, data)
+    const filePath = this.fileStore.setPlatformResource(content)
+    await this.git.writeFile(filePath, content)
 
     return { filePath, content }
   }
