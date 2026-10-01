@@ -282,13 +282,17 @@ Settings:
             platformAdmin: [read-any, update-any]
             teamAdmin: []
             teamMember: []
-        issuer:
-          type: string
-          enum:
-            - dex
-            - keycloak
-          default: keycloak
-          description: Which app every consumer authenticates against.
+        oidc:
+          type: object
+          additionalProperties: false
+          properties:
+            authenticationLayer:
+              type: string
+              enum:
+                - dex
+                - keycloak
+              default: keycloak
+              description: Which app every consumer authenticates against.
           x-acl:
             platformAdmin: [read-any, update-any]
             teamAdmin: []
