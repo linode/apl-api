@@ -150,6 +150,7 @@ import {
 import CloudTty from './tty'
 import {
   createDexPassword,
+  decodeDexUserId,
   deleteDexPassword,
   deleteDexUserIdentity,
   DexProvisionError,
@@ -3031,7 +3032,7 @@ export default class OtomiStack {
   async logout(user: SessionUser): Promise<void> {
     if (env.AUTH_PROVIDER !== 'dex' || !user.sub) return
     try {
-      await terminateSessionsByUser(user.sub)
+      await terminateSessionsByUser(decodeDexUserId(user.sub))
     } catch (err) {
       const cause = err instanceof DexProvisionError ? err.cause : err
       debug(`Dex TerminateSessionsByUser failed for ${user.sub}: ${cause}`)
