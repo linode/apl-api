@@ -5,6 +5,7 @@ export interface KubeCfgConfig {
   clusterName: string
   apiServer: string
   expirationSeconds: number
+  serviceAccount: string
 }
 
 export default class KubeCfgGenerator extends KubeApi {
@@ -23,7 +24,7 @@ export default class KubeCfgGenerator extends KubeApi {
           expirationSeconds: this.config.expirationSeconds,
         },
       },
-      name: 'exported-kubeconfig',
+      name: this.config.serviceAccount,
       namespace,
     })
     if (!res.status?.token) {
