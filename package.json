@@ -1,18 +1,21 @@
 {
   "author": "RedKubes",
   "bugs": {
-    "url": "https://github.com/redkubes/otomi-api/issues"
+    "url": "https://github.com/linode/apl-api/issues"
   },
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "16.0.3",
     "@casl/ability": "6.8.1",
+    "@grpc/grpc-js": "^1.14.4",
     "@kubernetes/client-node": "1.4.0",
     "@linode/api-v4": "0.158.0",
+    "@linode/dex-client-grpc": "0.1.0",
     "@linode/kubeseal-encrypt": "^1.0.1",
     "@types/json-schema": "7.0.15",
     "@types/jsonwebtoken": "9.0.10",
     "async-retry": "^1.3.3",
     "axios": "1.20.0",
+    "bcryptjs": "^3.0.3",
     "clean-deep": "3.4.0",
     "cors": "2.8.6",
     "debug": "4.4.3",
@@ -25,7 +28,6 @@
     "generate-password": "1.7.1",
     "glob": "13.0.6",
     "jose": "^6.2.12",
-    "jsonpath": "1.3.0",
     "jsonwebtoken": "9.0.3",
     "jwt-decode": "4.0.0",
     "lightship": "6.7.2",
@@ -47,6 +49,7 @@
     "@eslint/compat": "2.1.1",
     "@redocly/openapi-cli": "1.0.0-beta.95",
     "@types/async-retry": "^1.4.8",
+    "@types/bcryptjs": "^2.4.6",
     "@types/debug": "^4.1.13",
     "@types/expect": "24.3.2",
     "@types/express": "^5.0.6",
@@ -94,7 +97,7 @@
     "node": ">=24 <25"
   },
   "engineStrict": true,
-  "homepage": "https://github.com/redkubes/otomi-api#readme",
+  "homepage": "https://github.com/linode/apl-api#readme",
   "license": "ISC",
   "overrides": {
     "@babel/core": "$@babel/core"
@@ -105,14 +108,14 @@
     ]
   },
   "main": "dist/src/app.js",
-  "name": "@redkubes/otomi-api",
+  "name": "@linode/apl-api",
   "publishConfig": {
     "private": true,
     "registry": "https://npm.pkg.github.com"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/redkubes/otomi-api.git"
+    "url": "git+https://github.com/linode/apl-api.git"
   },
   "scripts": {
     "build": "npm run clean && npm run build:models && tsc && tsc-alias --dir dist -v && copyup --error src/generated-schema.json src/values-schema.yaml src/ttyManifests/*.yaml src/ttyManifests/adminTtyManifests/*.yaml dist/src && copyup --error ./src/license/license.pem ./dist/src",
