@@ -9,6 +9,7 @@ import {
   UpdatePasswordResp,
   UserIdentity,
 } from '@linode/dex-client-grpc'
+import { Reader } from 'protobufjs/minimal'
 import { cleanEnv, DEX_GRPC_ADDRESS } from 'src/validators'
 import { DEX_NO_GROUPS_SENTINEL } from 'src/clients/dexConstants'
 import { AlreadyExists, NotExistError } from 'src/error'
@@ -153,6 +154,17 @@ export async function listUserIdentitiesByUserId(userId: string): Promise<UserId
     })
   })
   return identities.filter((identity) => identity.userId === userId)
+}
+
+// sub is base64(protobuf) of dexidp/dex's IDTokenSubject { user_id = 1, conn_id = 2 }.
+export function decodeDexUserId(sub: string): string {
+  try {
+    const reader = Reader.create(Buffer.from(sub, 'base64'))
+    reader.uint32()
+    return reader.string()
+  } catch (err) {
+    throw new DexProvisionError(`Could not decode Dex user id from subject: ${sub}`, err)
+  }
 }
 
 export async function terminateSessionsByUser(userId: string): Promise<number> {

@@ -26,6 +26,7 @@ import { DEX_NO_GROUPS_SENTINEL } from './dexConstants'
 import { AlreadyExists, NotExistError } from 'src/error'
 import {
   createDexPassword,
+  decodeDexUserId,
   deleteDexPassword,
   DexProvisionError,
   terminateSessionsByUser,
@@ -149,5 +150,13 @@ describe('dexClient', () => {
     mockTerminateSessionsByUser.mockImplementation((_req, cb) => cb(new Error('unavailable'), null))
 
     await expect(terminateSessionsByUser('uuid-1')).rejects.toBeInstanceOf(DexProvisionError)
+  })
+
+  it('decodeDexUserId extracts the raw user_id from a Dex-issued sub claim', () => {
+    expect(decodeDexUserId('ChJhcGwtcGxhdGZvcm0tYWRtaW4SBWxvY2Fs')).toBe('apl-platform-admin')
+  })
+
+  it('decodeDexUserId throws DexProvisionError when the sub is not a valid Dex subject', () => {
+    expect(() => decodeDexUserId('/w==')).toThrow(DexProvisionError) // truncated varint
   })
 })
