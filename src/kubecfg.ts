@@ -40,8 +40,9 @@ export default class KubeCfgGenerator extends KubeApi {
     const contextName = `${namespace}-${sub}`
     const cluster = {
       name: apiName,
-      server: this.config.apiServer,
-      skipTLSVerify: true,
+      cluster: {
+        server: this.config.apiServer,
+      },
     }
     const user = {
       name: userName,
@@ -49,9 +50,11 @@ export default class KubeCfgGenerator extends KubeApi {
     }
     const context = {
       name: contextName,
-      namespace,
-      user: userName,
-      cluster: apiName,
+      context: {
+        namespace,
+        user: userName,
+        cluster: apiName,
+      },
     }
     return {
       apiVersion: 'v1',
