@@ -21,7 +21,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
-          echo "@linode:registry=https://npm.pkg.github.com/linode" > .npmrc
+          echo "@linode:registry=https://npm.pkg.github.com" > .npmrc
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
           echo '::set-output name=diff::1'
 
