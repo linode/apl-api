@@ -2326,7 +2326,8 @@ export default class OtomiStack {
     return mergeCanaryServices(mapped)
   }
 
-  async getKubecfg(teamId: string, sessionUser): Promise<Record<string, any>> {
+  async getKubecfg(teamId: string, sessionUser: SessionUser): Promise<Record<string, any>> {
+    this.getAplTeam(teamId) // will throw if not existing
     const isAdmin = sessionUser.isPlatformAdmin
     if (!isAdmin && !sessionUser.teams.includes(teamId)) {
       throw new ForbiddenError('Cannot generate a kubeconfig for a team you are not a member of.')
