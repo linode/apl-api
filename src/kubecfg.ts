@@ -49,11 +49,15 @@ export default class KubeCfgGenerator extends KubeApi {
     }
   }
 
-  async getKubeCfg(namespace: string, sub: string): Promise<Record<string, any>> {
-    const token = await this.createToken(namespace)
+  async getKubeCfg(
+    serviceAccountNamespace: string,
+    targetNamespace: string,
+    sub: string,
+  ): Promise<Record<string, any>> {
+    const token = await this.createToken(serviceAccountNamespace)
     const apiName = `apl-${this.config.clusterName}`
     const userName = sub
-    const contextName = `${namespace}-${sub}`
+    const contextName = `${targetNamespace}-${sub}`
     const cluster = {
       name: apiName,
       cluster: {
@@ -75,7 +79,7 @@ export default class KubeCfgGenerator extends KubeApi {
     const context = {
       name: contextName,
       context: {
-        namespace,
+        namespace: targetNamespace,
         user: userName,
         cluster: apiName,
       },

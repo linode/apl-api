@@ -2334,7 +2334,8 @@ export default class OtomiStack {
     if (!isAdmin && !sessionUser.teams.includes(teamId)) {
       throw new ForbiddenError('Cannot generate a kubeconfig for a team you are not a member of.')
     }
-    const namespace = isAdmin ? 'team-admin' : `team-${teamId}`
+    const targetNamespace = `team-${teamId}`
+    const saNamespace = isAdmin ? 'team-admin' : targetNamespace
     if (typeof sessionUser.sub !== 'string' || !sessionUser.sub) {
       debug('No user sub found, cannot create kubeconfig.')
       throw new OtomiError(500, 'No user sub found, cannot create kubeconfig.')
@@ -2352,7 +2353,7 @@ export default class OtomiStack {
       expirationSeconds: env.KUBECONFIG_EXPIRATION_SECONDS,
       allowInsecure: env.KUBECONFIG_ALLOW_INSECURE,
     })
-    return await cfgGenerator.getKubeCfg(namespace, sessionUser.sub)
+    return await cfgGenerator.getKubeCfg(saNamespace, targetNamespace, sessionUser.sub)
   }
 
   async getDockerConfig(teamId: string): Promise<string> {
