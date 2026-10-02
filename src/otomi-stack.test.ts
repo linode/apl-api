@@ -78,6 +78,7 @@ jest.mock('./clients/dexClient', () => ({
   listUserIdentitiesByUserId: (...args: any[]) => mockListUserIdentitiesByUserId(...args),
   deleteDexUserIdentity: (...args: any[]) => mockDeleteDexUserIdentity(...args),
   terminateSessionsByUser: (...args: any[]) => mockTerminateSessionsByUser(...args),
+  decodeDexUserId: jest.requireActual('./clients/dexClient').decodeDexUserId,
   DEX_NO_GROUPS_SENTINEL: '__no_groups__',
   DexProvisionError: class DexProvisionError extends Error {},
 }))
@@ -1297,12 +1298,14 @@ describe('Users tests', () => {
       expect(otomi.git.removeFile).not.toHaveBeenCalled()
     })
 
-    it('logout calls Dex TerminateSessionsByUser with the user subject when AUTH_PROVIDER is dex', async () => {
+    it('logout calls Dex TerminateSessionsByUser with the decoded raw Dex user id when AUTH_PROVIDER is dex', async () => {
+      // Dex's `sub` claim is base64(protobuf) of { user_id: 'session-user', conn_id: 'local' }.
+      const dexUser = { ...sessionUser, sub: 'CgxzZXNzaW9uLXVzZXISBWxvY2Fs' }
       const otomi = await getTestStack('dex')
 
-      await otomi.logout(sessionUser)
+      await otomi.logout(dexUser)
 
-      expect(mockTerminateSessionsByUser).toHaveBeenCalledWith(sessionUser.sub)
+      expect(mockTerminateSessionsByUser).toHaveBeenCalledWith('session-user')
     })
 
     it('logout does not call Dex when AUTH_PROVIDER is keycloak (default)', async () => {
