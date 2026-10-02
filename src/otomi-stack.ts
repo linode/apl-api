@@ -2342,6 +2342,9 @@ export default class OtomiStack {
     const {
       cluster: { name, apiServer },
     } = (await this.getSettings(['cluster'])) as Record<string, any>
+    if (!apiServer) {
+      throw new ValidationError('Cluster API server URL is not defined in settings, cannot generate kubeconfig.')
+    }
     const cfgGenerator = new KubeCfgGenerator({
       serviceAccount: env.KUBECONFIG_SERVICEACCOUNT,
       clusterName: name,
