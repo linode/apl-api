@@ -1,11 +1,4 @@
-import {
-  ApiException,
-  CoreV1Api,
-  KubeConfig,
-  User as k8sUser,
-  V1ObjectReference,
-  V1Secret,
-} from '@kubernetes/client-node'
+import { ApiException, CoreV1Api, KubeConfig, User as k8sUser, V1Secret } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
@@ -179,6 +172,7 @@ import {
 } from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
+import KubeCfgGenerator from './kubecfg'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -2328,45 +2322,23 @@ export default class OtomiStack {
     return mergeCanaryServices(mapped)
   }
 
-  async getKubecfg(teamId: string): Promise<KubeConfig> {
-    this.getAplTeam(teamId) // will throw if not existing
-    const {
-      cluster: { name, apiName = `otomi-${name}`, apiServer },
-    } = (await this.getSettings(['cluster'])) as Record<string, any>
-    if (!apiServer) throw new ValidationError('Missing configuration value: cluster.apiServer')
-    const client = this.getApiClient()
-    const namespace = `team-${teamId}`
-    const sa = await client.readNamespacedServiceAccount({ name: `kubectl`, namespace })
-    const { secrets }: { secrets?: Array<V1ObjectReference> } = sa
-    const secretName = secrets?.length ? secrets[0].name : ''
-    const secret = await client.readNamespacedSecret({ name: secretName || '', namespace })
-    const token = Buffer.from(secret.data?.token || '', 'base64').toString('ascii')
-    const cluster = {
-      name: apiName,
-      server: apiServer,
-      skipTLSVerify: true,
+  async getKubecfg(teamId: string, sessionUser): Promise<Record<string, any>> {
+    const isAdmin = sessionUser.isPlatformAdmin
+    if (!isAdmin && !sessionUser.teams.includes(teamId)) {
+      throw new ForbiddenError('Cannot generate a kubeconfig for a team you are not a member of.')
     }
-
-    const user = {
-      name: `${namespace}-${apiName}`,
-      token,
+    const namespace = isAdmin ? 'team-admin' : `team-${teamId}`
+    if (typeof sessionUser.sub !== 'string' || !sessionUser.sub) {
+      debug('No user sub found, cannot connect to shell.')
+      throw new OtomiError(500, 'No user sub found, cannot create kubeconfig.')
     }
-
-    const context = {
-      name: `${namespace}-${apiName}`,
-      namespace,
-      user: user.name,
-      cluster: cluster.name,
-    }
-    const options = {
-      users: [user],
-      clusters: [cluster],
-      contexts: [context],
-      currentContext: context.name,
-    }
-    const config = new KubeConfig()
-    config.loadFromOptions(options)
-    return config
+    const { name, apiServer } = (await this.getSettings(['cluster'])) as Record<string, any>
+    const cfgGenerator = new KubeCfgGenerator({
+      clusterName: name,
+      apiServer,
+      expirationSeconds: 3600,
+    })
+    return await cfgGenerator.getKubeCfg(namespace, sessionUser.sub)
   }
 
   async getDockerConfig(teamId: string): Promise<string> {
