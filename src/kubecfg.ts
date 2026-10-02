@@ -6,6 +6,7 @@ export interface KubeCfgConfig {
   apiServer: string
   expirationSeconds: number
   serviceAccount: string
+  allowInsecure: boolean
 }
 
 export default class KubeCfgGenerator extends KubeApi {
@@ -62,8 +63,10 @@ export default class KubeCfgGenerator extends KubeApi {
     const caCert = await this.getCaCert()
     if (caCert) {
       cluster.cluster['certificate-authority-data'] = Buffer.from(caCert).toString('base64')
-    } else {
+    } else if (this.config.allowInsecure) {
       cluster.cluster['insecure-skip-tls-verify'] = true
+    } else {
+      throw new ValidationError('Failed to look up CA certificate for Kubeconfig (kube-system/kube-root-ca.crt)')
     }
     const user = {
       name: userName,

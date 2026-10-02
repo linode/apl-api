@@ -117,6 +117,7 @@ import {
   HELM_CHART_CATALOG,
   HIDDEN_APPS,
   KNOWLEDGE_BASE_KIND,
+  KUBECONFIG_ALLOW_INSECURE,
   KUBECONFIG_EXPIRATION_SECONDS,
   KUBECONFIG_SERVICEACCOUNT,
   OBJ_STORAGE_APPS,
@@ -209,6 +210,7 @@ const env = cleanEnv({
   TTY_IMAGE_TAG,
   KUBECONFIG_SERVICEACCOUNT,
   KUBECONFIG_EXPIRATION_SECONDS,
+  KUBECONFIG_ALLOW_INSECURE,
 })
 
 export const rootPath = '/tmp/otomi/values'
@@ -2345,6 +2347,7 @@ export default class OtomiStack {
       clusterName: name,
       apiServer,
       expirationSeconds: env.KUBECONFIG_EXPIRATION_SECONDS,
+      allowInsecure: env.KUBECONFIG_ALLOW_INSECURE,
     })
     return await cfgGenerator.getKubeCfg(namespace, sessionUser.sub)
   }
