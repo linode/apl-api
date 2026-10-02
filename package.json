@@ -33,6 +33,7 @@
     "lightship": "6.7.2",
     "lodash": "4.18.1",
     "morgan": "1.12.1",
+    "protobufjs": "^7.6.6",
     "semver": "^7.8.5",
     "simple-git": "3.36.0",
     "socket.io": "4.8.4",
