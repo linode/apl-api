@@ -121,3 +121,15 @@ User:
   required:
     - email
   type: object
+
+UserLogout:
+  description: Permission to log out the current session. Not a CRUD resource; gates POST /v2/user/logout only.
+  x-acl:
+    platformAdmin:
+      - create-any
+    teamAdmin:
+      - create-any
+    teamMember:
+      - create-any
+  properties: {}
+  type: object
