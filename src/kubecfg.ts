@@ -39,12 +39,12 @@ export default class KubeCfgGenerator extends KubeApi {
       const res = await this.coreApi.readNamespacedConfigMap({ name: 'kube-root-ca.crt', namespace: 'kube-system' })
       const caCert = res.data?.['ca.crt']
       if (!caCert) {
-        this.debug('Unable to derive CA certificate from kube-root-ca.crt secret')
+        this.debug('Unable to derive CA certificate from kube-root-ca.crt configmap')
         return undefined
       }
       return caCert
     } catch {
-      this.debug('Unable to read CA certificate from kube-root-ca.crt secret')
+      this.debug('Unable to read CA certificate from kube-root-ca.crt configmap')
       return undefined
     }
   }
