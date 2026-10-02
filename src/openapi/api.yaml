@@ -1740,6 +1740,16 @@ paths:
         default:
           description: The requested session.
 
+  /v2/user/logout:
+    post:
+      operationId: logout
+      x-eov-operation-handler: v2/user/logout
+      description: Log out the current session. Revokes the user's Dex SSO session (when AUTH_PROVIDER is dex), in addition to the client's existing oauth2-proxy sign-out flow.
+      x-aclSchema: UserLogout
+      responses:
+        '204':
+          description: Logout processed.
+
   /v1/apiDocs:
     get:
       operationId: 'getApiDoc'
@@ -2854,6 +2864,8 @@ components:
       $ref: 'team.yaml#/TeamSelfService'
     User:
       $ref: 'user.yaml#/User'
+    UserLogout:
+      $ref: 'user.yaml#/UserLogout'
     Workload:
       $ref: 'workload.yaml#/Workload'
     WorkloadName:

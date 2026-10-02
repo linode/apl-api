@@ -155,6 +155,7 @@ import {
   listDexPasswords,
   listUserIdentitiesByUserId,
   Password,
+  terminateSessionsByUser,
   updateDexPassword,
 } from './clients/dexClient'
 import {
@@ -3022,6 +3023,16 @@ export default class OtomiStack {
       api: env.VERSIONS.api ?? process.env.npm_package_version!,
       console: env.VERSIONS.console,
       values: currentSha,
+    }
+  }
+
+  // Best-effort: a Dex failure here must not block the client's logout flow.
+  async logout(user: SessionUser): Promise<void> {
+    if (env.AUTH_PROVIDER !== 'dex' || !user.sub) return
+    try {
+      await terminateSessionsByUser(user.sub)
+    } catch (err) {
+      debug(`Dex TerminateSessionsByUser failed for ${user.sub}: ${err}`)
     }
   }
 
