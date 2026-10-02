@@ -152,6 +152,7 @@ import {
   createDexPassword,
   deleteDexPassword,
   deleteDexUserIdentity,
+  DexProvisionError,
   listDexPasswords,
   listUserIdentitiesByUserId,
   Password,
@@ -3032,7 +3033,8 @@ export default class OtomiStack {
     try {
       await terminateSessionsByUser(user.sub)
     } catch (err) {
-      debug(`Dex TerminateSessionsByUser failed for ${user.sub}: ${err}`)
+      const cause = err instanceof DexProvisionError ? err.cause : err
+      debug(`Dex TerminateSessionsByUser failed for ${user.sub}: ${cause}`)
     }
   }
 
