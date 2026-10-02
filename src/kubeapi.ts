@@ -15,7 +15,7 @@ export default class KubeApi {
   protected coreApi: CoreV1Api
   protected customObjectsApi: CustomObjectsApi
   protected rbacAuthorizationApi: RbacAuthorizationV1Api
-  private readonly debug: Debug.Debugger
+  protected readonly debug: Debug.Debugger
 
   constructor(debugNamespace = 'kubeapi') {
     const kc = new KubeConfig()

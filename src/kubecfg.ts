@@ -33,6 +33,21 @@ export default class KubeCfgGenerator extends KubeApi {
     return res.status?.token
   }
 
+  async getCaCert(): Promise<string | undefined> {
+    try {
+      const res = await this.coreApi.readNamespacedConfigMap({ name: 'kube-root-ca.crt', namespace: 'kube-system' })
+      const caCert = res.data?.['ca.crt']
+      if (!caCert) {
+        this.debug('Unable to derive CA certificate from kube-root-ca.crt secret')
+        return undefined
+      }
+      return caCert
+    } catch {
+      this.debug('Unable to read CA certificate from kube-root-ca.crt secret')
+      return undefined
+    }
+  }
+
   async getKubeCfg(namespace: string, sub: string): Promise<Record<string, any>> {
     const token = await this.createToken(namespace)
     const apiName = `apl-${this.config.clusterName}`
@@ -43,6 +58,12 @@ export default class KubeCfgGenerator extends KubeApi {
       cluster: {
         server: this.config.apiServer,
       },
+    }
+    const caCert = await this.getCaCert()
+    if (caCert) {
+      cluster.cluster['certificate-authority-data'] = Buffer.from(caCert).toString('base64')
+    } else {
+      cluster.cluster['insecure-skip-tls-verify'] = true
     }
     const user = {
       name: userName,
