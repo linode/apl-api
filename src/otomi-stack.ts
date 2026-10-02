@@ -2336,7 +2336,9 @@ export default class OtomiStack {
       debug('No user sub found, cannot create kubeconfig.')
       throw new OtomiError(500, 'No user sub found, cannot create kubeconfig.')
     }
-    const { name, apiServer } = (await this.getSettings(['cluster'])) as Record<string, any>
+    const {
+      cluster: { name, apiServer },
+    } = (await this.getSettings(['cluster'])) as Record<string, any>
     const cfgGenerator = new KubeCfgGenerator({
       serviceAccount: env.KUBECONFIG_SERVICEACCOUNT,
       clusterName: name,
