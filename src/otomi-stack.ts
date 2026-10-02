@@ -2333,7 +2333,7 @@ export default class OtomiStack {
     }
     const namespace = isAdmin ? 'team-admin' : `team-${teamId}`
     if (typeof sessionUser.sub !== 'string' || !sessionUser.sub) {
-      debug('No user sub found, cannot connect to shell.')
+      debug('No user sub found, cannot create kubeconfig.')
       throw new OtomiError(500, 'No user sub found, cannot create kubeconfig.')
     }
     const { name, apiServer } = (await this.getSettings(['cluster'])) as Record<string, any>
