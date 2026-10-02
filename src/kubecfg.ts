@@ -16,7 +16,7 @@ export default class KubeCfgGenerator extends KubeApi {
     this.config = kubecfgConfig
   }
 
-  async createToken(namespace: string, userName: string): Promise<string> {
+  async createToken(namespace: string): Promise<string> {
     const res = await this.coreApi.createNamespacedServiceAccountToken({
       body: {
         spec: {
@@ -34,7 +34,7 @@ export default class KubeCfgGenerator extends KubeApi {
   }
 
   async getKubeCfg(namespace: string, sub: string): Promise<Record<string, any>> {
-    const token = await this.createToken(namespace, sub!)
+    const token = await this.createToken(namespace)
     const apiName = `apl-${this.config.clusterName}`
     const userName = sub
     const contextName = `${namespace}-${sub}`
