@@ -351,6 +351,7 @@ describe('API V2 authz tests', () => {
     })
 
     jest.spyOn(otomiStack, 'getApiStatus').mockReturnValue({ locked: false })
+    jest.spyOn(otomiStack, 'logout').mockResolvedValue(undefined)
     jest.spyOn(otomiStack, 'createAplService').mockResolvedValue(mockServiceResource as any)
     jest.spyOn(otomiStack, 'getAplService').mockReturnValue(mockServiceResource as any)
     jest.spyOn(otomiStack, 'editAplService').mockResolvedValue(mockServiceResource as any)
@@ -2015,6 +2016,24 @@ describe('API V2 authz tests', () => {
       test('anonymous user cannot get api status', async () => {
         await agent.get('/v2/status').expect(401)
       })
+    })
+  })
+
+  describe('V2 User Logout', () => {
+    test('platform admin can log out', async () => {
+      await agent.post('/v2/user/logout').set('Authorization', `Bearer ${platformAdminToken}`).expect(204)
+    })
+
+    test('team admin can log out', async () => {
+      await agent.post('/v2/user/logout').set('Authorization', `Bearer ${teamAdminToken}`).expect(204)
+    })
+
+    test('team member can log out', async () => {
+      await agent.post('/v2/user/logout').set('Authorization', `Bearer ${teamMemberToken}`).expect(204)
+    })
+
+    test('anonymous user cannot log out', async () => {
+      await agent.post('/v2/user/logout').expect(401)
     })
   })
 

@@ -5,6 +5,7 @@ import {
   DeleteUserIdentityResp,
   DexClient,
   Password,
+  TerminateSessionsByUserResp,
   UpdatePasswordResp,
   UserIdentity,
 } from '@linode/dex-client-grpc'
@@ -152,6 +153,19 @@ export async function listUserIdentitiesByUserId(userId: string): Promise<UserId
     })
   })
   return identities.filter((identity) => identity.userId === userId)
+}
+
+export async function terminateSessionsByUser(userId: string): Promise<number> {
+  const dex = getDexClient()
+  return new Promise<number>((resolve, reject) => {
+    dex.terminateSessionsByUser({ userId }, (err: ServiceError | null, resp: TerminateSessionsByUserResp) => {
+      if (err) {
+        reject(new DexProvisionError(`Dex TerminateSessionsByUser failed for ${userId}`, err))
+        return
+      }
+      resolve(resp?.sessionsTerminated ?? 0)
+    })
+  })
 }
 
 // Cascades to the identity's auth session, refresh/offline sessions, its password record, and

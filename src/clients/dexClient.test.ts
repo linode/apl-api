@@ -1,12 +1,14 @@
 const mockCreatePassword = jest.fn()
 const mockUpdatePassword = jest.fn()
 const mockDeletePassword = jest.fn()
+const mockTerminateSessionsByUser = jest.fn()
 
 jest.mock('@linode/dex-client-grpc', () => ({
   DexClient: jest.fn().mockImplementation(() => ({
     createPassword: mockCreatePassword,
     updatePassword: mockUpdatePassword,
     deletePassword: mockDeletePassword,
+    terminateSessionsByUser: mockTerminateSessionsByUser,
   })),
 }))
 
@@ -22,7 +24,13 @@ jest.mock('src/validators', () => ({
 
 import { DEX_NO_GROUPS_SENTINEL } from './dexConstants'
 import { AlreadyExists, NotExistError } from 'src/error'
-import { createDexPassword, deleteDexPassword, DexProvisionError, updateDexPassword } from './dexClient'
+import {
+  createDexPassword,
+  deleteDexPassword,
+  DexProvisionError,
+  terminateSessionsByUser,
+  updateDexPassword,
+} from './dexClient'
 
 describe('dexClient', () => {
   beforeEach(() => {
@@ -128,5 +136,18 @@ describe('dexClient', () => {
     mockDeletePassword.mockImplementation((_req, cb) => cb(new Error('unavailable'), null))
 
     await expect(deleteDexPassword('a@b.com')).rejects.toBeInstanceOf(DexProvisionError)
+  })
+
+  it('terminateSessionsByUser sends userId and resolves with sessionsTerminated', async () => {
+    mockTerminateSessionsByUser.mockImplementation((_req, cb) => cb(null, { sessionsTerminated: 2 }))
+
+    await expect(terminateSessionsByUser('uuid-1')).resolves.toBe(2)
+    expect(mockTerminateSessionsByUser).toHaveBeenCalledWith({ userId: 'uuid-1' }, expect.any(Function))
+  })
+
+  it('terminateSessionsByUser rejects with DexProvisionError on RPC error', async () => {
+    mockTerminateSessionsByUser.mockImplementation((_req, cb) => cb(new Error('unavailable'), null))
+
+    await expect(terminateSessionsByUser('uuid-1')).rejects.toBeInstanceOf(DexProvisionError)
   })
 })
