@@ -75,14 +75,14 @@ export default class CloudTty extends KubeApi {
         namespace,
       },
     }
-    return this.createOrPatch(this.k8sApi.createNamespacedServiceAccount, this.k8sApi.patchNamespacedServiceAccount, {
+    return this.createOrPatch(this.coreApi.createNamespacedServiceAccount, this.coreApi.patchNamespacedServiceAccount, {
       namespace,
       body,
     })
   }
 
   async deleteServiceAccount(namespace: string, sub: string): Promise<void> {
-    await this.deleteIfExists(this.k8sApi.deleteNamespacedServiceAccount, { namespace, name: `tty-${sub}` })
+    await this.deleteIfExists(this.coreApi.deleteNamespacedServiceAccount, { namespace, name: `tty-${sub}` })
   }
 
   async createPod(namespace: string, sub: string): Promise<KubernetesObject> {
@@ -139,14 +139,14 @@ export default class CloudTty extends KubeApi {
         ],
       },
     }
-    return this.createOrPatch(this.k8sApi.createNamespacedPod, this.k8sApi.patchNamespacedPod, {
+    return this.createOrPatch(this.coreApi.createNamespacedPod, this.coreApi.patchNamespacedPod, {
       namespace,
       body,
     })
   }
 
   async deletePod(namespace: string, sub: string): Promise<void> {
-    await this.deleteIfExists(this.k8sApi.deleteNamespacedPod, { namespace, name: `tty-${sub}` })
+    await this.deleteIfExists(this.coreApi.deleteNamespacedPod, { namespace, name: `tty-${sub}` })
   }
 
   async createRoleBinding(accountNamespace: string, targetNamespace: string, sub: string): Promise<KubernetesObject> {
@@ -246,14 +246,14 @@ export default class CloudTty extends KubeApi {
         type: 'ClusterIP',
       },
     }
-    return this.createOrPatch(this.k8sApi.createNamespacedService, this.k8sApi.patchNamespacedService, {
+    return this.createOrPatch(this.coreApi.createNamespacedService, this.coreApi.patchNamespacedService, {
       namespace,
       body,
     })
   }
 
   async deleteService(namespace: string, sub: string): Promise<void> {
-    await this.deleteIfExists(this.k8sApi.deleteNamespacedService, { namespace, name: `tty-${sub}` })
+    await this.deleteIfExists(this.coreApi.deleteNamespacedService, { namespace, name: `tty-${sub}` })
   }
 
   async createRoute(namespace: string, sub: string, domain: string): Promise<KubernetesObject> {

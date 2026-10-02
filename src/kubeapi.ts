@@ -12,7 +12,7 @@ import {
 import Debug from 'debug'
 
 export default class KubeApi {
-  protected k8sApi: CoreV1Api
+  protected coreApi: CoreV1Api
   protected customObjectsApi: CustomObjectsApi
   protected rbacAuthorizationApi: RbacAuthorizationV1Api
   private readonly debug: Debug.Debugger
@@ -20,12 +20,12 @@ export default class KubeApi {
   constructor(debugNamespace = 'kubeapi') {
     const kc = new KubeConfig()
     kc.loadFromDefault()
-    this.k8sApi = kc.makeApiClient(CoreV1Api)
+    this.coreApi = kc.makeApiClient(CoreV1Api)
     this.customObjectsApi = kc.makeApiClient(CustomObjectsApi)
     this.rbacAuthorizationApi = kc.makeApiClient(RbacAuthorizationV1Api)
 
     // Keep client methods bound when they are passed as callbacks.
-    for (const client of [this.k8sApi, this.customObjectsApi, this.rbacAuthorizationApi]) {
+    for (const client of [this.coreApi, this.customObjectsApi, this.rbacAuthorizationApi]) {
       const proto = Object.getPrototypeOf(client)
       Object.getOwnPropertyNames(proto)
         .filter((m) => typeof client[m] === 'function')
