@@ -20,7 +20,7 @@ export default class KubeCfgGenerator extends KubeApi {
     const res = await this.coreApi.createNamespacedServiceAccountToken({
       body: {
         spec: {
-          audiences: [userName],
+          audiences: ['https://kubernetes.default.svc'],
           expirationSeconds: this.config.expirationSeconds,
         },
       },
