@@ -1928,6 +1928,14 @@ describe('APL code repositories tests', () => {
 
 describe('OtomiStack.migrateGitSettings', () => {
   let stack: OtomiStack
+  const mockFilestoreGet = jest.fn().mockImplementation(() => {
+    return {
+      spec: {
+        enabled: true,
+      },
+    }
+  })
+  const mockSaveApp = jest.fn()
   const mockCommit = jest.fn().mockResolvedValue(undefined)
   const mockPushToNewRemote = jest.fn().mockResolvedValue(undefined)
   const mockRootPull = jest.fn().mockResolvedValue(undefined)
@@ -1952,7 +1960,8 @@ describe('OtomiStack.migrateGitSettings', () => {
     jest.spyOn(stack as any, 'extractAndStoreSettingsSecrets').mockResolvedValue(undefined)
     jest.spyOn(require('src/utils'), 'getValuesSchema').mockResolvedValue({ properties: {} })
     jest.spyOn(stack as any, 'saveSettings').mockResolvedValue(undefined)
-    ;(stack as any).fileStore = { set: jest.fn() }
+    ;(stack as any).fileStore = { set: jest.fn(), get: mockFilestoreGet }
+    ;(stack as any).saveAppToggle = mockSaveApp
     ;(stack as any).git = {
       commit: mockCommit,
       pushToNewRemote: mockPushToNewRemote,
@@ -1983,6 +1992,8 @@ describe('OtomiStack.migrateGitSettings', () => {
       false,
     )
 
+    expect(mockFilestoreGet).toHaveBeenCalled()
+    expect(mockSaveApp).toHaveBeenCalledWith({ spec: { enabled: false } })
     expect(mockCommit).toHaveBeenCalled()
     expect(mockPushToNewRemote).toHaveBeenCalled()
     expect(mockRefreshGitClient).toHaveBeenCalled()
@@ -2000,6 +2011,8 @@ describe('OtomiStack.migrateGitSettings', () => {
       false,
     )
 
+    expect(mockFilestoreGet).toHaveBeenCalled()
+    expect(mockSaveApp).toHaveBeenCalledWith({ spec: { enabled: false } })
     expect(mockCommit).toHaveBeenCalled()
     expect(mockPushToNewRemote).toHaveBeenCalled()
     expect(mockRefreshGitClient).toHaveBeenCalled()
@@ -2019,6 +2032,8 @@ describe('OtomiStack.migrateGitSettings', () => {
       ),
     ).rejects.toThrow(new BadRequestError('Branch main in repository is not empty'))
 
+    expect(mockFilestoreGet).not.toHaveBeenCalled()
+    expect(mockSaveApp).not.toHaveBeenCalled()
     expect(mockCommit).not.toHaveBeenCalled()
     expect(mockPushToNewRemote).not.toHaveBeenCalled()
     expect(mockRefreshGitClient).not.toHaveBeenCalled()
@@ -2036,6 +2051,8 @@ describe('OtomiStack.migrateGitSettings', () => {
       false,
     )
 
+    expect(mockFilestoreGet).not.toHaveBeenCalled()
+    expect(mockSaveApp).not.toHaveBeenCalled()
     expect(mockCommit).not.toHaveBeenCalled()
     expect(mockPushToNewRemote).not.toHaveBeenCalled()
     expect(mockRefreshGitClient).toHaveBeenCalled()
