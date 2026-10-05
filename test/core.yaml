@@ -44,10 +44,6 @@ k8s:
       app: knative
       disablePolicyChecks: true
       disableIstioInjection: true
-    - name: kfp
-      app: kubeflow-pipelines
-      disablePolicyChecks: true
-      disableIstioInjection: true
     - name: kyverno
       app: kyverno
       disableIstioInjection: true

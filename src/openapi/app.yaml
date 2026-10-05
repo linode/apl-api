@@ -17,7 +17,6 @@ AppList:
     - keycloak
     - knative
     - kserve
-    - kubeflow-pipelines
     - kyverno
     - loki
     - otel

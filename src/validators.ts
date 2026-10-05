@@ -103,7 +103,6 @@ export const OBJ_STORAGE_APPS = json({
   default: [
     { appId: 'harbor', required: false },
     { appId: 'loki', required: false },
-    { appId: 'kubeflow-pipelines', required: true },
   ],
 })
 export const ROOT_KEYCLOAK_USER = str({
