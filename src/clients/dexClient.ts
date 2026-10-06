@@ -8,6 +8,7 @@ import {
   TerminateSessionsByUserResp,
   UpdatePasswordResp,
   UserIdentity,
+  VerifyPasswordResp,
 } from '@linode/dex-client-grpc'
 import { Reader } from 'protobufjs/minimal'
 import { cleanEnv, DEX_GRPC_ADDRESS } from 'src/validators'
@@ -110,6 +111,19 @@ export async function updateDexPassword(input: UpdateDexPasswordInput): Promise<
         resolve()
       },
     )
+  })
+}
+
+export async function verifyDexPassword(email: string, password: string): Promise<boolean> {
+  const dex = getDexClient()
+  return new Promise<boolean>((resolve, reject) => {
+    dex.verifyPassword({ email, password }, (err: ServiceError | null, resp: VerifyPasswordResp) => {
+      if (err) {
+        reject(new DexProvisionError(`Dex VerifyPassword failed for ${email}`, err))
+        return
+      }
+      resolve(!!resp?.verified)
+    })
   })
 }
 

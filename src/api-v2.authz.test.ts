@@ -352,6 +352,7 @@ describe('API V2 authz tests', () => {
 
     jest.spyOn(otomiStack, 'getApiStatus').mockReturnValue({ locked: false })
     jest.spyOn(otomiStack, 'logout').mockResolvedValue(undefined)
+    jest.spyOn(otomiStack, 'resetOwnPassword').mockResolvedValue(undefined)
     jest.spyOn(otomiStack, 'createAplService').mockResolvedValue(mockServiceResource as any)
     jest.spyOn(otomiStack, 'getAplService').mockReturnValue(mockServiceResource as any)
     jest.spyOn(otomiStack, 'editAplService').mockResolvedValue(mockServiceResource as any)
@@ -2034,6 +2035,54 @@ describe('API V2 authz tests', () => {
 
     test('anonymous user cannot log out', async () => {
       await agent.post('/v2/user/logout').expect(401)
+    })
+  })
+
+  describe('V2 User Reset Password', () => {
+    const body = { currentPassword: 'current-pw', newPassword: 'brand-new-password' }
+
+    test('platform admin can reset their own password', async () => {
+      await agent
+        .post('/v2/user/reset-password')
+        .send(body)
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(204)
+    })
+
+    test('team admin can reset their own password', async () => {
+      await agent
+        .post('/v2/user/reset-password')
+        .send(body)
+        .set('Authorization', `Bearer ${teamAdminToken}`)
+        .expect(204)
+    })
+
+    test('team member can reset their own password', async () => {
+      await agent
+        .post('/v2/user/reset-password')
+        .send(body)
+        .set('Authorization', `Bearer ${teamMemberToken}`)
+        .expect(204)
+    })
+
+    test('anonymous user cannot reset a password', async () => {
+      await agent.post('/v2/user/reset-password').send(body).expect(401)
+    })
+
+    test('rejects a new password shorter than 8 characters', async () => {
+      await agent
+        .post('/v2/user/reset-password')
+        .send({ currentPassword: 'current-pw', newPassword: 'short' })
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(400)
+    })
+
+    test('rejects a missing currentPassword', async () => {
+      await agent
+        .post('/v2/user/reset-password')
+        .send({ newPassword: 'brand-new-password' })
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(400)
     })
   })
 

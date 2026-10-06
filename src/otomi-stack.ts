@@ -23,6 +23,7 @@ import {
   HttpError,
   NotExistError,
   OtomiError,
+  UnauthorizedError,
   ValidationError,
 } from 'src/error'
 import { getSettingsFileMaps } from 'src/fileStore/file-map'
@@ -159,6 +160,7 @@ import {
   Password,
   terminateSessionsByUser,
   updateDexPassword,
+  verifyDexPassword,
 } from './clients/dexClient'
 import {
   extractRepositoryRefs,
@@ -3037,6 +3039,22 @@ export default class OtomiStack {
       const cause = err instanceof DexProvisionError ? err.cause : err
       debug(`Dex TerminateSessionsByUser failed for ${user.sub}: ${cause}`)
     }
+  }
+
+  async resetOwnPassword(user: SessionUser, currentPassword: string, newPassword: string): Promise<void> {
+    if (env.AUTH_PROVIDER !== 'dex') {
+      throw new ForbiddenError('Self-service password reset is only available when AUTH_PROVIDER is dex.')
+    }
+    if (user.email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
+      throw new ForbiddenError(
+        "The default platform admin's password is managed via cluster configuration and cannot be reset here.",
+      )
+    }
+    this.assertPasswordLength(newPassword)
+    if (!(await verifyDexPassword(user.email, currentPassword))) {
+      throw new UnauthorizedError('Current password is incorrect.')
+    }
+    await updateDexPassword({ email: user.email, newHash: await hashPassword(newPassword) })
   }
 
   async getSession(user: k8sUser): Promise<Session> {
