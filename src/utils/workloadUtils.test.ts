@@ -4,7 +4,7 @@ import * as fs from 'fs'
 import * as fsExtra from 'fs-extra'
 import * as fsPromises from 'fs/promises'
 import path from 'path'
-import simpleGit from 'simple-git'
+import { simpleGit } from 'simple-git'
 import YAML from 'yaml'
 import * as utils from '../utils'
 import * as workloadUtils from './workloadUtils'
@@ -34,7 +34,7 @@ jest.mock('fs-extra', () => ({
 }))
 jest.mock('simple-git', () => ({
   __esModule: true,
-  default: jest.fn(() => ({
+  simpleGit: jest.fn(() => ({
     clone: jest.fn().mockResolvedValue(undefined),
     cwd: jest.fn().mockResolvedValue(undefined),
     raw: jest.fn().mockResolvedValue(undefined),
