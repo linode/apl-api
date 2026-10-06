@@ -4,7 +4,7 @@ import { existsSync, lstatSync, mkdirSync, renameSync } from 'fs'
 import { readFile } from 'fs-extra'
 import { readdir, writeFile } from 'fs/promises'
 import path from 'path'
-import simpleGit, { SimpleGit } from 'simple-git'
+import { simpleGit, SimpleGit } from 'simple-git'
 import { safeReadTextFile } from 'src/utils'
 import {
   CATALOG_CACHE_REFRESH_INTERVAL_MS,
