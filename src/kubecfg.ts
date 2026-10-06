@@ -1,0 +1,96 @@
+import KubeApi from './kubeapi'
+import { ValidationError } from './error'
+
+export interface KubeCfgConfig {
+  clusterName: string
+  apiServer: string
+  expirationSeconds: number
+  serviceAccount: string
+  allowInsecure: boolean
+}
+
+export default class KubeCfgGenerator extends KubeApi {
+  private config: KubeCfgConfig
+
+  constructor(kubecfgConfig: KubeCfgConfig) {
+    super('kubecfg')
+    this.config = kubecfgConfig
+  }
+
+  async createToken(namespace: string): Promise<string> {
+    const res = await this.coreApi.createNamespacedServiceAccountToken({
+      body: {
+        spec: {
+          audiences: [],
+          expirationSeconds: this.config.expirationSeconds,
+        },
+      },
+      name: this.config.serviceAccount,
+      namespace,
+    })
+    if (!res.status?.token) {
+      throw new ValidationError('Failed to create service account token')
+    }
+    return res.status?.token
+  }
+
+  async getCaCert(): Promise<string | undefined> {
+    try {
+      const res = await this.coreApi.readNamespacedConfigMap({ name: 'kube-root-ca.crt', namespace: 'kube-system' })
+      const caCert = res.data?.['ca.crt']
+      if (!caCert) {
+        this.debug('Unable to derive CA certificate from kube-root-ca.crt configmap')
+        return undefined
+      }
+      return caCert
+    } catch {
+      this.debug('Unable to read CA certificate from kube-root-ca.crt configmap')
+      return undefined
+    }
+  }
+
+  async getKubeCfg(
+    serviceAccountNamespace: string,
+    targetNamespace: string,
+    sub: string,
+  ): Promise<Record<string, any>> {
+    const token = await this.createToken(serviceAccountNamespace)
+    const apiName = `apl-${this.config.clusterName}`
+    const userName = sub
+    const contextName = `${targetNamespace}-${sub}`
+    const cluster = {
+      name: apiName,
+      cluster: {
+        server: this.config.apiServer,
+      },
+    }
+    const caCert = await this.getCaCert()
+    if (caCert) {
+      cluster.cluster['certificate-authority-data'] = Buffer.from(caCert).toString('base64')
+    } else if (this.config.allowInsecure) {
+      cluster.cluster['insecure-skip-tls-verify'] = true
+    } else {
+      throw new ValidationError('Failed to look up CA certificate for Kubeconfig (kube-system/kube-root-ca.crt)')
+    }
+    const user = {
+      name: userName,
+      user: { token },
+    }
+    const context = {
+      name: contextName,
+      context: {
+        namespace: targetNamespace,
+        user: userName,
+        cluster: apiName,
+      },
+    }
+    return {
+      apiVersion: 'v1',
+      kind: 'Config',
+      clusters: [cluster],
+      users: [user],
+      contexts: [context],
+      'current-context': contextName,
+    }
+  }
+}
