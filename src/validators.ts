@@ -230,6 +230,18 @@ export const TTY_IMAGE_TAG = str({
   desc: 'Tag of the cloud shell image',
   default: '1.2.8',
 })
+export const KUBECONFIG_SERVICEACCOUNT = str({
+  desc: 'Name of the ServiceAccount used for generating kubeconfig',
+  default: 'exported-kubeconfig',
+})
+export const KUBECONFIG_EXPIRATION_SECONDS = num({
+  desc: 'Expiration time in seconds for the generated kubeconfig token',
+  default: 28800, // 8 hours
+})
+export const KUBECONFIG_ALLOW_INSECURE = bool({
+  desc: 'Allow insecure connections in the generated kubeconfig (skip TLS verification)',
+  default: false,
+})
 export const RESERVED_SERVICE_NAMES = str({
   desc: 'Comma-separated team service names that are rejected because they collide with per-team platform hostnames (<name>-<teamId>.<domainSuffix>)',
   default: 'grafana,alertmanager,tekton',
