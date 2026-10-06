@@ -1,15 +1,5 @@
-import {
-  ApiException,
-  ConfigurationOptions,
-  CoreV1Api,
-  CustomObjectsApi,
-  KubeConfig,
-  KubernetesObject,
-  PatchStrategy,
-  RbacAuthorizationV1Api,
-  setHeaderOptions,
-} from '@kubernetes/client-node'
-import Debug from 'debug'
+import { KubernetesObject } from '@kubernetes/client-node'
+import KubeApi from './kubeapi'
 import { SessionUser } from './otomi-models'
 
 export interface TtyConfig {
@@ -17,64 +7,12 @@ export interface TtyConfig {
   imageTag: string
 }
 
-export default class CloudTty {
-  private k8sApi: CoreV1Api
-  private customObjectsApi: CustomObjectsApi
-  private rbacAuthorizationApi: RbacAuthorizationV1Api
+export default class CloudTty extends KubeApi {
   private config: TtyConfig
-  private readonly debug: Debug.Debugger
 
   constructor(ttyConfig: TtyConfig) {
-    const kc = new KubeConfig()
-    kc.loadFromDefault()
-    this.k8sApi = kc.makeApiClient(CoreV1Api)
-    this.customObjectsApi = kc.makeApiClient(CustomObjectsApi)
-    this.rbacAuthorizationApi = kc.makeApiClient(RbacAuthorizationV1Api)
+    super('tty')
     this.config = ttyConfig
-
-    // Bind every method on each client instance
-    for (const client of [this.k8sApi, this.customObjectsApi, this.rbacAuthorizationApi]) {
-      const proto = Object.getPrototypeOf(client)
-      Object.getOwnPropertyNames(proto)
-        .filter((m) => typeof client[m] === 'function')
-        .forEach((m) => {
-          client[m] = client[m].bind(client)
-        })
-    }
-
-    this.debug = Debug('tty')
-  }
-
-  async createOrPatch<T extends { body: KubernetesObject }>(
-    createFunc: (params: T) => Promise<KubernetesObject>,
-    patchFunc: (params: T, options?: ConfigurationOptions) => Promise<KubernetesObject>,
-    params: T,
-  ): Promise<KubernetesObject> {
-    try {
-      return await createFunc(params)
-    } catch (error) {
-      if (error instanceof ApiException && error.code === 409) {
-        const { name } = params.body.metadata!
-        return await patchFunc(
-          { name, ...params, fieldManager: 'apl-api', force: true },
-          setHeaderOptions('Content-Type', PatchStrategy.ServerSideApply),
-        )
-      } else {
-        throw error
-      }
-    }
-  }
-
-  async deleteIfExists<T>(func: (params: T) => Promise<any>, params: T): Promise<void> {
-    try {
-      await func(params)
-    } catch (error) {
-      if (error instanceof ApiException && error.code === 404) {
-        return
-      } else {
-        this.debug(error)
-      }
-    }
   }
 
   async createAuthorizationPolicy(namespace: string, sub: string): Promise<KubernetesObject> {
@@ -137,14 +75,14 @@ export default class CloudTty {
         namespace,
       },
     }
-    return this.createOrPatch(this.k8sApi.createNamespacedServiceAccount, this.k8sApi.patchNamespacedServiceAccount, {
+    return this.createOrPatch(this.coreApi.createNamespacedServiceAccount, this.coreApi.patchNamespacedServiceAccount, {
       namespace,
       body,
     })
   }
 
   async deleteServiceAccount(namespace: string, sub: string): Promise<void> {
-    await this.deleteIfExists(this.k8sApi.deleteNamespacedServiceAccount, { namespace, name: `tty-${sub}` })
+    await this.deleteIfExists(this.coreApi.deleteNamespacedServiceAccount, { namespace, name: `tty-${sub}` })
   }
 
   async createPod(namespace: string, sub: string): Promise<KubernetesObject> {
@@ -201,14 +139,14 @@ export default class CloudTty {
         ],
       },
     }
-    return this.createOrPatch(this.k8sApi.createNamespacedPod, this.k8sApi.patchNamespacedPod, {
+    return this.createOrPatch(this.coreApi.createNamespacedPod, this.coreApi.patchNamespacedPod, {
       namespace,
       body,
     })
   }
 
   async deletePod(namespace: string, sub: string): Promise<void> {
-    await this.deleteIfExists(this.k8sApi.deleteNamespacedPod, { namespace, name: `tty-${sub}` })
+    await this.deleteIfExists(this.coreApi.deleteNamespacedPod, { namespace, name: `tty-${sub}` })
   }
 
   async createRoleBinding(accountNamespace: string, targetNamespace: string, sub: string): Promise<KubernetesObject> {
@@ -308,14 +246,14 @@ export default class CloudTty {
         type: 'ClusterIP',
       },
     }
-    return this.createOrPatch(this.k8sApi.createNamespacedService, this.k8sApi.patchNamespacedService, {
+    return this.createOrPatch(this.coreApi.createNamespacedService, this.coreApi.patchNamespacedService, {
       namespace,
       body,
     })
   }
 
   async deleteService(namespace: string, sub: string): Promise<void> {
-    await this.deleteIfExists(this.k8sApi.deleteNamespacedService, { namespace, name: `tty-${sub}` })
+    await this.deleteIfExists(this.coreApi.deleteNamespacedService, { namespace, name: `tty-${sub}` })
   }
 
   async createRoute(namespace: string, sub: string, domain: string): Promise<KubernetesObject> {
