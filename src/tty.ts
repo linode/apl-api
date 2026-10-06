@@ -221,8 +221,8 @@ export default class CloudTty {
       },
       roleRef: {
         apiGroup: 'rbac.authorization.k8s.io',
-        kind: 'Role',
-        name: 'tty-admin',
+        kind: 'ClusterRole',
+        name: 'admin',
       },
       subjects: [
         {
