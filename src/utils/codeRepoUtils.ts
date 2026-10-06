@@ -1,7 +1,7 @@
 /* eslint-disable prefer-destructuring */
 import axios from 'axios'
 import { writeFile } from 'fs/promises'
-import simpleGit, { SimpleGit, SimpleGitOptions } from 'simple-git'
+import { simpleGit, SimpleGit, SimpleGitOptions } from 'simple-git'
 import { OtomiError } from 'src/error'
 import { v4 as uuidv4 } from 'uuid'
 import { getAuthenticatedUrl } from '../git/connect'
@@ -160,7 +160,10 @@ export async function getAuthenticatedGitClient(
     throw new Error('Invalid URL provided')
   }
 
-  const gitOptions: Partial<SimpleGitOptions> = isSSH ? { unsafe: { allowUnsafeSshCommand: true } } : {}
+  const gitOptions: Partial<SimpleGitOptions> = {
+    allowEnvironment: isSSH ? ['GIT_TERMINAL_PROMPT', 'GIT_SSH_COMMAND'] : ['GIT_TERMINAL_PROMPT'],
+    ...(isSSH ? { unsafe: { allowUnsafeSshCommand: true } } : {}),
+  }
   const git: SimpleGit = simpleGit(gitOptions).env('GIT_TERMINAL_PROMPT', '0')
   if (secretName) {
     // Prefer to use provided credentials, even if internal Git repo is used
