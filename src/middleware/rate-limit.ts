@@ -1,11 +1,65 @@
-import rateLimit from 'express-rate-limit'
-import { cleanEnv, RATE_LIMIT_AUTH_MAX_ATTEMPTS, RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_MS } from 'src/validators'
+import rateLimit, { ipKeyGenerator, MemoryStore } from 'express-rate-limit'
+import { IncomingHttpHeaders } from 'http'
+import { isIP } from 'net'
+import {
+  cleanEnv,
+  RATE_LIMIT_AUTH_MAX_ATTEMPTS,
+  RATE_LIMIT_MAX_REQUESTS,
+  RATE_LIMIT_WINDOW_MS,
+  TRUST_PROXY,
+} from 'src/validators'
 
 const env = cleanEnv({
   RATE_LIMIT_WINDOW_MS,
   RATE_LIMIT_MAX_REQUESTS,
   RATE_LIMIT_AUTH_MAX_ATTEMPTS,
+  TRUST_PROXY,
 })
+
+const authLimitMessage = 'Too many authentication attempts from this IP, please try again later.'
+
+export class SocketAuthRateLimitError extends Error {
+  readonly data: { status: number; retryAfter: number }
+
+  constructor(retryAfter: number) {
+    super(authLimitMessage)
+    this.data = { status: 429, retryAfter }
+  }
+}
+
+const authStore = new MemoryStore()
+
+export async function beginSocketAuthAttempt(
+  address: string,
+  headers: IncomingHttpHeaders,
+): Promise<() => Promise<void>> {
+  // Match Express's numeric trust-proxy setting: walk from the nearest hop.
+  const forwarded = headers['x-forwarded-for']
+  const addresses = [
+    address,
+    ...(typeof forwarded === 'string'
+      ? forwarded
+          .split(',')
+          .map((ip) => ip.trim())
+          .reverse()
+      : []),
+  ]
+  const ip = addresses[Math.min(Math.max(0, Math.ceil(env.TRUST_PROXY)), addresses.length - 1)]
+  if (!isIP(ip)) throw new Error('Invalid socket client IP address')
+
+  const key = ipKeyGenerator(ip)
+  const { totalHits, resetTime } = await authStore.increment(key)
+  if (totalHits > env.RATE_LIMIT_AUTH_MAX_ATTEMPTS) {
+    const retryAfter = resetTime
+      ? Math.ceil((resetTime.getTime() - Date.now()) / 1000)
+      : env.RATE_LIMIT_WINDOW_MS / 1000
+    throw new SocketAuthRateLimitError(Math.max(0, Math.ceil(retryAfter)))
+  }
+
+  // Reserve before verification so concurrent attempts cannot bypass the limit.
+  // Successful authentication releases the reservation, just as for REST.
+  return () => authStore.decrement(key)
+}
 
 /**
  * General API rate limiter
@@ -65,12 +119,13 @@ export const apiRateLimiter = rateLimit({
  *
  */
 export const authRateLimiter = rateLimit({
+  store: authStore,
   windowMs: env.RATE_LIMIT_WINDOW_MS,
   max: env.RATE_LIMIT_AUTH_MAX_ATTEMPTS,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
-    message: 'Too many authentication attempts from this IP, please try again later.',
+    message: authLimitMessage,
     retryAfter: Math.floor(env.RATE_LIMIT_WINDOW_MS / 1000),
   },
   // Only count requests with Authorization header

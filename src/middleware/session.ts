@@ -13,6 +13,7 @@ import { API_NAMESPACE, cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validato
 import { v4 as uuidv4 } from 'uuid'
 import { setApiStatusInConfigMap } from '../k8s-operations'
 import { getSanitizedErrorMessage } from '../utils'
+import { beginSocketAuthAttempt, SocketAuthRateLimitError } from './rate-limit'
 
 const debug = Debug('otomi:session')
 const env = cleanEnv({
@@ -96,19 +97,21 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
   if (!env.isTest && server) {
     io = new Server(server, { path: '/ws' })
     io.use(async (socket, next) => {
-      const token: unknown = socket.handshake.auth.token ?? socket.handshake.headers.authorization
-      if (typeof token !== 'string' || !token.trim()) {
-        return next(new Error('Unauthorized'))
-      }
-
       try {
+        const completeAuthAttempt = await beginSocketAuthAttempt(socket.handshake.address, socket.handshake.headers)
+        const token: unknown = socket.handshake.auth.token ?? socket.handshake.headers.authorization
+        if (typeof token !== 'string' || !token.trim()) {
+          return next(new Error('Unauthorized'))
+        }
         const { email, sub, groups, roles } = await verifyJwt(token)
+        await completeAuthAttempt()
         const { data } = socket
         data.email = email
         data.sub = sub
         data.groups = groups
         data.roles = roles
       } catch (error) {
+        if (error instanceof SocketAuthRateLimitError) return next(error)
         debug(`Socket JWT verification failed: ${getSanitizedErrorMessage(error)}`)
         return next(new Error('Unauthorized'))
       }

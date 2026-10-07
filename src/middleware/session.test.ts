@@ -11,6 +11,8 @@ const mockVerifyJwt = jest.fn()
 const mockIoUse = jest.fn()
 const mockIoOn = jest.fn()
 const mockIoOf = jest.fn()
+const mockBeginSocketAuthAttempt = jest.fn()
+const mockCompleteAuthAttempt = jest.fn()
 
 const mockReadOnlyInit = jest.fn()
 const mockReadOnlySetLocked = jest.fn()
@@ -96,6 +98,13 @@ jest.mock('src/otomi-stack', () => ({
 
 jest.mock('src/jwt-verification', () => ({
   verifyJwt: (...args: unknown[]) => mockVerifyJwt(...args),
+}))
+
+jest.mock('./rate-limit', () => ({
+  beginSocketAuthAttempt: (...args: unknown[]) => mockBeginSocketAuthAttempt(...args),
+  SocketAuthRateLimitError: class extends Error {
+    data = { status: 429, retryAfter: 60 }
+  },
 }))
 
 jest.mock('socket.io', () => ({
@@ -213,6 +222,8 @@ describe('session middleware', () => {
         sessionModule.sessionMiddleware({} as http.Server)
         ;[[authenticate]] = mockIoUse.mock.calls
         mockVerifyJwt.mockResolvedValue({ email: 'verified@example.com' })
+        mockBeginSocketAuthAttempt.mockResolvedValue(mockCompleteAuthAttempt)
+        mockCompleteAuthAttempt.mockResolvedValue(undefined)
       })
 
       it.each([undefined, '', '   ', 123, {}, ['token']])(
@@ -224,6 +235,7 @@ describe('session middleware', () => {
 
           expect(next).toHaveBeenCalledWith(expect.objectContaining({ message: 'Unauthorized' }))
           expect(mockVerifyJwt).not.toHaveBeenCalled()
+          expect(mockCompleteAuthAttempt).not.toHaveBeenCalled()
         },
       )
 
@@ -235,6 +247,7 @@ describe('session middleware', () => {
 
         expect(mockVerifyJwt).toHaveBeenCalledWith(token)
         expect(socket.data.email).toBe('verified@example.com')
+        expect(mockCompleteAuthAttempt).toHaveBeenCalledTimes(1)
         expect(next).toHaveBeenCalledWith()
       })
 
@@ -270,6 +283,20 @@ describe('session middleware', () => {
         expect(next).toHaveBeenCalledTimes(1)
         expect(next).toHaveBeenCalledWith(expect.objectContaining({ message: 'Unauthorized' }))
         expect(socket.data.email).toBeUndefined()
+        expect(mockCompleteAuthAttempt).not.toHaveBeenCalled()
+      })
+
+      it('rejects rate-limited connections before verifying JWTs', async () => {
+        const { SocketAuthRateLimitError } = await import('./rate-limit')
+        const error = new SocketAuthRateLimitError(60)
+        mockBeginSocketAuthAttempt.mockRejectedValueOnce(error)
+        const next = jest.fn()
+
+        await authenticate(createSocket('valid-token'), next)
+
+        expect(next).toHaveBeenCalledWith(error)
+        expect(mockVerifyJwt).not.toHaveBeenCalled()
+        expect(mockCompleteAuthAttempt).not.toHaveBeenCalled()
       })
 
       it('uses the verified identity for user events', async () => {
