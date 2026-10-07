@@ -6,6 +6,7 @@ import http from 'http'
 import { join } from 'path'
 import { Server } from 'socket.io'
 import { ApiLockedError, ApiNotReadyError } from 'src/error'
+import { verifyJwt } from 'src/jwt-verification'
 import { OpenApiRequestExt } from 'src/otomi-models'
 import { default as OtomiStack, rootPath } from 'src/otomi-stack'
 import { API_NAMESPACE, cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validators'
@@ -94,20 +95,39 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
   // socket setup - only create Socket.IO if we have a server and not in tests
   if (!env.isTest && server) {
     io = new Server(server, { path: '/ws' })
-    io.on('connection', (socket: any) => {
+    io.use(async (socket, next) => {
+      const token: unknown = socket.handshake.auth.token ?? socket.handshake.headers.authorization
+      if (typeof token !== 'string' || !token.trim()) {
+        return next(new Error('Unauthorized'))
+      }
+
+      try {
+        const { email, sub, groups, roles } = await verifyJwt(token)
+        const { data } = socket
+        data.email = email
+        data.sub = sub
+        data.groups = groups
+        data.roles = roles
+      } catch (error) {
+        debug(`Socket JWT verification failed: ${getSanitizedErrorMessage(error)}`)
+        return next(new Error('Unauthorized'))
+      }
+      return next()
+    })
+    io.on('connection', (socket) => {
       socket.on('error', console.error)
-      const users: any[] = []
-      for (const [id, { email }] of io.of('/').sockets as Map<string, any>) {
+      const users: { id: string; email: string }[] = []
+      for (const [id, { data }] of io.of('/').sockets) {
         users.push({
           id,
-          email,
+          email: data.email,
         })
       }
       socket.emit('users', users)
       // notify existing users
       socket.broadcast.emit('user connected', {
         userID: socket.id,
-        email: socket.email,
+        email: socket.data.email,
       })
     })
   }

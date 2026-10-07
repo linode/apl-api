@@ -1,11 +1,16 @@
 import type { NextFunction, Request, Response } from 'express'
 import type http from 'http'
+import type { Server, Socket } from 'socket.io'
 import type { OpenApiRequestExt } from 'src/otomi-models'
 
 const mockRemove = jest.fn()
 const mockRm = jest.fn()
 const mockUuidv4 = jest.fn()
 const mockSetApiStatusInConfigMap = jest.fn()
+const mockVerifyJwt = jest.fn()
+const mockIoUse = jest.fn()
+const mockIoOn = jest.fn()
+const mockIoOf = jest.fn()
 
 const mockReadOnlyInit = jest.fn()
 const mockReadOnlySetLocked = jest.fn()
@@ -89,8 +94,16 @@ jest.mock('src/otomi-stack', () => ({
   rootPath: '/tmp/otomi/values',
 }))
 
+jest.mock('src/jwt-verification', () => ({
+  verifyJwt: (...args: unknown[]) => mockVerifyJwt(...args),
+}))
+
 jest.mock('socket.io', () => ({
-  Server: jest.fn(),
+  Server: jest.fn().mockImplementation(() => ({
+    use: mockIoUse,
+    on: mockIoOn,
+    of: mockIoOf,
+  })),
 }))
 
 type SessionModule = typeof import('./session')
@@ -177,6 +190,103 @@ describe('session middleware', () => {
 
       expect(req.otomi).toBe(sessionStack)
       expect(next).toHaveBeenCalledTimes(1)
+    })
+
+    describe('socket authentication', () => {
+      type SocketMiddleware = Parameters<Server['use']>[0]
+      let authenticate: SocketMiddleware
+
+      const createSocket = (token?: unknown, authorization?: string): Socket =>
+        ({
+          id: 'socket-id',
+          handshake: {
+            auth: token === undefined ? {} : { token },
+            headers: { authorization },
+          },
+          data: {},
+          on: jest.fn(),
+          emit: jest.fn(),
+          broadcast: { emit: jest.fn() },
+        }) as unknown as Socket
+
+      beforeEach(() => {
+        sessionModule.sessionMiddleware({} as http.Server)
+        ;[[authenticate]] = mockIoUse.mock.calls
+        mockVerifyJwt.mockResolvedValue({ email: 'verified@example.com' })
+      })
+
+      it.each([undefined, '', '   ', 123, {}, ['token']])(
+        'rejects a missing or malformed token (%p)',
+        async (token) => {
+          const next = jest.fn()
+
+          await authenticate(createSocket(token), next)
+
+          expect(next).toHaveBeenCalledWith(expect.objectContaining({ message: 'Unauthorized' }))
+          expect(mockVerifyJwt).not.toHaveBeenCalled()
+        },
+      )
+
+      it.each(['valid-token', 'Bearer valid-token'])('verifies handshake auth.token (%s)', async (token) => {
+        const socket = createSocket(token)
+        const next = jest.fn()
+
+        await authenticate(socket, next)
+
+        expect(mockVerifyJwt).toHaveBeenCalledWith(token)
+        expect(socket.data.email).toBe('verified@example.com')
+        expect(next).toHaveBeenCalledWith()
+      })
+
+      it('verifies the Authorization header when auth.token is absent', async () => {
+        const next = jest.fn()
+
+        await authenticate(createSocket(undefined, 'Bearer header-token'), next)
+
+        expect(mockVerifyJwt).toHaveBeenCalledWith('Bearer header-token')
+        expect(next).toHaveBeenCalledWith()
+      })
+
+      it('prefers auth.token over the Authorization header', async () => {
+        await authenticate(createSocket('auth-token', 'Bearer header-token'), jest.fn())
+
+        expect(mockVerifyJwt).toHaveBeenCalledWith('auth-token')
+      })
+
+      it.each([
+        'invalid signature',
+        'expired token',
+        'wrong issuer',
+        'wrong audience',
+        'missing claims',
+        'JWKS unavailable',
+      ])('rejects verification failures (%s)', async (message) => {
+        mockVerifyJwt.mockRejectedValueOnce(new Error(message))
+        const socket = createSocket('invalid-token')
+        const next = jest.fn()
+
+        await authenticate(socket, next)
+
+        expect(next).toHaveBeenCalledTimes(1)
+        expect(next).toHaveBeenCalledWith(expect.objectContaining({ message: 'Unauthorized' }))
+        expect(socket.data.email).toBeUndefined()
+      })
+
+      it('uses the verified identity for user events', async () => {
+        const socket = createSocket('valid-token')
+        socket.handshake.auth.email = 'spoofed@example.com'
+        await authenticate(socket, jest.fn())
+        mockIoOf.mockReturnValue({ sockets: new Map([[socket.id, socket]]) })
+        const [, onConnection] = mockIoOn.mock.calls.find(([event]) => event === 'connection')!
+
+        onConnection(socket)
+
+        expect(socket.emit).toHaveBeenCalledWith('users', [{ id: socket.id, email: 'verified@example.com' }])
+        expect(socket.broadcast.emit).toHaveBeenCalledWith('user connected', {
+          userID: socket.id,
+          email: 'verified@example.com',
+        })
+      })
     })
 
     it('treats method names case-insensitively', async () => {
