@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
-import type http from 'http'
+import http from 'http'
+import request from 'supertest'
 import type { Server, Socket } from 'socket.io'
 import type { OpenApiRequestExt } from 'src/otomi-models'
 
@@ -11,6 +12,7 @@ const mockVerifyJwt = jest.fn()
 const mockIoUse = jest.fn()
 const mockIoOn = jest.fn()
 const mockIoOf = jest.fn()
+const mockEngineUse = jest.fn()
 
 const mockReadOnlyInit = jest.fn()
 const mockReadOnlySetLocked = jest.fn()
@@ -103,6 +105,7 @@ jest.mock('socket.io', () => ({
     use: mockIoUse,
     on: mockIoOn,
     of: mockIoOf,
+    engine: { use: mockEngineUse, on: jest.fn() },
   })),
 }))
 
@@ -173,6 +176,169 @@ describe('session middleware', () => {
       expect(mockSessionInitGitWorktree).not.toHaveBeenCalled()
       expect(mockSessionCopyFrom).not.toHaveBeenCalled()
       expect(next).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  it.each(['/ws', '/ws/', '/ws/other'])('does not create an editor session for POST %s', async (path) => {
+    const middleware = sessionModule.sessionMiddleware(undefined as unknown as http.Server)
+    const req = { ...createRequest('POST'), path }
+    const res = { sendStatus: jest.fn() } as unknown as Response
+    const next = jest.fn()
+
+    await middleware(req as unknown as Request, res, next)
+
+    expect(res.sendStatus).toHaveBeenCalledWith(404)
+    expect(mockOtomiStack).not.toHaveBeenCalled()
+    expect(mockUuidv4).not.toHaveBeenCalled()
+    expect(next).not.toHaveBeenCalled()
+  })
+
+  describe('transport authentication', () => {
+    let server: http.Server
+
+    beforeEach(async () => {
+      const { Server: RealServer } = jest.requireActual<typeof import('socket.io')>('socket.io')
+      const { Server: MockServer } = await import('socket.io')
+      jest.mocked(MockServer).mockImplementationOnce((httpServer) => new RealServer(httpServer, { path: '/ws' }))
+      server = http.createServer()
+      sessionModule.sessionMiddleware(server)
+      await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+      mockVerifyJwt.mockResolvedValue({ email: 'verified@example.com' })
+    })
+
+    afterEach(async () => {
+      await new Promise<void>((resolve) => sessionModule.getIo().close(() => resolve()))
+    })
+
+    const websocketUrl = (sid?: string): string => {
+      const address = server.address()
+      if (!address || typeof address === 'string') throw new Error('Expected an HTTP listening address')
+      return `ws://127.0.0.1:${address.port}/ws/?EIO=4&transport=websocket${sid ? `&sid=${sid}` : ''}`
+    }
+
+    it.each([undefined, 'unknown-session'])('rejects unauthenticated WebSockets or forged sids (%s)', async (sid) => {
+      await new Promise<void>((resolve, reject) => {
+        const socket = new WebSocket(websocketUrl(sid))
+        socket.addEventListener('open', () => {
+          socket.close()
+          reject(new Error('Unauthenticated WebSocket was accepted'))
+        })
+        socket.addEventListener('error', () => resolve())
+      })
+
+      expect(sessionModule.getIo().engine.clientsCount).toBe(0)
+      expect(mockVerifyJwt).not.toHaveBeenCalled()
+    })
+
+    it('allows browser WebSocket upgrades of authenticated polling sessions', async () => {
+      const token = 'upgrade-test-token'
+      const res = await request(server).get('/ws/?EIO=4&transport=polling').set('Authorization', token)
+      const { sid } = JSON.parse(res.text.substring(1))
+      mockVerifyJwt.mockClear()
+
+      await new Promise<void>((resolve, reject) => {
+        const socket = new WebSocket(websocketUrl(sid))
+        socket.addEventListener('open', () => socket.send('2probe'))
+        socket.addEventListener('error', () => reject(new Error('Authenticated upgrade was rejected')))
+        socket.addEventListener('message', ({ data }) => {
+          if (data !== '3probe') return reject(new Error('Unexpected upgrade probe response'))
+          socket.send('5')
+          socket.close()
+        })
+        socket.addEventListener('close', () => resolve())
+      })
+
+      expect(mockVerifyJwt).not.toHaveBeenCalled()
+    })
+
+    it('rejects upgrades of closed polling sessions', async () => {
+      const token = 'upgrade-test-token'
+      const res = await request(server).get('/ws/?EIO=4&transport=polling').set('Authorization', token)
+      const { sid } = JSON.parse(res.text.substring(1))
+      await request(server)
+        .post(`/ws/?EIO=4&transport=polling&sid=${sid}`)
+        .set('Authorization', token)
+        .send('1')
+        .expect(200)
+      mockVerifyJwt.mockClear()
+
+      await new Promise<void>((resolve, reject) => {
+        const socket = new WebSocket(websocketUrl(sid))
+        socket.addEventListener('open', () => {
+          socket.close()
+          reject(new Error('Closed session was accepted'))
+        })
+        socket.addEventListener('error', () => resolve())
+      })
+
+      expect(mockVerifyJwt).not.toHaveBeenCalled()
+    })
+
+    it.each(['get', 'post'] as const)(
+      'rejects an unauthenticated initial %s without allocating a session',
+      async (method) => {
+        await request(server)[method]('/ws/?EIO=4&transport=polling').expect(401, { message: 'Unauthorized' })
+
+        expect(sessionModule.getIo().engine.clientsCount).toBe(0)
+        expect(mockVerifyJwt).not.toHaveBeenCalled()
+      },
+    )
+
+    it.each(['expired token', 'invalid signature', 'wrong issuer', 'wrong audience'])(
+      'rejects invalid handshake credentials (%s)',
+      async (message) => {
+        mockVerifyJwt.mockRejectedValueOnce(new Error(message))
+
+        await request(server)
+          .get('/ws/?EIO=4&transport=polling')
+          .set('Authorization', 'Bearer invalid-token')
+          .expect(401, { message: 'Unauthorized' })
+
+        expect(sessionModule.getIo().engine.clientsCount).toBe(0)
+      },
+    )
+
+    it('creates a transport session only after JWT verification', async () => {
+      const res = await request(server)
+        .get('/ws/?EIO=4&transport=polling')
+        .set('Authorization', 'Bearer valid-token')
+        .expect(200)
+
+      expect(JSON.parse(res.text.substring(1))).toHaveProperty('sid')
+      expect(sessionModule.getIo().engine.clientsCount).toBe(1)
+      expect(mockVerifyJwt).toHaveBeenCalledWith('Bearer valid-token')
+    })
+
+    it('requires authentication on subsequent polling POSTs even with a valid sid', async () => {
+      const res = await request(server).get('/ws/?EIO=4&transport=polling').set('Authorization', 'Bearer valid-token')
+      const { sid } = JSON.parse(res.text.substring(1))
+      mockVerifyJwt.mockClear()
+
+      await request(server)
+        .post(`/ws/?EIO=4&transport=polling&sid=${sid}`)
+        .send('40')
+        .expect(401, { message: 'Unauthorized' })
+
+      expect(mockVerifyJwt).not.toHaveBeenCalled()
+      expect(sessionModule.getIo().of('/').sockets.size).toBe(0)
+    })
+
+    it('accepts an authenticated polling POST and connects the socket', async () => {
+      const res = await request(server).get('/ws/?EIO=4&transport=polling').set('Authorization', 'Bearer valid-token')
+      const { sid } = JSON.parse(res.text.substring(1))
+
+      await request(server)
+        .post(`/ws/?EIO=4&transport=polling&sid=${sid}`)
+        .set('Authorization', 'Bearer valid-token')
+        .send('40')
+        .expect(200)
+      const poll = await request(server)
+        .get(`/ws/?EIO=4&transport=polling&sid=${sid}`)
+        .set('Authorization', 'Bearer valid-token')
+        .expect(200)
+
+      expect(poll.text).toContain('verified@example.com')
+      expect(sessionModule.getIo().of('/').sockets.size).toBe(1)
     })
   })
 
