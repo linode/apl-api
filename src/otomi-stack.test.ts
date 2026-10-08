@@ -1379,6 +1379,16 @@ describe('Users tests', () => {
       expect(mockUpdateDexPassword).not.toHaveBeenCalled()
     })
 
+    it('resetOwnPassword rejects a new password identical to the current one, before verifying it or touching Dex', async () => {
+      const otomi = await getTestStack('dex')
+
+      await expect(otomi.resetOwnPassword(sessionUser, 'same-password', 'same-password')).rejects.toThrow()
+
+      expect(mockVerifyDexPassword).not.toHaveBeenCalled()
+      expect(mockTerminateSessionsByUser).not.toHaveBeenCalled()
+      expect(mockUpdateDexPassword).not.toHaveBeenCalled()
+    })
+
     it('resetOwnPassword rejects a new password shorter than 8 characters before verifying the current one', async () => {
       const otomi = await getTestStack('dex')
 
