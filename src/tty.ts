@@ -159,8 +159,8 @@ export default class CloudTty extends KubeApi {
       },
       roleRef: {
         apiGroup: 'rbac.authorization.k8s.io',
-        kind: 'Role',
-        name: 'tty-admin',
+        kind: 'ClusterRole',
+        name: 'admin',
       },
       subjects: [
         {
