@@ -18,6 +18,12 @@ export class ForbiddenError extends OtomiError {
     this.code = 403
   }
 }
+export class UnauthorizedError extends OtomiError {
+  public constructor(err?: string) {
+    super(err || 'Unauthorized', err)
+    this.code = 401
+  }
+}
 export class NotExistError extends OtomiError {
   public constructor(err?: string) {
     super(err || 'Not Found', err)

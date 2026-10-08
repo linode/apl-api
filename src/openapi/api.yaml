@@ -1750,6 +1750,24 @@ paths:
         '204':
           description: Logout processed.
 
+  /v2/user/reset-password:
+    post:
+      operationId: resetOwnPassword
+      x-eov-operation-handler: v2/user/reset-password
+      description: Self-service password reset for the caller's own Dex account. Requires AUTH_PROVIDER=dex and proof of the current password.
+      x-aclSchema: ResetPasswordRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+        required: true
+      responses:
+        '204':
+          description: Password updated.
+        '401':
+          description: The current password is incorrect.
+
   /v1/apiDocs:
     get:
       operationId: 'getApiDoc'
@@ -2850,6 +2868,8 @@ components:
       $ref: 'settingsinfo.yaml#/SettingsInfo'
     RepoBranches:
       $ref: 'repobranches.yaml#/RepoBranches'
+    ResetPasswordRequest:
+      $ref: 'user.yaml#/ResetPasswordRequest'
     TestRepoConnect:
       $ref: 'testrepoconnect.yaml#/TestRepoConnect'
     InternalRepoUrls:

@@ -43,6 +43,7 @@ export type AplTeamSettingsResponse = components['schemas']['AplTeamSettingsResp
 export type TeamSelfService = components['schemas']['Team']['selfService']
 export type SessionUser = components['schemas']['SessionUser']
 export type UserAuthz = components['schemas']['SessionUser']['authz']
+export type ResetPasswordRequest = components['schemas']['ResetPasswordRequest']
 export type Workload = components['schemas']['Workload']
 export type WorkloadName = components['schemas']['WorkloadName']
 export type WorkloadValues = components['schemas']['WorkloadValues']

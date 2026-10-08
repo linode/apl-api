@@ -69,6 +69,7 @@ const mockListDexPasswords = jest.fn().mockResolvedValue([])
 const mockListUserIdentitiesByUserId = jest.fn().mockResolvedValue([])
 const mockDeleteDexUserIdentity = jest.fn().mockResolvedValue(undefined)
 const mockTerminateSessionsByUser = jest.fn().mockResolvedValue(0)
+const mockVerifyDexPassword = jest.fn().mockResolvedValue(true)
 jest.mock('./clients/dexClient', () => ({
   __esModule: true,
   createDexPassword: (...args: any[]) => mockCreateDexPassword(...args),
@@ -78,6 +79,7 @@ jest.mock('./clients/dexClient', () => ({
   listUserIdentitiesByUserId: (...args: any[]) => mockListUserIdentitiesByUserId(...args),
   deleteDexUserIdentity: (...args: any[]) => mockDeleteDexUserIdentity(...args),
   terminateSessionsByUser: (...args: any[]) => mockTerminateSessionsByUser(...args),
+  verifyDexPassword: (...args: any[]) => mockVerifyDexPassword(...args),
   decodeDexUserId: jest.requireActual('./clients/dexClient').decodeDexUserId,
   DEX_NO_GROUPS_SENTINEL: '__no_groups__',
   DexProvisionError: class DexProvisionError extends Error {},
@@ -1317,10 +1319,109 @@ describe('Users tests', () => {
     })
 
     it('logout resolves even when Dex TerminateSessionsByUser fails', async () => {
+      const dexUser = { ...sessionUser, sub: 'CgxzZXNzaW9uLXVzZXISBWxvY2Fs' }
       mockTerminateSessionsByUser.mockRejectedValueOnce(new Error('dex unavailable'))
       const otomi = await getTestStack('dex')
 
-      await expect(otomi.logout(sessionUser)).resolves.toBeUndefined()
+      await expect(otomi.logout(dexUser)).resolves.toBeUndefined()
+      expect(mockTerminateSessionsByUser).toHaveBeenCalledWith('session-user')
+    })
+
+    it('resetOwnPassword updates the password, revokes existing Dex sessions, and leaves groups untouched when the current password verifies', async () => {
+      // Dex's `sub` claim is base64(protobuf) of { user_id: 'session-user', conn_id: 'local' }.
+      const dexUser = { ...sessionUser, sub: 'CgxzZXNzaW9uLXVzZXISBWxvY2Fs' }
+      const otomi = await getTestStack('dex')
+
+      await otomi.resetOwnPassword(dexUser, 'correct-current-pw', 'brand-new-password')
+
+      expect(mockVerifyDexPassword).toHaveBeenCalledWith(dexUser.email, 'correct-current-pw')
+      const call = mockUpdateDexPassword.mock.calls[0][0]
+      expect(call).toMatchObject({ email: dexUser.email })
+      expect(call).not.toHaveProperty('newGroups')
+      expect(mockTerminateSessionsByUser).toHaveBeenCalledWith('session-user')
+    })
+
+    it('resetOwnPassword revokes sessions before writing the new hash, so a failed update never leaves the old password replaced with sessions still alive', async () => {
+      const dexUser = { ...sessionUser, sub: 'CgxzZXNzaW9uLXVzZXISBWxvY2Fs' }
+      const otomi = await getTestStack('dex')
+      const callOrder: string[] = []
+      mockTerminateSessionsByUser.mockImplementationOnce(async () => {
+        callOrder.push('terminate')
+        return 0
+      })
+      mockUpdateDexPassword.mockImplementationOnce(async () => {
+        callOrder.push('update')
+      })
+
+      await otomi.resetOwnPassword(dexUser, 'correct-current-pw', 'brand-new-password')
+
+      expect(callOrder).toEqual(['terminate', 'update'])
+    })
+
+    it('resetOwnPassword leaves the password unchanged when session revocation fails, so a retry with the same current password is safe', async () => {
+      const dexUser = { ...sessionUser, sub: 'CgxzZXNzaW9uLXVzZXISBWxvY2Fs' }
+      mockTerminateSessionsByUser.mockRejectedValueOnce(new Error('dex unavailable'))
+      const otomi = await getTestStack('dex')
+
+      await expect(otomi.resetOwnPassword(dexUser, 'correct-current-pw', 'brand-new-password')).rejects.toThrow()
+
+      expect(mockUpdateDexPassword).not.toHaveBeenCalled()
+    })
+
+    it('resetOwnPassword rejects with 401 and applies no change when the current password is wrong', async () => {
+      mockVerifyDexPassword.mockResolvedValueOnce(false)
+      const otomi = await getTestStack('dex')
+
+      await expect(otomi.resetOwnPassword(sessionUser, 'wrong-pw', 'brand-new-password')).rejects.toMatchObject({
+        code: 401,
+      })
+
+      expect(mockUpdateDexPassword).not.toHaveBeenCalled()
+    })
+
+    it('resetOwnPassword rejects a new password identical to the current one, before verifying it or touching Dex', async () => {
+      const otomi = await getTestStack('dex')
+
+      await expect(otomi.resetOwnPassword(sessionUser, 'same-password', 'same-password')).rejects.toThrow()
+
+      expect(mockVerifyDexPassword).not.toHaveBeenCalled()
+      expect(mockTerminateSessionsByUser).not.toHaveBeenCalled()
+      expect(mockUpdateDexPassword).not.toHaveBeenCalled()
+    })
+
+    it('resetOwnPassword rejects a new password shorter than 8 characters before verifying the current one', async () => {
+      const otomi = await getTestStack('dex')
+
+      await expect(otomi.resetOwnPassword(sessionUser, 'correct-current-pw', 'short')).rejects.toThrow()
+
+      expect(mockVerifyDexPassword).not.toHaveBeenCalled()
+      expect(mockUpdateDexPassword).not.toHaveBeenCalled()
+    })
+
+    it('resetOwnPassword rejects a new password over 72 bytes before verifying the current one', async () => {
+      const otomi = await getTestStack('dex')
+
+      await expect(otomi.resetOwnPassword(sessionUser, 'correct-current-pw', 'a'.repeat(73))).rejects.toThrow()
+
+      expect(mockVerifyDexPassword).not.toHaveBeenCalled()
+    })
+
+    it('resetOwnPassword rejects when AUTH_PROVIDER is keycloak (default)', async () => {
+      const otomi = await getTestStack('keycloak')
+
+      await expect(otomi.resetOwnPassword(sessionUser, 'current-pw', 'brand-new-password')).rejects.toThrow()
+
+      expect(mockVerifyDexPassword).not.toHaveBeenCalled()
+      expect(mockUpdateDexPassword).not.toHaveBeenCalled()
+    })
+
+    it('resetOwnPassword rejects for the default platform admin, whose password is a Dex staticPassword, not a storage record', async () => {
+      const otomi = await getTestStack('dex')
+
+      await expect(otomi.resetOwnPassword(platformAdminSession, 'current-pw', 'brand-new-password')).rejects.toThrow()
+
+      expect(mockVerifyDexPassword).not.toHaveBeenCalled()
+      expect(mockUpdateDexPassword).not.toHaveBeenCalled()
     })
   })
 })
