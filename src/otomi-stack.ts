@@ -3055,8 +3055,11 @@ export default class OtomiStack {
     if (!(await verifyDexPassword(user.email, currentPassword))) {
       throw new UnauthorizedError('Current password is incorrect.')
     }
-    await updateDexPassword({ email: user.email, newHash: await hashPassword(newPassword) })
+    // Revoke before writing the new hash: if this fails, the old password is still valid and the
+    // caller can safely retry. Reversing the order would let a failed write-after-revoke leave the
+    // password changed with sessions still alive, with no safe way for the caller to retry.
     await terminateSessionsByUser(decodeDexUserId(user.sub))
+    await updateDexPassword({ email: user.email, newHash: await hashPassword(newPassword) })
   }
 
   async getSession(user: k8sUser): Promise<Session> {
