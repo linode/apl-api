@@ -1,6 +1,7 @@
 import { Express } from 'express'
 import { mockDeep } from 'jest-mock-extended'
 import { initApp, loadSpec } from 'src/app'
+import { UnauthorizedError } from 'src/error'
 import getToken from 'src/fixtures/jwt'
 import OtomiStack from 'src/otomi-stack'
 import request from 'supertest'
@@ -2083,6 +2084,28 @@ describe('API V2 authz tests', () => {
         .send({ newPassword: 'brand-new-password' })
         .set('Authorization', `Bearer ${platformAdminToken}`)
         .expect(400)
+    })
+
+    test('rejects a new password over 32 characters', async () => {
+      await agent
+        .post('/v2/user/reset-password')
+        .send({ currentPassword: 'current-pw', newPassword: 'a'.repeat(33) })
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(400)
+    })
+
+    test('the wrong-current-password response body contains nothing but a generic message', async () => {
+      jest
+        .spyOn(otomiStack, 'resetOwnPassword')
+        .mockRejectedValueOnce(new UnauthorizedError('Current password is incorrect.'))
+
+      const res = await agent
+        .post('/v2/user/reset-password')
+        .send(body)
+        .set('Authorization', `Bearer ${platformAdminToken}`)
+        .expect(401)
+
+      expect(res.body).toEqual({ error: 'Current password is incorrect.' })
     })
   })
 

@@ -150,7 +150,7 @@ ResetPasswordRequest:
     newPassword:
       type: string
       minLength: 8
-      maxLength: 72
+      maxLength: 32
       description: The new password.
   required:
     - currentPassword
