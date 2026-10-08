@@ -2,6 +2,7 @@
 # Required repository/environment secrets:
 #   OCI_USERNAME              - registry login username
 #   DOCKERHUB_LINODEBOT_TOKEN - registry login token
+#   BOT_TOKEN                 - GitHub token with package read access, for npm install of @linode/*-client-grpc packages from GitHub Packages
 name: Build test push release
 on:
   pull_request:
@@ -77,6 +78,8 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.REPO }}:${{ steps.set_tag.outputs.tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          secrets: |
+            NPM_TOKEN=${{ secrets.BOT_TOKEN }}
       - name: Build, test
         if: ${{ env.SHOULD_PUSH != 'true' }}
         uses: docker/build-push-action@v7
@@ -85,3 +88,5 @@ jobs:
           context: .
           tags: not-used:tmp
           cache-from: type=gha
+          secrets: |
+            NPM_TOKEN=${{ secrets.BOT_TOKEN }}
