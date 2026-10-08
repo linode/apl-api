@@ -1319,21 +1319,34 @@ describe('Users tests', () => {
     })
 
     it('logout resolves even when Dex TerminateSessionsByUser fails', async () => {
+      const dexUser = { ...sessionUser, sub: 'CgxzZXNzaW9uLXVzZXISBWxvY2Fs' }
       mockTerminateSessionsByUser.mockRejectedValueOnce(new Error('dex unavailable'))
       const otomi = await getTestStack('dex')
 
-      await expect(otomi.logout(sessionUser)).resolves.toBeUndefined()
+      await expect(otomi.logout(dexUser)).resolves.toBeUndefined()
+      expect(mockTerminateSessionsByUser).toHaveBeenCalledWith('session-user')
     })
 
-    it('resetOwnPassword updates the password and leaves groups untouched when the current password verifies', async () => {
+    it('resetOwnPassword updates the password, revokes existing Dex sessions, and leaves groups untouched when the current password verifies', async () => {
+      // Dex's `sub` claim is base64(protobuf) of { user_id: 'session-user', conn_id: 'local' }.
+      const dexUser = { ...sessionUser, sub: 'CgxzZXNzaW9uLXVzZXISBWxvY2Fs' }
       const otomi = await getTestStack('dex')
 
-      await otomi.resetOwnPassword(sessionUser, 'correct-current-pw', 'brand-new-password')
+      await otomi.resetOwnPassword(dexUser, 'correct-current-pw', 'brand-new-password')
 
-      expect(mockVerifyDexPassword).toHaveBeenCalledWith(sessionUser.email, 'correct-current-pw')
+      expect(mockVerifyDexPassword).toHaveBeenCalledWith(dexUser.email, 'correct-current-pw')
       const call = mockUpdateDexPassword.mock.calls[0][0]
-      expect(call).toMatchObject({ email: sessionUser.email })
+      expect(call).toMatchObject({ email: dexUser.email })
       expect(call).not.toHaveProperty('newGroups')
+      expect(mockTerminateSessionsByUser).toHaveBeenCalledWith('session-user')
+    })
+
+    it('resetOwnPassword fails loudly when revoking Dex sessions fails, so a false "success" is never reported', async () => {
+      const dexUser = { ...sessionUser, sub: 'CgxzZXNzaW9uLXVzZXISBWxvY2Fs' }
+      mockTerminateSessionsByUser.mockRejectedValueOnce(new Error('dex unavailable'))
+      const otomi = await getTestStack('dex')
+
+      await expect(otomi.resetOwnPassword(dexUser, 'correct-current-pw', 'brand-new-password')).rejects.toThrow()
     })
 
     it('resetOwnPassword rejects with 401 and applies no change when the current password is wrong', async () => {

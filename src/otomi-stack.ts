@@ -3050,11 +3050,13 @@ export default class OtomiStack {
         "The default platform admin's password is managed via cluster configuration and cannot be reset here.",
       )
     }
+    if (!user.sub) throw new DexProvisionError('Session has no Dex subject; cannot revoke existing sessions.')
     this.assertPasswordLength(newPassword)
     if (!(await verifyDexPassword(user.email, currentPassword))) {
       throw new UnauthorizedError('Current password is incorrect.')
     }
     await updateDexPassword({ email: user.email, newHash: await hashPassword(newPassword) })
+    await terminateSessionsByUser(decodeDexUserId(user.sub))
   }
 
   async getSession(user: k8sUser): Promise<Session> {
