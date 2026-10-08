@@ -3051,6 +3051,7 @@ export default class OtomiStack {
       )
     }
     if (!user.sub) throw new DexProvisionError('Session has no Dex subject; cannot revoke existing sessions.')
+    if (newPassword === currentPassword) throw new BadRequestError('New password must differ from the current one.')
     this.assertPasswordLength(newPassword)
     if (!(await verifyDexPassword(user.email, currentPassword))) {
       throw new UnauthorizedError('Current password is incorrect.')
