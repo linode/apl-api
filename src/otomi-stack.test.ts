@@ -1341,12 +1341,31 @@ describe('Users tests', () => {
       expect(mockTerminateSessionsByUser).toHaveBeenCalledWith('session-user')
     })
 
-    it('resetOwnPassword fails loudly when revoking Dex sessions fails, so a false "success" is never reported', async () => {
+    it('resetOwnPassword revokes sessions before writing the new hash, so a failed update never leaves the old password replaced with sessions still alive', async () => {
+      const dexUser = { ...sessionUser, sub: 'CgxzZXNzaW9uLXVzZXISBWxvY2Fs' }
+      const otomi = await getTestStack('dex')
+      const callOrder: string[] = []
+      mockTerminateSessionsByUser.mockImplementationOnce(async () => {
+        callOrder.push('terminate')
+        return 0
+      })
+      mockUpdateDexPassword.mockImplementationOnce(async () => {
+        callOrder.push('update')
+      })
+
+      await otomi.resetOwnPassword(dexUser, 'correct-current-pw', 'brand-new-password')
+
+      expect(callOrder).toEqual(['terminate', 'update'])
+    })
+
+    it('resetOwnPassword leaves the password unchanged when session revocation fails, so a retry with the same current password is safe', async () => {
       const dexUser = { ...sessionUser, sub: 'CgxzZXNzaW9uLXVzZXISBWxvY2Fs' }
       mockTerminateSessionsByUser.mockRejectedValueOnce(new Error('dex unavailable'))
       const otomi = await getTestStack('dex')
 
       await expect(otomi.resetOwnPassword(dexUser, 'correct-current-pw', 'brand-new-password')).rejects.toThrow()
+
+      expect(mockUpdateDexPassword).not.toHaveBeenCalled()
     })
 
     it('resetOwnPassword rejects with 401 and applies no change when the current password is wrong', async () => {
