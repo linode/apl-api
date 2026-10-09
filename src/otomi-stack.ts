@@ -1598,15 +1598,17 @@ export default class OtomiStack {
         await git.listRemote([url])
         return { status: 'success' }
       } catch (error) {
-        const message = error?.response?.data?.message || error?.message
-        return { status: 'failed', message }
+        const errorMessage = error?.response?.data?.message || error?.message
+        debug('Error testing repo connection:', errorMessage)
+        return { status: 'failed', message: 'Unable to connect to the repository' }
       } finally {
         if (keyPath && (await pathExists(keyPath))) {
           await unlink(keyPath)
         }
       }
     } catch (error) {
-      return { status: 'failed', message: error?.message }
+      debug('Error testing repo connection:', error?.message)
+      return { status: 'failed', message: 'Unable to connect to the repository' }
     }
   }
 

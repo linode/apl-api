@@ -1,5 +1,6 @@
 /* eslint-disable prefer-destructuring */
 import axios from 'axios'
+import { lookup } from 'dns/promises'
 import { writeFile } from 'fs/promises'
 import { simpleGit, SimpleGit, SimpleGitOptions } from 'simple-git'
 import { OtomiError } from 'src/error'
@@ -108,6 +109,57 @@ export function normalizeSSHKey(sshPrivateKey) {
   return `-----BEGIN OPENSSH PRIVATE KEY-----\n${basePrivateKey}\n-----END OPENSSH PRIVATE KEY-----`
 }
 
+function ipv4ToLong(ip: string): number {
+  return ip.split('.').reduce((acc, octet) => (acc << 8) + Number(octet), 0) >>> 0
+}
+
+const PRIVATE_IPV4_RANGES: [string, number][] = [
+  ['0.0.0.0', 8],
+  ['10.0.0.0', 8],
+  ['100.64.0.0', 10],
+  ['127.0.0.0', 8],
+  ['169.254.0.0', 16],
+  ['172.16.0.0', 12],
+  ['192.0.0.0', 24],
+  ['192.168.0.0', 16],
+  ['198.18.0.0', 15],
+  ['224.0.0.0', 4],
+  ['240.0.0.0', 4],
+]
+
+function isPrivateIPv4(ip: string): boolean {
+  const long = ipv4ToLong(ip)
+  return PRIVATE_IPV4_RANGES.some(([base, bits]) => {
+    const mask = bits === 0 ? 0 : (~0 << (32 - bits)) >>> 0
+    return (long & mask) === (ipv4ToLong(base) & mask)
+  })
+}
+
+function isPrivateIPv6(ip: string): boolean {
+  const normalized = ip.toLowerCase()
+  if (normalized === '::1' || normalized === '::') return true
+  if (normalized.startsWith('fe80:') || normalized.startsWith('fec0:')) return true
+  if (/^f[cd][0-9a-f]{2}:/.test(normalized)) return true
+  const mapped = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/)
+  if (mapped) return isPrivateIPv4(mapped[1])
+  return false
+}
+
+// Resolves hostname and rejects it if any resolved address is private/loopback/link-local/metadata.
+export async function assertResolvesToPublicAddress(hostname: string): Promise<void> {
+  let addresses: { address: string; family: number }[]
+  try {
+    addresses = await lookup(hostname, { all: true })
+  } catch {
+    throw new Error('Unable to resolve repository host')
+  }
+  if (addresses.length === 0) throw new Error('Unable to resolve repository host')
+  const blocked = addresses.some(({ address, family }) =>
+    family === 4 ? isPrivateIPv4(address) : isPrivateIPv6(address),
+  )
+  if (blocked) throw new Error('Repository host resolves to a disallowed network address')
+}
+
 export function isInternalGiteaUrl(repositoryUrl: string, clusterDomainSuffix?: string) {
   if (!clusterDomainSuffix) return false
   try {
@@ -160,8 +212,16 @@ export async function getAuthenticatedGitClient(
     throw new Error('Invalid URL provided')
   }
 
+  if (!isInternalGiteaUrl(normalizedUrl, domainSuffix)) {
+    const hostname = isSSH
+      ? normalizedUrl.slice('git@'.length, normalizedUrl.indexOf(':'))
+      : new URL(normalizedUrl).hostname
+    await assertResolvesToPublicAddress(hostname)
+  }
+
   const gitOptions: Partial<SimpleGitOptions> = {
     allowEnvironment: isSSH ? ['GIT_TERMINAL_PROMPT', 'GIT_SSH_COMMAND'] : ['GIT_TERMINAL_PROMPT'],
+    config: ['http.followRedirects=false'],
     ...(isSSH ? { unsafe: { allowUnsafeSshCommand: true } } : {}),
   }
   const git: SimpleGit = simpleGit(gitOptions).env('GIT_TERMINAL_PROMPT', '0')
