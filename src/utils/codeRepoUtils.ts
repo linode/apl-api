@@ -1,12 +1,17 @@
 /* eslint-disable prefer-destructuring */
 import axios from 'axios'
+import { lookup } from 'dns/promises'
 import { writeFile } from 'fs/promises'
+import ipaddr from 'ipaddr.js'
 import { simpleGit, SimpleGit, SimpleGitOptions } from 'simple-git'
 import { OtomiError } from 'src/error'
 import { v4 as uuidv4 } from 'uuid'
 import { getAuthenticatedUrl } from '../git/connect'
 import { getSecretValues } from '../k8s-operations'
 import { APL_SECRETS_NAMESPACE, GITEA_SECRETS_NAME } from '../constants'
+import { cleanEnv, CODE_REPO_BLOCKED_CIDRS } from '../validators'
+
+const env = cleanEnv({ CODE_REPO_BLOCKED_CIDRS })
 
 const axiosInstance = (adminUsername, adminPassword, domainSuffix) =>
   axios.create({
@@ -108,6 +113,36 @@ export function normalizeSSHKey(sshPrivateKey) {
   return `-----BEGIN OPENSSH PRIVATE KEY-----\n${basePrivateKey}\n-----END OPENSSH PRIVATE KEY-----`
 }
 
+// Fully admin-controlled via CODE_REPO_BLOCKED_CIDRS
+function isBlockedAddress(address: string): boolean {
+  const addr = ipaddr.process(address) // unwraps IPv4-mapped IPv6 (::ffff:a.b.c.d) to plain IPv4
+  return env.CODE_REPO_BLOCKED_CIDRS.split(',')
+    .map((cidr) => cidr.trim())
+    .filter(Boolean)
+    .some((cidr) => {
+      try {
+        const [rangeAddr, bits] = ipaddr.parseCIDR(cidr)
+        return addr.kind() === rangeAddr.kind() && addr.match(rangeAddr, bits)
+      } catch {
+        return false
+      }
+    })
+}
+
+// Resolves hostname and rejects it if any resolved address matches CODE_REPO_BLOCKED_CIDRS.
+export async function assertResolvesToPublicAddress(hostname: string): Promise<void> {
+  let addresses: { address: string }[]
+  try {
+    addresses = await lookup(hostname, { all: true })
+  } catch {
+    throw new Error('Unable to resolve repository host')
+  }
+  if (addresses.length === 0) throw new Error('Unable to resolve repository host')
+  if (addresses.some(({ address }) => isBlockedAddress(address))) {
+    throw new Error('Repository host resolves to a disallowed network address')
+  }
+}
+
 export function isInternalGiteaUrl(repositoryUrl: string, clusterDomainSuffix?: string) {
   if (!clusterDomainSuffix) return false
   try {
@@ -160,8 +195,16 @@ export async function getAuthenticatedGitClient(
     throw new Error('Invalid URL provided')
   }
 
+  if (!isInternalGiteaUrl(normalizedUrl, domainSuffix)) {
+    const hostname = isSSH
+      ? normalizedUrl.slice('git@'.length, normalizedUrl.indexOf(':'))
+      : new URL(normalizedUrl).hostname
+    await assertResolvesToPublicAddress(hostname)
+  }
+
   const gitOptions: Partial<SimpleGitOptions> = {
     allowEnvironment: isSSH ? ['GIT_TERMINAL_PROMPT', 'GIT_SSH_COMMAND'] : ['GIT_TERMINAL_PROMPT'],
+    config: ['http.followRedirects=false'],
     ...(isSSH ? { unsafe: { allowUnsafeSshCommand: true } } : {}),
   }
   const git: SimpleGit = simpleGit(gitOptions).env('GIT_TERMINAL_PROMPT', '0')
