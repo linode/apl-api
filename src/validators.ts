@@ -38,6 +38,11 @@ export const VERSIONS = json({
   },
 })
 export const CUSTOM_ROOT_CA = str({ desc: 'The root CA used for certs', default: undefined })
+export const CODE_REPO_BLOCKED_CIDRS = str({
+  desc: 'Comma separated CIDRs that code repo URLs may not resolve to (SSRF protection).',
+  default:
+    '0.0.0.0/8,10.0.0.0/8,100.64.0.0/10,127.0.0.0/8,169.254.0.0/16,172.16.0.0/12,192.0.0.0/24,192.168.0.0/16,198.18.0.0/15,224.0.0.0/4,240.0.0.0/4,::1/128,::/128,fe80::/10,fec0::/10,fc00::/7',
+})
 export const EDITOR_INACTIVITY_TIMEOUT = num({
   desc: 'Inactivity timeout in days after which editor session is removed to clean mem',
   default: 1,

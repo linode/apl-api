@@ -2,12 +2,16 @@
 import axios from 'axios'
 import { lookup } from 'dns/promises'
 import { writeFile } from 'fs/promises'
+import ipaddr from 'ipaddr.js'
 import { simpleGit, SimpleGit, SimpleGitOptions } from 'simple-git'
 import { OtomiError } from 'src/error'
 import { v4 as uuidv4 } from 'uuid'
 import { getAuthenticatedUrl } from '../git/connect'
 import { getSecretValues } from '../k8s-operations'
 import { APL_SECRETS_NAMESPACE, GITEA_SECRETS_NAME } from '../constants'
+import { cleanEnv, CODE_REPO_BLOCKED_CIDRS } from '../validators'
+
+const env = cleanEnv({ CODE_REPO_BLOCKED_CIDRS })
 
 const axiosInstance = (adminUsername, adminPassword, domainSuffix) =>
   axios.create({
@@ -109,55 +113,34 @@ export function normalizeSSHKey(sshPrivateKey) {
   return `-----BEGIN OPENSSH PRIVATE KEY-----\n${basePrivateKey}\n-----END OPENSSH PRIVATE KEY-----`
 }
 
-function ipv4ToLong(ip: string): number {
-  return ip.split('.').reduce((acc, octet) => (acc << 8) + Number(octet), 0) >>> 0
+// Fully admin-controlled via CODE_REPO_BLOCKED_CIDRS
+function isBlockedAddress(address: string): boolean {
+  const addr = ipaddr.process(address) // unwraps IPv4-mapped IPv6 (::ffff:a.b.c.d) to plain IPv4
+  return env.CODE_REPO_BLOCKED_CIDRS.split(',')
+    .map((cidr) => cidr.trim())
+    .filter(Boolean)
+    .some((cidr) => {
+      try {
+        const [rangeAddr, bits] = ipaddr.parseCIDR(cidr)
+        return addr.kind() === rangeAddr.kind() && addr.match(rangeAddr, bits)
+      } catch {
+        return false
+      }
+    })
 }
 
-const PRIVATE_IPV4_RANGES: [string, number][] = [
-  ['0.0.0.0', 8],
-  ['10.0.0.0', 8],
-  ['100.64.0.0', 10],
-  ['127.0.0.0', 8],
-  ['169.254.0.0', 16],
-  ['172.16.0.0', 12],
-  ['192.0.0.0', 24],
-  ['192.168.0.0', 16],
-  ['198.18.0.0', 15],
-  ['224.0.0.0', 4],
-  ['240.0.0.0', 4],
-]
-
-function isPrivateIPv4(ip: string): boolean {
-  const long = ipv4ToLong(ip)
-  return PRIVATE_IPV4_RANGES.some(([base, bits]) => {
-    const mask = bits === 0 ? 0 : (~0 << (32 - bits)) >>> 0
-    return (long & mask) === (ipv4ToLong(base) & mask)
-  })
-}
-
-function isPrivateIPv6(ip: string): boolean {
-  const normalized = ip.toLowerCase()
-  if (normalized === '::1' || normalized === '::') return true
-  if (normalized.startsWith('fe80:') || normalized.startsWith('fec0:')) return true
-  if (/^f[cd][0-9a-f]{2}:/.test(normalized)) return true
-  const mapped = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/)
-  if (mapped) return isPrivateIPv4(mapped[1])
-  return false
-}
-
-// Resolves hostname and rejects it if any resolved address is private/loopback/link-local/metadata.
+// Resolves hostname and rejects it if any resolved address matches CODE_REPO_BLOCKED_CIDRS.
 export async function assertResolvesToPublicAddress(hostname: string): Promise<void> {
-  let addresses: { address: string; family: number }[]
+  let addresses: { address: string }[]
   try {
     addresses = await lookup(hostname, { all: true })
   } catch {
     throw new Error('Unable to resolve repository host')
   }
   if (addresses.length === 0) throw new Error('Unable to resolve repository host')
-  const blocked = addresses.some(({ address, family }) =>
-    family === 4 ? isPrivateIPv4(address) : isPrivateIPv6(address),
-  )
-  if (blocked) throw new Error('Repository host resolves to a disallowed network address')
+  if (addresses.some(({ address }) => isBlockedAddress(address))) {
+    throw new Error('Repository host resolves to a disallowed network address')
+  }
 }
 
 export function isInternalGiteaUrl(repositoryUrl: string, clusterDomainSuffix?: string) {
