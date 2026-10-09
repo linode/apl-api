@@ -29,6 +29,8 @@ k8s:
       app: grafana
     - name: istio-system
       disableIstioInjection: true
+    - name: dex
+      app: dex
     - name: keycloak
     - name: apl-keycloak-operator
       disableIstioInjection: true
@@ -42,10 +44,6 @@ k8s:
       disableIstioInjection: true
     - name: knative-operator
       app: knative
-      disablePolicyChecks: true
-      disableIstioInjection: true
-    - name: kfp
-      app: kubeflow-pipelines
       disablePolicyChecks: true
       disableIstioInjection: true
     - name: kyverno
@@ -101,6 +99,7 @@ adminApps:
     tags: [cicd, gitops]
     isShared: true
     ownHost: true
+    oidcCallbackPath: /auth/callback
   - name: cert-manager
     tags: [ingress, security, tls]
   - name: cnpg
@@ -111,20 +110,25 @@ adminApps:
     ownHost: true
   - name: external-dns
     tags: [ingress, security, tls]
+  - name: external-secrets
+    tags: [secrets, security]
   - name: gitea
     tags: [git]
     isShared: true
     ownHost: true
     path: /user/oauth2/otomi-idp
+    oidcCallbackPath: /user/oauth2/otomi-idp/callback
   - name: grafana
     tags: [tracing, telemetry, observability]
     deps: [prometheus]
     path: /dashboards
     ownHost: true
+    oidcCallbackPath: /login/generic_oauth
   - name: harbor
     tags: [security]
     isShared: true
     ownHost: true
+    oidcCallbackPath: /c/oidc/callback
   - name: hello
     hide: true
     tags: [demo]
@@ -137,10 +141,6 @@ adminApps:
   - name: knative
     tags: [serverless, functions]
     deps: [istio]
-  - name: kubeflow-pipelines
-    tags: [ai, ml]
-    ownHost: true
-    isShared: true
   - name: kserve
     tags: [ai]
   - name: tekton
@@ -165,7 +165,6 @@ adminApps:
     ownHost: true
   - name: sealed-secrets
     tags: [secrets, security, observability]
-    ownHost: true
   - name: otel
     tags: [logging, tracing]
   - name: trivy
@@ -183,6 +182,7 @@ teamApps:
   - name: grafana
     ownHost: true
     path: /dashboards
+    oidcCallbackPath: /login/generic_oauth
   - name: loki
     useHost: grafana
     path: /explore?orgId=1&left=%7B"datasource":"loki","queries":%5B%7B"refId":"A","expr":"","queryType":"range","datasource":%7B"type":"loki","uid":"loki"%7D%7D%5D,"range":%7B"from":"now-1h","to":"now"%7D%7D

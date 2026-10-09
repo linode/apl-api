@@ -448,7 +448,6 @@ export default class OtomiStack {
         harbor: `lke${lkeClusterId}-harbor`,
         loki: `lke${lkeClusterId}-loki`,
         gitea: `lke${lkeClusterId}-gitea`,
-        'kubeflow-pipelines': `lke${lkeClusterId}-kubeflow-pipelines`,
       }
       const objectStorageClient = new ObjectStorageClient(data.apiToken)
       // Create object storage buckets
