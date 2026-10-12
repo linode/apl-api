@@ -13,6 +13,7 @@ import { API_NAMESPACE, cleanEnv, EDITOR_INACTIVITY_TIMEOUT } from 'src/validato
 import { v4 as uuidv4 } from 'uuid'
 import { setApiStatusInConfigMap } from '../k8s-operations'
 import { getSanitizedErrorMessage } from '../utils'
+import { beginSocketAuthAttempt, SocketAuthRateLimitError } from './rate-limit'
 
 const debug = Debug('otomi:session')
 const env = cleanEnv({
@@ -104,14 +105,17 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
       // Browsers cannot set headers on upgrades. Engine.IO validates the sid,
       // which can only belong to a session created by an authenticated handshake.
       if (isUpgrade && sid && !token) return next()
-      if (!token?.trim()) {
-        res.writeHead(401, { 'Content-Type': 'application/json' })
-        return res.end(JSON.stringify({ message: 'Unauthorized' }))
-      }
-
       try {
+        const completeAuthAttempt = await beginSocketAuthAttempt(req.socket.remoteAddress || 'unknown', req.headers)
+        if (!token?.trim()) {
+          res.writeHead(401, { 'Content-Type': 'application/json' })
+          return res.end(JSON.stringify({ message: 'Unauthorized' }))
+        }
+
         await verifyJwt(token)
+        await completeAuthAttempt()
       } catch (error) {
+        if (error instanceof SocketAuthRateLimitError) return next(error)
         debug(`Transport JWT verification failed: ${getSanitizedErrorMessage(error)}`)
         res.writeHead(401, { 'Content-Type': 'application/json' })
         return res.end(JSON.stringify({ message: 'Unauthorized' }))
@@ -125,13 +129,16 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
       }
 
       try {
+        const { data, handshake } = socket
+        const completeAuthAttempt = await beginSocketAuthAttempt(handshake.address, handshake.headers)
         const { email, sub, groups, roles } = await verifyJwt(token)
-        const { data } = socket
+        await completeAuthAttempt()
         data.email = email
         data.sub = sub
         data.groups = groups
         data.roles = roles
       } catch (error) {
+        if (error instanceof SocketAuthRateLimitError) return next(error)
         debug(`Socket JWT verification failed: ${getSanitizedErrorMessage(error)}`)
         return next(new Error('Unauthorized'))
       }
