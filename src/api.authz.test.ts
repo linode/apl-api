@@ -15,9 +15,16 @@ const platformAdminToken = getToken(['platform-admin'])
 const teamAdminToken = getToken(['team-admin', 'team-team1'])
 const teamMemberToken = getToken(['team-team1'])
 const team2MemberToken = getToken(['team-team2'])
-const userToken = getToken([])
 const teamId = 'team1'
 const otherTeamId = 'team2'
+const mockKubecfg = {
+  apiVersion: 'v1',
+  kind: 'Config',
+  clusters: [],
+  users: [],
+  contexts: [],
+  'current-context': '',
+}
 
 const mockUser = {
   id: 'user1',
@@ -458,7 +465,7 @@ describe('API authz tests', () => {
 
   describe('Kubecfg endpoint tests', () => {
     test('team member can get its own kubecfg', async () => {
-      jest.spyOn(otomiStack, 'getKubecfg').mockResolvedValue({ exportConfig: () => '{}' } as never)
+      jest.spyOn(otomiStack, 'getKubecfg').mockResolvedValue(mockKubecfg as never)
       await agent.get(`/v1/kubecfg/${teamId}`).set('Authorization', `Bearer ${teamMemberToken}`).expect(200)
     })
 
@@ -467,7 +474,7 @@ describe('API authz tests', () => {
     })
 
     test('team admin can get its own kubecfg', async () => {
-      jest.spyOn(otomiStack, 'getKubecfg').mockResolvedValue({ exportConfig: () => '{}' } as never)
+      jest.spyOn(otomiStack, 'getKubecfg').mockResolvedValue(mockKubecfg as never)
       await agent.get(`/v1/kubecfg/${teamId}`).set('Authorization', `Bearer ${teamAdminToken}`).expect(200)
     })
 
@@ -476,7 +483,7 @@ describe('API authz tests', () => {
     })
 
     test('platform admin can get any kubecfg', async () => {
-      jest.spyOn(otomiStack, 'getKubecfg').mockResolvedValue({ exportConfig: () => '{}' } as never)
+      jest.spyOn(otomiStack, 'getKubecfg').mockResolvedValue(mockKubecfg as never)
       await agent.get(`/v1/kubecfg/${otherTeamId}`).set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
     })
 

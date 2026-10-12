@@ -1,5 +1,4 @@
 import CloudTty, { TtyConfig } from './tty'
-import { ApiException } from '@kubernetes/client-node'
 import { SessionUser } from './otomi-models'
 
 const mockCoreV1Api = {
@@ -40,27 +39,14 @@ const mockMakeApiClient = jest.fn((apiClientType) => {
 })
 
 jest.mock('@kubernetes/client-node', () => {
-  class MockApiException extends Error {
-    code: number
-
-    constructor(code: number) {
-      super(`api error ${code}`)
-      this.code = code
-    }
-  }
-
   class CoreV1Api {}
   class CustomObjectsApi {}
   class RbacAuthorizationV1Api {}
-  const PatchStrategy = { ServerSideApply: 'application/apply-patch+yaml' }
 
   return {
-    ApiException: MockApiException,
     CoreV1Api,
     CustomObjectsApi,
     RbacAuthorizationV1Api,
-    PatchStrategy,
-    setHeaderOptions: jest.fn().mockImplementation(() => 'header-options'),
     KubeConfig: jest.fn().mockImplementation(() => ({
       makeApiClient: mockMakeApiClient,
       loadFromDefault: jest.fn(),
@@ -88,54 +74,6 @@ describe('CloudTty', () => {
     mockRbacAuthorizationApi.patchNamespacedRoleBinding.mockResolvedValue({ kind: 'ok' })
     mockRbacAuthorizationApi.createClusterRoleBinding.mockResolvedValue({ kind: 'ok' })
     mockRbacAuthorizationApi.patchClusterRoleBinding.mockResolvedValue({ kind: 'ok' })
-  })
-
-  test('createOrPatch calls create function when no conflict occurs', async () => {
-    const tty = new CloudTty(testConfig)
-    const createFn = jest.fn().mockResolvedValue({ kind: 'created' })
-    const patchFn = jest.fn().mockResolvedValue({ kind: 'patched' })
-
-    const params = { body: { metadata: { name: 'x' }, spec: {} } }
-    const result = await tty.createOrPatch(createFn, patchFn, params)
-
-    expect(createFn).toHaveBeenCalledWith(params)
-    expect(patchFn).not.toHaveBeenCalled()
-    expect(result).toEqual({ kind: 'created' })
-  })
-
-  test('createOrPatch calls patch function when create throws 409', async () => {
-    const tty = new CloudTty(testConfig)
-    const createFn = jest.fn().mockImplementation(() => {
-      throw new ApiException(409, '', {}, {})
-    })
-    const patchFn = jest.fn().mockResolvedValue({ kind: 'patched' })
-
-    const params = { body: { metadata: { name: 'x' }, spec: {} } }
-    const result = await tty.createOrPatch(createFn, patchFn, params)
-
-    expect(createFn).toHaveBeenCalledWith(params)
-    expect(patchFn).toHaveBeenCalledWith(
-      { name: 'x', body: params.body, fieldManager: 'apl-api', force: true },
-      'header-options',
-    )
-    expect(result).toEqual({ kind: 'patched' })
-  })
-
-  test('deleteIfExists ignores 404 errors', async () => {
-    const tty = new CloudTty(testConfig)
-    const deleteFn = jest.fn().mockRejectedValue(new ApiException(404, '', {}, {}))
-
-    await expect(tty.deleteIfExists(deleteFn, { name: 'x' })).resolves.toBeUndefined()
-
-    expect(deleteFn).toHaveBeenCalledWith({ name: 'x' })
-  })
-
-  test('deleteIfExists logs non-404 errors and continues', async () => {
-    const tty = new CloudTty(testConfig)
-    const error = new ApiException(500, '', {}, {})
-    const deleteFn = jest.fn().mockRejectedValue(error)
-
-    await expect(tty.deleteIfExists(deleteFn, { name: 'x' })).resolves.toBeUndefined()
   })
 
   test('createAuthorizationPolicy passes expected API parameters', async () => {

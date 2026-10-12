@@ -1,11 +1,4 @@
-import {
-  ApiException,
-  CoreV1Api,
-  KubeConfig,
-  User as k8sUser,
-  V1ObjectReference,
-  V1Secret,
-} from '@kubernetes/client-node'
+import { ApiException, CoreV1Api, KubeConfig, User as k8sUser, V1Secret } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
@@ -124,6 +117,9 @@ import {
   HELM_CHART_CATALOG,
   HIDDEN_APPS,
   KNOWLEDGE_BASE_KIND,
+  KUBECONFIG_ALLOW_INSECURE,
+  KUBECONFIG_EXPIRATION_SECONDS,
+  KUBECONFIG_SERVICEACCOUNT,
   OBJ_STORAGE_APPS,
   OBJECT_STORAGE_UI_EXCLUSIONS,
   PREINSTALLED_EXCLUDED_APPS,
@@ -179,6 +175,7 @@ import {
 } from './utils/userUtils'
 import { defineClusterId, ObjectStorageClient } from './utils/wizardUtils'
 import { fetchWorkloadCatalog } from './utils/workloadUtils'
+import KubeCfgGenerator from './kubecfg'
 
 interface ExcludedApp extends App {
   managed: boolean
@@ -211,6 +208,9 @@ const env = cleanEnv({
   OBJECT_STORAGE_UI_EXCLUSIONS,
   TTY_IMAGE_REPOSITORY,
   TTY_IMAGE_TAG,
+  KUBECONFIG_SERVICEACCOUNT,
+  KUBECONFIG_EXPIRATION_SECONDS,
+  KUBECONFIG_ALLOW_INSECURE,
 })
 
 export const rootPath = '/tmp/otomi/values'
@@ -2328,45 +2328,32 @@ export default class OtomiStack {
     return mergeCanaryServices(mapped)
   }
 
-  async getKubecfg(teamId: string): Promise<KubeConfig> {
+  async getKubecfg(teamId: string, sessionUser: SessionUser): Promise<Record<string, any>> {
     this.getAplTeam(teamId) // will throw if not existing
+    const isAdmin = sessionUser.isPlatformAdmin
+    if (!isAdmin && !sessionUser.teams.includes(teamId)) {
+      throw new ForbiddenError('Cannot generate a kubeconfig for a team you are not a member of.')
+    }
+    const targetNamespace = `team-${teamId}`
+    const saNamespace = isAdmin ? 'team-admin' : targetNamespace
+    if (typeof sessionUser.sub !== 'string' || !sessionUser.sub) {
+      debug('No user sub found, cannot create kubeconfig.')
+      throw new OtomiError(500, 'No user sub found, cannot create kubeconfig.')
+    }
     const {
-      cluster: { name, apiName = `otomi-${name}`, apiServer },
+      cluster: { name, apiServer },
     } = (await this.getSettings(['cluster'])) as Record<string, any>
-    if (!apiServer) throw new ValidationError('Missing configuration value: cluster.apiServer')
-    const client = this.getApiClient()
-    const namespace = `team-${teamId}`
-    const sa = await client.readNamespacedServiceAccount({ name: `kubectl`, namespace })
-    const { secrets }: { secrets?: Array<V1ObjectReference> } = sa
-    const secretName = secrets?.length ? secrets[0].name : ''
-    const secret = await client.readNamespacedSecret({ name: secretName || '', namespace })
-    const token = Buffer.from(secret.data?.token || '', 'base64').toString('ascii')
-    const cluster = {
-      name: apiName,
-      server: apiServer,
-      skipTLSVerify: true,
+    if (!apiServer) {
+      throw new ValidationError('Cluster API server URL is not defined in settings, cannot generate kubeconfig.')
     }
-
-    const user = {
-      name: `${namespace}-${apiName}`,
-      token,
-    }
-
-    const context = {
-      name: `${namespace}-${apiName}`,
-      namespace,
-      user: user.name,
-      cluster: cluster.name,
-    }
-    const options = {
-      users: [user],
-      clusters: [cluster],
-      contexts: [context],
-      currentContext: context.name,
-    }
-    const config = new KubeConfig()
-    config.loadFromOptions(options)
-    return config
+    const cfgGenerator = new KubeCfgGenerator({
+      serviceAccount: env.KUBECONFIG_SERVICEACCOUNT,
+      clusterName: name,
+      apiServer,
+      expirationSeconds: env.KUBECONFIG_EXPIRATION_SECONDS,
+      allowInsecure: env.KUBECONFIG_ALLOW_INSECURE,
+    })
+    return await cfgGenerator.getKubeCfg(saNamespace, targetNamespace, sessionUser.sub)
   }
 
   async getDockerConfig(teamId: string): Promise<string> {

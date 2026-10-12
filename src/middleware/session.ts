@@ -96,22 +96,46 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
   // socket setup - only create Socket.IO if we have a server and not in tests
   if (!env.isTest && server) {
     io = new Server(server, { path: '/ws' })
-    io.use(async (socket, next) => {
+    io.engine.use(async (req: http.IncomingMessage, res: http.ServerResponse, next: (error?: Error) => void) => {
+      if (req.method === 'OPTIONS') return next()
+
+      const sid = new URL(req.url || '/', 'http://localhost').searchParams.get('sid')
+      const isUpgrade = req.headers.upgrade?.toLowerCase() === 'websocket'
+      const token = req.headers.authorization
+      // Browsers cannot set headers on upgrades. Engine.IO validates the sid,
+      // which can only belong to a session created by an authenticated handshake.
+      if (isUpgrade && sid && !token) return next()
       try {
-        const completeAuthAttempt = await beginSocketAuthAttempt(socket.handshake.address, socket.handshake.headers)
-        const token: unknown = socket.handshake.auth.token ?? socket.handshake.headers.authorization
-        if (typeof token !== 'string' || !token.trim()) {
-          return next(new Error('Unauthorized'))
+        const completeAuthAttempt = await beginSocketAuthAttempt(req.socket.remoteAddress!, req.headers)
+        if (!token?.trim()) {
+          res.writeHead(401, { 'Content-Type': 'application/json' })
+          return res.end(JSON.stringify({ message: 'Unauthorized' }))
         }
-        const { email, sub, groups, roles } = await verifyJwt(token)
+
+        await verifyJwt(token)
         await completeAuthAttempt()
+      } catch (error) {
+        if (error instanceof SocketAuthRateLimitError) return next(error)
+        debug(`Transport JWT verification failed: ${getSanitizedErrorMessage(error)}`)
+        res.writeHead(401, { 'Content-Type': 'application/json' })
+        return res.end(JSON.stringify({ message: 'Unauthorized' }))
+      }
+      return next()
+    })
+    io.use(async (socket, next) => {
+      const token: unknown = socket.handshake.auth.token ?? socket.handshake.headers.authorization
+      if (typeof token !== 'string' || !token.trim()) {
+        return next(new Error('Unauthorized'))
+      }
+
+      try {
+        const { email, sub, groups, roles } = await verifyJwt(token)
         const { data } = socket
         data.email = email
         data.sub = sub
         data.groups = groups
         data.roles = roles
       } catch (error) {
-        if (error instanceof SocketAuthRateLimitError) return next(error)
         debug(`Socket JWT verification failed: ${getSanitizedErrorMessage(error)}`)
         return next(new Error('Unauthorized'))
       }
@@ -136,6 +160,10 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
   }
 
   return async function nextHandler(req: OpenApiRequestExt, res, next): Promise<any> {
+    // Engine.IO owns /ws/. Do not create editor sessions for unmatched /ws requests.
+    if (req.path === '/ws' || req.path.startsWith('/ws/')) {
+      return res.sendStatus(404)
+    }
     if (!env.isTest && (!readOnlyStack || !readOnlyStack.isLoaded)) throw new ApiNotReadyError()
     const { email } = req.user || {}
     const roStack = await getSessionStack()
