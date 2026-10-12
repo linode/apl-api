@@ -106,7 +106,7 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
       // which can only belong to a session created by an authenticated handshake.
       if (isUpgrade && sid && !token) return next()
       try {
-        const completeAuthAttempt = await beginSocketAuthAttempt(req.socket.remoteAddress!, req.headers)
+        const completeAuthAttempt = await beginSocketAuthAttempt(req.socket.remoteAddress || 'unknown', req.headers)
         if (!token?.trim()) {
           res.writeHead(401, { 'Content-Type': 'application/json' })
           return res.end(JSON.stringify({ message: 'Unauthorized' }))
@@ -129,13 +129,16 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
       }
 
       try {
+        const { data, handshake } = socket
+        const completeAuthAttempt = await beginSocketAuthAttempt(handshake.address, handshake.headers)
         const { email, sub, groups, roles } = await verifyJwt(token)
-        const { data } = socket
+        await completeAuthAttempt()
         data.email = email
         data.sub = sub
         data.groups = groups
         data.roles = roles
       } catch (error) {
+        if (error instanceof SocketAuthRateLimitError) return next(error)
         debug(`Socket JWT verification failed: ${getSanitizedErrorMessage(error)}`)
         return next(new Error('Unauthorized'))
       }

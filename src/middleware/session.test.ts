@@ -213,6 +213,8 @@ describe('session middleware', () => {
       sessionModule.sessionMiddleware(server)
       await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
       mockVerifyJwt.mockResolvedValue({ email: 'verified@example.com' })
+      mockBeginSocketAuthAttempt.mockResolvedValue(mockCompleteAuthAttempt)
+      mockCompleteAuthAttempt.mockResolvedValue(undefined)
     })
 
     afterEach(async () => {
