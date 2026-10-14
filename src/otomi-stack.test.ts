@@ -1778,7 +1778,7 @@ describe('getTestRepoConnect', () => {
 
     const result = await otomiStack.getTestRepoConnect('https://gitea.test.com', 'demo', 'my-secret')
 
-    expect(result).toEqual({ status: 'failed', message: 'Connection refused' })
+    expect(result).toEqual({ status: 'failed', message: 'Unable to connect to the repository' })
   })
 
   it('should return { status: "failed" } when getAuthenticatedGitClient throws', async () => {
@@ -1786,7 +1786,7 @@ describe('getTestRepoConnect', () => {
 
     const result = await otomiStack.getTestRepoConnect('https://gitea.test.com', 'demo', 'my-secret')
 
-    expect(result).toEqual({ status: 'failed', message: 'Invalid credentials' })
+    expect(result).toEqual({ status: 'failed', message: 'Unable to connect to the repository' })
   })
 
   it('should clean up the SSH key file after testing connection', async () => {
