@@ -1,6 +1,7 @@
 # Required repository/environment secrets:
 #   OCI_USERNAME              - registry login username
 #   DOCKERHUB_LINODEBOT_TOKEN - registry login token
+#   BOT_TOKEN                 - GitHub token with package read access, for npm install of @linode/*-client-grpc packages from GitHub Packages
 name: Release Software
 
 on:
@@ -110,6 +111,8 @@ jobs:
           build-args: |
             VERSION=${{ env.GIT_TAG }}
           tags: ${{ env.CONTAINER_IMAGE_TAG }}
+          secrets: |
+            NPM_TOKEN=${{ secrets.BOT_TOKEN }}
 
       - name: Create GitHub Release
         uses: linode/apl-gh-actions/actions/release-create-github-release@v0.4.0
@@ -123,6 +126,13 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 24
+
+      - name: Set npm token
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.BOT_TOKEN }}
+        run: |
+          echo "@linode:registry=https://npm.pkg.github.com" >> .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
 
       - name: Build OpenAPI schema
         run: |

@@ -1197,6 +1197,9 @@ paths:
                     $ref: '#/components/schemas/User/properties/id'
                   teams:
                     $ref: '#/components/schemas/User/properties/teams'
+                required:
+                  - id
+                  - teams
         description: User object that contains updated values
         required: true
       responses:
