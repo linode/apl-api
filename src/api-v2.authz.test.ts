@@ -16,6 +16,7 @@ const teamAdminToken = getToken(['team-admin', 'team-team1'])
 const teamMemberToken = getToken(['team-team1'])
 const team2MemberToken = getToken(['team-team2'])
 const team2AdminToken = getToken(['team-admin', 'team-team2'])
+const groupLessToken = getToken([])
 
 function createTeamResource(kind: AplKind, spec: Record<string, any>) {
   return {
@@ -2034,6 +2035,10 @@ describe('API V2 authz tests', () => {
 
     test('anonymous user cannot log out', async () => {
       await agent.post('/v2/user/logout').expect(401)
+    })
+
+    test('authenticated user with no groups/roles can still log out', async () => {
+      await agent.post('/v2/user/logout').set('Authorization', `Bearer ${groupLessToken}`).expect(204)
     })
   })
 
