@@ -2075,6 +2075,14 @@ describe('API V2 authz tests', () => {
       await agent.post('/v2/user/reset-password').send(body).expect(401)
     })
 
+    test('authenticated user with no groups/roles can still reset their own password', async () => {
+      await agent
+        .post('/v2/user/reset-password')
+        .send(body)
+        .set('Authorization', `Bearer ${groupLessToken}`)
+        .expect(204)
+    })
+
     test('rejects a new password shorter than 8 characters', async () => {
       await agent
         .post('/v2/user/reset-password')

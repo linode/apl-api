@@ -122,7 +122,7 @@ describe('Authz using generated OpenAPI schema', () => {
 
 // Operations that require authentication (groupAuthz still runs) but intentionally
 // grant access to any authenticated user regardless of role, so they have no x-aclSchema.
-const OPERATIONS_WITHOUT_ACL_SCHEMA = new Set(['logout'])
+const OPERATIONS_WITHOUT_ACL_SCHEMA = new Set(['logout', 'resetOwnPassword'])
 
 describe('Generated OpenAPI ACL contract', () => {
   test('every secured operation has x-aclSchema pointing to a schema with x-acl', () => {

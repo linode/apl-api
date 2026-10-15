@@ -195,28 +195,51 @@ describe('dexClient', () => {
   })
 
   it('verifyDexPassword resolves true when Dex reports the password matches', async () => {
-    mockVerifyPassword.mockImplementation((_req, cb) => cb(null, { verified: true, notFound: false }))
+    mockVerifyPassword.mockImplementation((_req, _metadata, _options, cb) =>
+      cb(null, { verified: true, notFound: false }),
+    )
 
     await expect(verifyDexPassword('a@b.com', 'secret')).resolves.toBe(true)
-    expect(mockVerifyPassword).toHaveBeenCalledWith({ email: 'a@b.com', password: 'secret' }, expect.any(Function))
+    expect(mockVerifyPassword).toHaveBeenCalledWith(
+      { email: 'a@b.com', password: 'secret' },
+      expect.any(Object),
+      expect.any(Object),
+      expect.any(Function),
+    )
   })
 
   it('verifyDexPassword resolves false when Dex reports the password does not match', async () => {
-    mockVerifyPassword.mockImplementation((_req, cb) => cb(null, { verified: false, notFound: false }))
+    mockVerifyPassword.mockImplementation((_req, _metadata, _options, cb) =>
+      cb(null, { verified: false, notFound: false }),
+    )
 
     await expect(verifyDexPassword('a@b.com', 'wrong')).resolves.toBe(false)
   })
 
   it('verifyDexPassword resolves false when Dex reports the email is not found', async () => {
-    mockVerifyPassword.mockImplementation((_req, cb) => cb(null, { verified: false, notFound: true }))
+    mockVerifyPassword.mockImplementation((_req, _metadata, _options, cb) =>
+      cb(null, { verified: false, notFound: true }),
+    )
 
     await expect(verifyDexPassword('ghost@b.com', 'secret')).resolves.toBe(false)
   })
 
   it('verifyDexPassword rejects with DexProvisionError on RPC error', async () => {
-    mockVerifyPassword.mockImplementation((_req, cb) => cb(new Error('unavailable'), null))
+    mockVerifyPassword.mockImplementation((_req, _metadata, _options, cb) => cb(new Error('unavailable'), null))
 
     await expect(verifyDexPassword('a@b.com', 'secret')).rejects.toBeInstanceOf(DexProvisionError)
+  })
+
+  it('verifyDexPassword sends a finite deadline so an unreachable Dex cannot hang the call', async () => {
+    mockVerifyPassword.mockImplementation((_req, _metadata, _options, cb) =>
+      cb(null, { verified: true, notFound: false }),
+    )
+
+    await verifyDexPassword('a@b.com', 'secret')
+
+    const [, , options] = mockVerifyPassword.mock.calls[0]
+    expect(typeof options.deadline).toBe('number')
+    expect(options.deadline).toBeGreaterThan(Date.now())
   })
 
   it('decodeDexUserId extracts the raw user_id from a Dex-issued sub claim', () => {

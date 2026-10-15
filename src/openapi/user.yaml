@@ -123,14 +123,7 @@ User:
   type: object
 
 ResetPasswordRequest:
-  description: Permission to reset the caller's own password.
-  x-acl:
-    platformAdmin:
-      - create-any
-    teamAdmin:
-      - create-any
-    teamMember:
-      - create-any
+  description: Request body for self-service password reset. Gated by authentication only (groupAuthz), not role.
   properties:
     currentPassword:
       type: string
