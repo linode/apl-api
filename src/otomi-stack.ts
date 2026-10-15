@@ -1472,7 +1472,7 @@ export default class OtomiStack {
     // already be gone. Look up both instead of gating on the password alone.
     const [passwords, identities] = await Promise.all([listDexPasswords(), listUserIdentitiesByUserId(id)])
     const email = passwords.find((p) => p.userId === id)?.email ?? identities[0]?.email
-    if (!email) return // already fully purged
+    if (!email) throw new NotExistError(`User ${id} not found`)
 
     if (email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
       throw new ForbiddenError('Cannot delete the default platform admin user')
