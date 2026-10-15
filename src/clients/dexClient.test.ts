@@ -1,12 +1,14 @@
 const mockCreatePassword = jest.fn()
 const mockUpdatePassword = jest.fn()
 const mockDeletePassword = jest.fn()
+const mockTerminateSessionsByUser = jest.fn()
 
 jest.mock('@linode/dex-client-grpc', () => ({
   DexClient: jest.fn().mockImplementation(() => ({
     createPassword: mockCreatePassword,
     updatePassword: mockUpdatePassword,
     deletePassword: mockDeletePassword,
+    terminateSessionsByUser: mockTerminateSessionsByUser,
   })),
 }))
 
@@ -22,7 +24,14 @@ jest.mock('src/validators', () => ({
 
 import { DEX_NO_GROUPS_SENTINEL } from './dexConstants'
 import { AlreadyExists, NotExistError } from 'src/error'
-import { createDexPassword, deleteDexPassword, DexProvisionError, updateDexPassword } from './dexClient'
+import {
+  createDexPassword,
+  decodeDexUserId,
+  deleteDexPassword,
+  DexProvisionError,
+  terminateSessionsByUser,
+  updateDexPassword,
+} from './dexClient'
 
 describe('dexClient', () => {
   beforeEach(() => {
@@ -30,7 +39,7 @@ describe('dexClient', () => {
   })
 
   it('createDexPassword sends email, hash, username, user_id and groups', async () => {
-    mockCreatePassword.mockImplementation((_req, cb) => cb(null, { alreadyExists: false }))
+    mockCreatePassword.mockImplementation((_req, _metadata, _options, cb) => cb(null, { alreadyExists: false }))
 
     await createDexPassword({
       id: 'uuid-1',
@@ -50,23 +59,27 @@ describe('dexClient', () => {
           groups: ['platform-admin'],
         },
       },
+      expect.any(Object),
+      expect.any(Object),
       expect.any(Function),
     )
   })
 
   it('createDexPassword sends the no-groups sentinel instead of an empty array', async () => {
-    mockCreatePassword.mockImplementation((_req, cb) => cb(null, { alreadyExists: false }))
+    mockCreatePassword.mockImplementation((_req, _metadata, _options, cb) => cb(null, { alreadyExists: false }))
 
     await createDexPassword({ id: 'uuid-1', email: 'a@b.com', passwordHash: 'h', username: 'a', groups: [] })
 
     expect(mockCreatePassword).toHaveBeenCalledWith(
       expect.objectContaining({ password: expect.objectContaining({ groups: [DEX_NO_GROUPS_SENTINEL] }) }),
+      expect.any(Object),
+      expect.any(Object),
       expect.any(Function),
     )
   })
 
   it('createDexPassword rejects with DexProvisionError on RPC error', async () => {
-    mockCreatePassword.mockImplementation((_req, cb) => cb(new Error('unavailable'), null))
+    mockCreatePassword.mockImplementation((_req, _metadata, _options, cb) => cb(new Error('unavailable'), null))
 
     await expect(
       createDexPassword({ id: 'uuid-1', email: 'a@b.com', passwordHash: 'h', username: 'a', groups: [] }),
@@ -74,7 +87,7 @@ describe('dexClient', () => {
   })
 
   it('createDexPassword rejects with AlreadyExists (409) when Dex reports alreadyExists', async () => {
-    mockCreatePassword.mockImplementation((_req, cb) => cb(null, { alreadyExists: true }))
+    mockCreatePassword.mockImplementation((_req, _metadata, _options, cb) => cb(null, { alreadyExists: true }))
 
     await expect(
       createDexPassword({ id: 'uuid-1', email: 'a@b.com', passwordHash: 'h', username: 'a', groups: [] }),
@@ -82,51 +95,107 @@ describe('dexClient', () => {
   })
 
   it('updateDexPassword only sets provided fields', async () => {
-    mockUpdatePassword.mockImplementation((_req, cb) => cb(null, { notFound: false }))
+    mockUpdatePassword.mockImplementation((_req, _metadata, _options, cb) => cb(null, { notFound: false }))
 
     await updateDexPassword({ email: 'a@b.com', newGroups: ['team-blue'] })
 
     expect(mockUpdatePassword).toHaveBeenCalledWith(
       { email: 'a@b.com', newHash: Buffer.alloc(0), newUsername: '', newGroups: ['team-blue'] },
+      expect.any(Object),
+      expect.any(Object),
       expect.any(Function),
     )
   })
 
   it('updateDexPassword sends the no-groups sentinel when clearing groups to empty', async () => {
-    mockUpdatePassword.mockImplementation((_req, cb) => cb(null, { notFound: false }))
+    mockUpdatePassword.mockImplementation((_req, _metadata, _options, cb) => cb(null, { notFound: false }))
 
     await updateDexPassword({ email: 'a@b.com', newGroups: [] })
 
     expect(mockUpdatePassword).toHaveBeenCalledWith(
       expect.objectContaining({ newGroups: [DEX_NO_GROUPS_SENTINEL] }),
+      expect.any(Object),
+      expect.any(Object),
       expect.any(Function),
     )
   })
 
   it('updateDexPassword leaves newGroups empty when groups are not being touched', async () => {
-    mockUpdatePassword.mockImplementation((_req, cb) => cb(null, { notFound: false }))
+    mockUpdatePassword.mockImplementation((_req, _metadata, _options, cb) => cb(null, { notFound: false }))
 
     await updateDexPassword({ email: 'a@b.com', newUsername: 'a' })
 
-    expect(mockUpdatePassword).toHaveBeenCalledWith(expect.objectContaining({ newGroups: [] }), expect.any(Function))
+    expect(mockUpdatePassword).toHaveBeenCalledWith(
+      expect.objectContaining({ newGroups: [] }),
+      expect.any(Object),
+      expect.any(Object),
+      expect.any(Function),
+    )
   })
 
   it('updateDexPassword rejects with NotExistError (404) when the record is not found', async () => {
-    mockUpdatePassword.mockImplementation((_req, cb) => cb(null, { notFound: true }))
+    mockUpdatePassword.mockImplementation((_req, _metadata, _options, cb) => cb(null, { notFound: true }))
 
     await expect(updateDexPassword({ email: 'ghost@b.com' })).rejects.toBeInstanceOf(NotExistError)
   })
 
   it('deleteDexPassword resolves even when Dex reports not found (idempotent)', async () => {
-    mockDeletePassword.mockImplementation((_req, cb) => cb(null, { notFound: true }))
+    mockDeletePassword.mockImplementation((_req, _metadata, _options, cb) => cb(null, { notFound: true }))
 
     await expect(deleteDexPassword('a@b.com')).resolves.toBeUndefined()
-    expect(mockDeletePassword).toHaveBeenCalledWith({ email: 'a@b.com' }, expect.any(Function))
+    expect(mockDeletePassword).toHaveBeenCalledWith(
+      { email: 'a@b.com' },
+      expect.any(Object),
+      expect.any(Object),
+      expect.any(Function),
+    )
   })
 
   it('deleteDexPassword rejects with DexProvisionError on RPC error', async () => {
-    mockDeletePassword.mockImplementation((_req, cb) => cb(new Error('unavailable'), null))
+    mockDeletePassword.mockImplementation((_req, _metadata, _options, cb) => cb(new Error('unavailable'), null))
 
     await expect(deleteDexPassword('a@b.com')).rejects.toBeInstanceOf(DexProvisionError)
+  })
+
+  it('terminateSessionsByUser sends userId and resolves with sessionsTerminated', async () => {
+    mockTerminateSessionsByUser.mockImplementation((_req, _metadata, _options, cb) =>
+      cb(null, { sessionsTerminated: 2 }),
+    )
+
+    await expect(terminateSessionsByUser('uuid-1')).resolves.toBe(2)
+    expect(mockTerminateSessionsByUser).toHaveBeenCalledWith(
+      { userId: 'uuid-1' },
+      expect.any(Object),
+      expect.any(Object),
+      expect.any(Function),
+    )
+  })
+
+  it('terminateSessionsByUser rejects with DexProvisionError on RPC error', async () => {
+    mockTerminateSessionsByUser.mockImplementation((_req, _metadata, _options, cb) =>
+      cb(new Error('unavailable'), null),
+    )
+
+    await expect(terminateSessionsByUser('uuid-1')).rejects.toBeInstanceOf(DexProvisionError)
+  })
+
+  it('terminateSessionsByUser sends a finite deadline so an unreachable Dex cannot hang the call', async () => {
+    mockTerminateSessionsByUser.mockImplementation((_req, _metadata, _options, cb) =>
+      cb(null, { sessionsTerminated: 0 }),
+    )
+
+    await terminateSessionsByUser('uuid-1')
+
+    const [, , options] = mockTerminateSessionsByUser.mock.calls[0]
+    expect(typeof options.deadline).toBe('number')
+    expect(options.deadline).toBeGreaterThan(Date.now())
+  })
+
+  it('decodeDexUserId extracts the raw user_id from a Dex-issued sub claim', () => {
+    expect(decodeDexUserId('ChJhcGwtcGxhdGZvcm0tYWRtaW4SBWxvY2Fs')).toBe('apl-platform-admin')
+  })
+
+  it('decodeDexUserId throws DexProvisionError when the sub is not a valid Dex subject', () => {
+    expect(() => decodeDexUserId('/w==')).toThrow(DexProvisionError) // truncated varint
   })
 })
