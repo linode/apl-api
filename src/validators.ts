@@ -80,6 +80,10 @@ export const DEX_GRPC_ADDRESS = str({
   devDefault: 'localhost:5557',
   default: undefined,
 })
+export const DEX_RPC_DEADLINE_MS = num({
+  desc: 'Deadline in milliseconds for Dex gRPC calls. grpc-js applies no deadline by default.',
+  default: 5000,
+})
 export const JWT_AUDIENCE = str({
   desc: 'Expected JWT audience',
   example: 'otomi',

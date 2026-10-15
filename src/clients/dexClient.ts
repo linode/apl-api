@@ -1,4 +1,4 @@
-import { ChannelCredentials, ServiceError } from '@grpc/grpc-js'
+import { CallOptions, ChannelCredentials, Metadata, ServiceError } from '@grpc/grpc-js'
 import {
   CreatePasswordResp,
   DeletePasswordResp,
@@ -10,13 +10,18 @@ import {
   UserIdentity,
 } from '@linode/dex-client-grpc'
 import { Reader } from 'protobufjs/minimal'
-import { cleanEnv, DEX_GRPC_ADDRESS } from 'src/validators'
+import { cleanEnv, DEX_GRPC_ADDRESS, DEX_RPC_DEADLINE_MS } from 'src/validators'
 import { DEX_NO_GROUPS_SENTINEL } from 'src/clients/dexConstants'
 import { AlreadyExists, NotExistError } from 'src/error'
 
 export type { Password }
 
-const env = cleanEnv({ DEX_GRPC_ADDRESS })
+const env = cleanEnv({ DEX_GRPC_ADDRESS, DEX_RPC_DEADLINE_MS })
+
+// grpc-js applies no deadline by default, so an unreachable Dex can hang a call forever.
+function dexCallOptions(): Partial<CallOptions> {
+  return { deadline: Date.now() + env.DEX_RPC_DEADLINE_MS }
+}
 
 function toDexGroups(groups: string[]): string[] {
   return groups.length > 0 ? groups : [DEX_NO_GROUPS_SENTINEL]
@@ -66,6 +71,8 @@ export async function createDexPassword(input: CreateDexPasswordInput): Promise<
           groups: toDexGroups(input.groups),
         },
       },
+      new Metadata(),
+      dexCallOptions(),
       (err: ServiceError | null, resp: CreatePasswordResp) => {
         if (err) {
           reject(new DexProvisionError(`Dex CreatePassword failed for ${input.email}`, err))
@@ -98,6 +105,8 @@ export async function updateDexPassword(input: UpdateDexPasswordInput): Promise<
         newUsername: input.newUsername ?? '',
         newGroups: input.newGroups !== undefined ? toDexGroups(input.newGroups) : [],
       },
+      new Metadata(),
+      dexCallOptions(),
       (err: ServiceError | null, resp: UpdatePasswordResp) => {
         if (err) {
           reject(new DexProvisionError(`Dex UpdatePassword failed for ${input.email}`, err))
@@ -116,42 +125,57 @@ export async function updateDexPassword(input: UpdateDexPasswordInput): Promise<
 export async function listDexPasswords(): Promise<Password[]> {
   const dex = getDexClient()
   return new Promise<Password[]>((resolve, reject) => {
-    dex.listPasswords({}, (err: ServiceError | null, resp: { passwords: Password[] }) => {
-      if (err) {
-        reject(new DexProvisionError('Dex ListPasswords failed', err))
-        return
-      }
-      resolve(resp?.passwords ?? [])
-    })
+    dex.listPasswords(
+      {},
+      new Metadata(),
+      dexCallOptions(),
+      (err: ServiceError | null, resp: { passwords: Password[] }) => {
+        if (err) {
+          reject(new DexProvisionError('Dex ListPasswords failed', err))
+          return
+        }
+        resolve(resp?.passwords ?? [])
+      },
+    )
   })
 }
 
 export async function deleteDexPassword(email: string): Promise<void> {
   const dex = getDexClient()
   await new Promise<void>((resolve, reject) => {
-    dex.deletePassword({ email }, (err: ServiceError | null, resp: DeletePasswordResp) => {
-      if (err) {
-        reject(new DexProvisionError(`Dex DeletePassword failed for ${email}`, err))
-        return
-      }
-      // notFound is treated as success: deleting an already-absent record is a no-op,
-      // matching deleteUser's existing idempotent-delete behavior for the Git side.
-      void resp
-      resolve()
-    })
+    dex.deletePassword(
+      { email },
+      new Metadata(),
+      dexCallOptions(),
+      (err: ServiceError | null, resp: DeletePasswordResp) => {
+        if (err) {
+          reject(new DexProvisionError(`Dex DeletePassword failed for ${email}`, err))
+          return
+        }
+        // notFound is treated as success: deleting an already-absent record is a no-op,
+        // matching deleteUser's existing idempotent-delete behavior for the Git side.
+        void resp
+        resolve()
+      },
+    )
   })
 }
 
 export async function listUserIdentitiesByUserId(userId: string): Promise<UserIdentity[]> {
   const dex = getDexClient()
   const identities = await new Promise<UserIdentity[]>((resolve, reject) => {
-    dex.listUserIdentities({}, (err: ServiceError | null, resp: { identities: UserIdentity[] }) => {
-      if (err) {
-        reject(new DexProvisionError('Dex ListUserIdentities failed', err))
-        return
-      }
-      resolve(resp?.identities ?? [])
-    })
+    dex.listUserIdentities(
+      {},
+      new Metadata(),
+      dexCallOptions(),
+      (err: ServiceError | null, resp: { identities: UserIdentity[] }) => {
+        if (err) {
+          reject(new DexProvisionError('Dex ListUserIdentities failed', err))
+          return
+        }
+        resolve(resp?.identities ?? [])
+      },
+    )
   })
   return identities.filter((identity) => identity.userId === userId)
 }
@@ -170,13 +194,18 @@ export function decodeDexUserId(sub: string): string {
 export async function terminateSessionsByUser(userId: string): Promise<number> {
   const dex = getDexClient()
   return new Promise<number>((resolve, reject) => {
-    dex.terminateSessionsByUser({ userId }, (err: ServiceError | null, resp: TerminateSessionsByUserResp) => {
-      if (err) {
-        reject(new DexProvisionError(`Dex TerminateSessionsByUser failed for ${userId}`, err))
-        return
-      }
-      resolve(resp?.sessionsTerminated ?? 0)
-    })
+    dex.terminateSessionsByUser(
+      { userId },
+      new Metadata(),
+      dexCallOptions(),
+      (err: ServiceError | null, resp: TerminateSessionsByUserResp) => {
+        if (err) {
+          reject(new DexProvisionError(`Dex TerminateSessionsByUser failed for ${userId}`, err))
+          return
+        }
+        resolve(resp?.sessionsTerminated ?? 0)
+      },
+    )
   })
 }
 
@@ -185,13 +214,18 @@ export async function terminateSessionsByUser(userId: string): Promise<number> {
 export async function deleteDexUserIdentity(userId: string, connectorId: string): Promise<void> {
   const dex = getDexClient()
   await new Promise<void>((resolve, reject) => {
-    dex.deleteUserIdentity({ userId, connectorId }, (err: ServiceError | null, resp: DeleteUserIdentityResp) => {
-      if (err) {
-        reject(new DexProvisionError(`Dex DeleteUserIdentity failed for ${userId}/${connectorId}`, err))
-        return
-      }
-      void resp
-      resolve()
-    })
+    dex.deleteUserIdentity(
+      { userId, connectorId },
+      new Metadata(),
+      dexCallOptions(),
+      (err: ServiceError | null, resp: DeleteUserIdentityResp) => {
+        if (err) {
+          reject(new DexProvisionError(`Dex DeleteUserIdentity failed for ${userId}/${connectorId}`, err))
+          return
+        }
+        void resp
+        resolve()
+      },
+    )
   })
 }
