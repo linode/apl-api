@@ -1,5 +1,6 @@
 import { Express } from 'express'
 import { mockDeep } from 'jest-mock-extended'
+import * as appModule from 'src/app'
 import { initApp, loadSpec } from 'src/app'
 import getToken from 'src/fixtures/jwt'
 import OtomiStack from 'src/otomi-stack'
@@ -178,6 +179,10 @@ describe('API authz tests', () => {
   })
 
   test('authenticated user should get api spec', async () => {
+    // Real spec is ~1.5MB; a response that size leaves a lingering supertest/superagent
+    // stream handle (STREAM_END_OF_STREAM) that blocks Jest from exiting. Shrink it here
+    // since this test only checks that auth lets the request through, not spec content.
+    jest.spyOn(appModule, 'getSpec').mockReturnValue({ spec: { ok: true }, valuesSchema: {} } as any)
     await agent
       .get('/v1/apiDocs')
       .set('Authorization', `Bearer ${teamMemberToken}`)
@@ -200,6 +205,7 @@ describe('API authz tests', () => {
   })
 
   test('anonymous user should get api spec', async () => {
+    jest.spyOn(appModule, 'getSpec').mockReturnValue({ spec: { ok: true }, valuesSchema: {} } as any)
     await agent.get('/v1/apiDocs').expect(200).expect('Content-Type', /json/)
   })
 

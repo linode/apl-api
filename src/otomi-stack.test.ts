@@ -1279,7 +1279,7 @@ describe('Users tests', () => {
       mockListUserIdentitiesByUserId.mockResolvedValueOnce([])
       const otomi = await getTestStack('dex')
 
-      await expect(otomi.deleteUser('uuid-7')).resolves.toBeUndefined()
+      await expect(otomi.deleteUser('uuid-7')).rejects.toMatchObject({ code: 404 })
 
       expect(mockDeleteDexUserIdentity).not.toHaveBeenCalled()
       expect(mockDeleteDexPassword).not.toHaveBeenCalled()

@@ -3,6 +3,7 @@ import type { Config } from '@jest/types'
 const config: Config.InitialOptions = {
   roots: ['<rootDir>/src'],
   testEnvironment: 'node',
+  setupFilesAfterEnv: ['<rootDir>/src/jest.setup.ts'],
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',
     '^uuid$': '<rootDir>/src/stubs/uuid.ts',
@@ -16,6 +17,7 @@ const config: Config.InitialOptions = {
   ],
   silent: false,
   verbose: true,
+  maxWorkers: '50%',
 }
 export default config
 process.env = Object.assign(process.env, {
