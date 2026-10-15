@@ -121,3 +121,19 @@ User:
   required:
     - email
   type: object
+
+ResetPasswordRequest:
+  description: Request body for self-service password reset. Gated by authentication only (groupAuthz), not role.
+  properties:
+    currentPassword:
+      type: string
+      description: The caller's current password, verified by Dex before the change is applied.
+    newPassword:
+      type: string
+      minLength: 8
+      maxLength: 32
+      description: The new password.
+  required:
+    - currentPassword
+    - newPassword
+  type: object
