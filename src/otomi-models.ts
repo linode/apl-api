@@ -71,8 +71,8 @@ export type Cluster = Settings['cluster']
 export type Dns = Settings['dns']
 export type Ingress = Settings['ingress']
 export type Kms = Settings['kms']
-export type Oidc = Settings['oidc']
 export type Otomi = Settings['otomi']
+export type Oidc = NonNullable<Otomi>['oidc']
 export type Versions = Settings['versions']
 
 export type AplRequestObject =
@@ -108,7 +108,6 @@ export const APL_KINDS = [
   'AplIngress',
   'AplObjectStorage',
   'AplKms',
-  'AplIdentityProvider',
   'AplCapabilitySet',
   'AplBackupCollection',
   'AplPlatformSettingSet',

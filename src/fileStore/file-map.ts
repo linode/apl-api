@@ -77,14 +77,6 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
     name: 'obj',
   })
 
-  maps.set('AplIdentityProvider', {
-    kind: 'AplIdentityProvider',
-    envDir,
-    pathGlob: `${envDir}/env/settings/*oidc.yaml`,
-    pathTemplate: 'env/settings/oidc.yaml',
-    name: 'oidc',
-  })
-
   maps.set('AplCapabilitySet', {
     kind: 'AplCapabilitySet',
     envDir,
