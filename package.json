@@ -106,7 +106,7 @@
     "node": ">=24.22.1 <25",
     "npm": ">=11"
   },
-  "homepage": "https://github.com/redkubes/otomi-api#readme",
+  "homepage": "https://github.com/linode/apl-api#readme",
   "license": "ISC",
   "overrides": {
     "@babel/core": "$@babel/core"
