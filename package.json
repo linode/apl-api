@@ -90,10 +90,22 @@
     "typescript": "5.9.3",
     "watch": "1.0.2"
   },
-  "engines": {
-    "node": ">=24 <25"
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24.22.1",
+      "onFail": "error"
+    },
+    "packageManager": {
+      "name": "npm",
+      "version": ">=11",
+      "onFail": "error"
+    }
   },
-  "engineStrict": true,
+  "engines": {
+    "node": "24.22.1",
+    "npm": ">=11"
+  },
   "homepage": "https://github.com/redkubes/otomi-api#readme",
   "license": "ISC",
   "overrides": {

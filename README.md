@@ -4,8 +4,9 @@
 
 ### Prerequisites
 
-- **Node.js**: v22.x (see `.nvmrc`)
-- **npm**: v10.x+
+- **Node.js**: exactly v24.22.1 (see `.nvmrc`)
+- **npm**: v11+ (bundled with Node.js v24.22.1)
+- **nvm**: For installing and selecting the pinned Node.js version
 - **Git**: For version control and values repository
 - **Running Akamai App Platform Core Server** [Akamai App Platform Core](https://github.com/linode/apl-core)
 
@@ -15,8 +16,11 @@
 # Clone the repository
 git clone https://github.com/linode/apl-api.git
 cd apl-api
+# Install and select the required Node.js version
+nvm install
+nvm use
 # Install dependencies
-npm install
+npm ci
 # Setup environment variables
 cp .env.sample .env
 # Edit .env with your configuration
@@ -24,6 +28,13 @@ npm run dev
 ```
 
 The API will be available at `http://localhost:8080`
+
+Run `nvm use` whenever you open a new shell in this repository, or enable
+[nvm's automatic version switching](https://github.com/nvm-sh/nvm#deeper-shell-integration).
+The exact Node.js version is enforced during dependency installation by
+`.npmrc` (`engine-strict=true`) and before npm installs and scripts by
+`package.json` (`devEngines`). Unsupported versions fail instead of only warning.
+CI reads `.nvmrc`, and both Docker stages use the same pinned Node.js version.
 
 ## Essential Commands
 
