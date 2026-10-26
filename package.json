@@ -93,7 +93,7 @@
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "24.22.1",
+      "version": ">=24.22.1 <25",
       "onFail": "error"
     },
     "packageManager": {
@@ -103,7 +103,7 @@
     }
   },
   "engines": {
-    "node": "24.22.1",
+    "node": ">=24.22.1 <25",
     "npm": ">=11"
   },
   "homepage": "https://github.com/redkubes/otomi-api#readme",

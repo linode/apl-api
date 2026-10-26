@@ -4,7 +4,7 @@
 
 ### Prerequisites
 
-- **Node.js**: exactly v24.22.1 (see `.nvmrc`)
+- **Node.js**: `>=24.22.1 <25` for local development (`.nvmrc` defaults to v24.22.1)
 - **npm**: v11+ (bundled with Node.js v24.22.1)
 - **nvm**: For installing and selecting the pinned Node.js version
 - **Git**: For version control and values repository
@@ -16,7 +16,7 @@
 # Clone the repository
 git clone https://github.com/linode/apl-api.git
 cd apl-api
-# Install and select the required Node.js version
+# Install and select the default Node.js version
 nvm install
 nvm use
 # Install dependencies
@@ -31,10 +31,10 @@ The API will be available at `http://localhost:8080`
 
 Run `nvm use` whenever you open a new shell in this repository, or enable
 [nvm's automatic version switching](https://github.com/nvm-sh/nvm#deeper-shell-integration).
-The exact Node.js version is enforced during dependency installation by
+The supported Node.js range (`>=24.22.1 <25`) is enforced during dependency installation by
 `.npmrc` (`engine-strict=true`) and before npm installs and scripts by
 `package.json` (`devEngines`). Unsupported versions fail instead of only warning.
-CI reads `.nvmrc`, and both Docker stages use the same pinned Node.js version.
+CI reads `.nvmrc`, and both Docker stages remain pinned to Node.js v24.22.1.
 
 ## Essential Commands
 
