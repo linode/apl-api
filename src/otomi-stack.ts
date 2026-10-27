@@ -1417,7 +1417,11 @@ export default class OtomiStack {
 
   private async editDexUser(id: string, data: User): Promise<User> {
     const { match, user: existingUser } = await this.lookupDexUser(id)
-    // email is immutable in Dex; groups are merged individually so an omitted field is kept, not wiped.
+    // email is immutable in Dex
+    if (data.email !== undefined && data.email !== existingUser.email) {
+      throw new BadRequestError('User email cannot be changed when AUTH_PROVIDER is dex.')
+    }
+    // groups are merged individually so an omitted field is kept, not wiped.
     const user: User = {
       ...existingUser,
       ...data,
