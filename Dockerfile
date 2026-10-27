@@ -1,4 +1,4 @@
-FROM node:24-alpine as ci
+FROM node:24.22.1-alpine AS ci
 
 ENV NODE_ENV=test
 ENV BLUEBIRD_DEBUG=0
@@ -9,7 +9,8 @@ RUN mkdir /app
 WORKDIR /app
 
 # Install dependencies before copying the full source code to take advantage of Docker layer caching
-COPY package*.json .npmrc ./
+COPY package*.json ./
+COPY .npmrc ./
 # Needed for postinstall (build:models) during npm ci
 COPY src/build-spec.ts ./src/build-spec.ts
 COPY src/openapi ./src/openapi
@@ -30,7 +31,7 @@ FROM ci as clean
 # below command removes the packages specified in devDependencies and set NODE_ENV to production
 RUN npm prune --production
 # --------------- Production stage
-FROM node:24-alpine AS prod
+FROM node:24.22.1-alpine AS prod
 
 ENV NODE_ENV=production
 ENV NODE_PATH='dist'
