@@ -122,8 +122,27 @@ User:
     - email
   type: object
 
+UserLogout:
+  description: Permission to log out the current session. Not a CRUD resource; gates POST /v2/user/logout only.
+  x-acl:
+    platformAdmin:
+      - create-any
+    teamAdmin:
+      - create-any
+    teamMember:
+      - create-any
+  properties: {}
+  type: object
+
 ResetPasswordRequest:
-  description: Request body for self-service password reset. Gated by authentication only (groupAuthz), not role.
+  description: Permission to reset the caller's own password.
+  x-acl:
+    platformAdmin:
+      - create-any
+    teamAdmin:
+      - create-any
+    teamMember:
+      - create-any
   properties:
     currentPassword:
       type: string

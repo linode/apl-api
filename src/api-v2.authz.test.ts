@@ -2039,8 +2039,8 @@ describe('API V2 authz tests', () => {
       await agent.post('/v2/user/logout').expect(401)
     })
 
-    test('authenticated user with no groups/roles can still log out', async () => {
-      await agent.post('/v2/user/logout').set('Authorization', `Bearer ${groupLessToken}`).expect(204)
+    test('authenticated user with no groups/roles cannot log out', async () => {
+      await agent.post('/v2/user/logout').set('Authorization', `Bearer ${groupLessToken}`).expect(403)
     })
   })
 
@@ -2075,12 +2075,12 @@ describe('API V2 authz tests', () => {
       await agent.post('/v2/user/reset-password').send(body).expect(401)
     })
 
-    test('authenticated user with no groups/roles can still reset their own password', async () => {
+    test('authenticated user with no groups/roles cannot reset their own password', async () => {
       await agent
         .post('/v2/user/reset-password')
         .send(body)
         .set('Authorization', `Bearer ${groupLessToken}`)
-        .expect(204)
+        .expect(403)
     })
 
     test('rejects a new password shorter than 8 characters', async () => {
