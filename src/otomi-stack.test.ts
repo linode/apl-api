@@ -68,6 +68,7 @@ const mockDeleteDexPassword = jest.fn().mockResolvedValue(undefined)
 const mockListDexPasswords = jest.fn().mockResolvedValue([])
 const mockListUserIdentitiesByUserId = jest.fn().mockResolvedValue([])
 const mockDeleteDexUserIdentity = jest.fn().mockResolvedValue(undefined)
+const mockTerminateSessionsByUser = jest.fn().mockResolvedValue(0)
 jest.mock('./clients/dexClient', () => ({
   __esModule: true,
   createDexPassword: (...args: any[]) => mockCreateDexPassword(...args),
@@ -76,6 +77,8 @@ jest.mock('./clients/dexClient', () => ({
   listDexPasswords: (...args: any[]) => mockListDexPasswords(...args),
   listUserIdentitiesByUserId: (...args: any[]) => mockListUserIdentitiesByUserId(...args),
   deleteDexUserIdentity: (...args: any[]) => mockDeleteDexUserIdentity(...args),
+  terminateSessionsByUser: (...args: any[]) => mockTerminateSessionsByUser(...args),
+  decodeDexUserId: jest.requireActual('./clients/dexClient').decodeDexUserId,
   DEX_NO_GROUPS_SENTINEL: '__no_groups__',
   DexProvisionError: class DexProvisionError extends Error {},
 }))
@@ -1293,6 +1296,31 @@ describe('Users tests', () => {
       await expect(otomi.deleteUser('uuid-4')).rejects.toThrow()
 
       expect(otomi.git.removeFile).not.toHaveBeenCalled()
+    })
+
+    it('logout calls Dex TerminateSessionsByUser with the decoded raw Dex user id when AUTH_PROVIDER is dex', async () => {
+      // Dex's `sub` claim is base64(protobuf) of { user_id: 'session-user', conn_id: 'local' }.
+      const dexUser = { ...sessionUser, sub: 'CgxzZXNzaW9uLXVzZXISBWxvY2Fs' }
+      const otomi = await getTestStack('dex')
+
+      await otomi.logout(dexUser)
+
+      expect(mockTerminateSessionsByUser).toHaveBeenCalledWith('session-user')
+    })
+
+    it('logout does not call Dex when AUTH_PROVIDER is keycloak (default)', async () => {
+      const otomi = await getTestStack('keycloak')
+
+      await otomi.logout(sessionUser)
+
+      expect(mockTerminateSessionsByUser).not.toHaveBeenCalled()
+    })
+
+    it('logout resolves even when Dex TerminateSessionsByUser fails', async () => {
+      mockTerminateSessionsByUser.mockRejectedValueOnce(new Error('dex unavailable'))
+      const otomi = await getTestStack('dex')
+
+      await expect(otomi.logout(sessionUser)).resolves.toBeUndefined()
     })
   })
 })
