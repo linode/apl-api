@@ -166,6 +166,11 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
     // eslint-disable-next-line no-param-reassign
     req.otomi = roStack
 
+    // Logout and self-service password reset touch Dex only, not the values repo. Skip
+    // editor-session creation and the API-locked check: no worktree to leak or clean up,
+    // and users can still log out / reset their password during git migration.
+    if (req.path === '/v2/user/logout' || req.path === '/v2/user/reset-password') return next()
+
     if (['patch', 'post', 'put', 'delete'].includes(req.method.toLowerCase())) {
       // Block all write operations when the API is locked (git migration completed)
       if (readOnlyStack?.locked) throw new ApiLockedError()

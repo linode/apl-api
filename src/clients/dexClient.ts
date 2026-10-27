@@ -1,0 +1,250 @@
+import { CallOptions, ChannelCredentials, Metadata, ServiceError } from '@grpc/grpc-js'
+import {
+  CreatePasswordResp,
+  DeletePasswordResp,
+  DeleteUserIdentityResp,
+  DexClient,
+  Password,
+  TerminateSessionsByUserResp,
+  UpdatePasswordResp,
+  UserIdentity,
+  VerifyPasswordResp,
+} from '@linode/dex-client-grpc'
+import { Reader } from 'protobufjs/minimal'
+import { cleanEnv, DEX_GRPC_ADDRESS, DEX_RPC_DEADLINE_MS } from 'src/validators'
+import { DEX_NO_GROUPS_SENTINEL } from 'src/clients/dexConstants'
+import { AlreadyExists, NotExistError } from 'src/error'
+
+export type { Password }
+
+const env = cleanEnv({ DEX_GRPC_ADDRESS, DEX_RPC_DEADLINE_MS })
+
+// grpc-js applies no deadline by default, so an unreachable Dex can hang a call forever.
+function dexCallOptions(): Partial<CallOptions> {
+  return { deadline: Date.now() + env.DEX_RPC_DEADLINE_MS }
+}
+
+function toDexGroups(groups: string[]): string[] {
+  return groups.length > 0 ? groups : [DEX_NO_GROUPS_SENTINEL]
+}
+
+export class DexProvisionError extends Error {
+  constructor(
+    message: string,
+    public readonly cause?: unknown,
+  ) {
+    super(message)
+    this.name = 'DexProvisionError'
+  }
+}
+
+let client: DexClient | undefined
+
+function getDexClient(): DexClient {
+  if (!env.DEX_GRPC_ADDRESS) {
+    throw new DexProvisionError('DEX_GRPC_ADDRESS must be set when AUTH_PROVIDER=dex')
+  }
+  if (!client) {
+    // Secured by Istio mtls and Authorization policy
+    client = new DexClient(env.DEX_GRPC_ADDRESS, ChannelCredentials.createInsecure())
+  }
+  return client
+}
+
+export interface CreateDexPasswordInput {
+  id: string
+  email: string
+  passwordHash: string
+  username: string
+  groups: string[]
+}
+
+export async function createDexPassword(input: CreateDexPasswordInput): Promise<void> {
+  const dex = getDexClient()
+  await new Promise<void>((resolve, reject) => {
+    dex.createPassword(
+      {
+        password: {
+          email: input.email,
+          hash: Buffer.from(input.passwordHash, 'utf-8'),
+          username: input.username,
+          userId: input.id,
+          groups: toDexGroups(input.groups),
+        },
+      },
+      new Metadata(),
+      dexCallOptions(),
+      (err: ServiceError | null, resp: CreatePasswordResp) => {
+        if (err) {
+          reject(new DexProvisionError(`Dex CreatePassword failed for ${input.email}`, err))
+          return
+        }
+        if (resp?.alreadyExists) {
+          reject(new AlreadyExists(`Dex already has a password record for ${input.email}`))
+          return
+        }
+        resolve()
+      },
+    )
+  })
+}
+
+export interface UpdateDexPasswordInput {
+  email: string
+  newHash?: string
+  newUsername?: string
+  newGroups?: string[]
+}
+
+export async function updateDexPassword(input: UpdateDexPasswordInput): Promise<void> {
+  const dex = getDexClient()
+  await new Promise<void>((resolve, reject) => {
+    dex.updatePassword(
+      {
+        email: input.email,
+        newHash: input.newHash ? Buffer.from(input.newHash, 'utf-8') : Buffer.alloc(0),
+        newUsername: input.newUsername ?? '',
+        newGroups: input.newGroups !== undefined ? toDexGroups(input.newGroups) : [],
+      },
+      new Metadata(),
+      dexCallOptions(),
+      (err: ServiceError | null, resp: UpdatePasswordResp) => {
+        if (err) {
+          reject(new DexProvisionError(`Dex UpdatePassword failed for ${input.email}`, err))
+          return
+        }
+        if (resp?.notFound) {
+          reject(new NotExistError(`Dex has no password record for ${input.email}`))
+          return
+        }
+        resolve()
+      },
+    )
+  })
+}
+
+export async function verifyDexPassword(email: string, password: string): Promise<boolean> {
+  const dex = getDexClient()
+  return new Promise<boolean>((resolve, reject) => {
+    dex.verifyPassword(
+      { email, password },
+      new Metadata(),
+      dexCallOptions(),
+      (err: ServiceError | null, resp: VerifyPasswordResp) => {
+        if (err) {
+          reject(new DexProvisionError(`Dex VerifyPassword failed for ${email}`, err))
+          return
+        }
+        resolve(!!resp?.verified)
+      },
+    )
+  })
+}
+
+export async function listDexPasswords(): Promise<Password[]> {
+  const dex = getDexClient()
+  return new Promise<Password[]>((resolve, reject) => {
+    dex.listPasswords(
+      {},
+      new Metadata(),
+      dexCallOptions(),
+      (err: ServiceError | null, resp: { passwords: Password[] }) => {
+        if (err) {
+          reject(new DexProvisionError('Dex ListPasswords failed', err))
+          return
+        }
+        resolve(resp?.passwords ?? [])
+      },
+    )
+  })
+}
+
+export async function deleteDexPassword(email: string): Promise<void> {
+  const dex = getDexClient()
+  await new Promise<void>((resolve, reject) => {
+    dex.deletePassword(
+      { email },
+      new Metadata(),
+      dexCallOptions(),
+      (err: ServiceError | null, resp: DeletePasswordResp) => {
+        if (err) {
+          reject(new DexProvisionError(`Dex DeletePassword failed for ${email}`, err))
+          return
+        }
+        // notFound is treated as success: deleting an already-absent record is a no-op,
+        // matching deleteUser's existing idempotent-delete behavior for the Git side.
+        void resp
+        resolve()
+      },
+    )
+  })
+}
+
+export async function listUserIdentitiesByUserId(userId: string): Promise<UserIdentity[]> {
+  const dex = getDexClient()
+  const identities = await new Promise<UserIdentity[]>((resolve, reject) => {
+    dex.listUserIdentities(
+      {},
+      new Metadata(),
+      dexCallOptions(),
+      (err: ServiceError | null, resp: { identities: UserIdentity[] }) => {
+        if (err) {
+          reject(new DexProvisionError('Dex ListUserIdentities failed', err))
+          return
+        }
+        resolve(resp?.identities ?? [])
+      },
+    )
+  })
+  return identities.filter((identity) => identity.userId === userId)
+}
+
+// sub is base64(protobuf) of dexidp/dex's IDTokenSubject { user_id = 1, conn_id = 2 }.
+export function decodeDexUserId(sub: string): string {
+  try {
+    const reader = Reader.create(Buffer.from(sub, 'base64'))
+    reader.uint32()
+    return reader.string()
+  } catch (err) {
+    throw new DexProvisionError(`Could not decode Dex user id from subject: ${sub}`, err)
+  }
+}
+
+export async function terminateSessionsByUser(userId: string): Promise<number> {
+  const dex = getDexClient()
+  return new Promise<number>((resolve, reject) => {
+    dex.terminateSessionsByUser(
+      { userId },
+      new Metadata(),
+      dexCallOptions(),
+      (err: ServiceError | null, resp: TerminateSessionsByUserResp) => {
+        if (err) {
+          reject(new DexProvisionError(`Dex TerminateSessionsByUser failed for ${userId}`, err))
+          return
+        }
+        resolve(resp?.sessionsTerminated ?? 0)
+      },
+    )
+  })
+}
+
+// Cascades to the identity's auth session, refresh/offline sessions, its password record, and
+// the identity itself (see DeleteUserIdentityReq in @linode/dex-client-grpc's source .proto).
+export async function deleteDexUserIdentity(userId: string, connectorId: string): Promise<void> {
+  const dex = getDexClient()
+  await new Promise<void>((resolve, reject) => {
+    dex.deleteUserIdentity(
+      { userId, connectorId },
+      new Metadata(),
+      dexCallOptions(),
+      (err: ServiceError | null, resp: DeleteUserIdentityResp) => {
+        if (err) {
+          reject(new DexProvisionError(`Dex DeleteUserIdentity failed for ${userId}/${connectorId}`, err))
+          return
+        }
+        void resp
+        resolve()
+      },
+    )
+  })
+}

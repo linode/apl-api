@@ -1,0 +1,252 @@
+const mockCreatePassword = jest.fn()
+const mockUpdatePassword = jest.fn()
+const mockDeletePassword = jest.fn()
+const mockTerminateSessionsByUser = jest.fn()
+const mockVerifyPassword = jest.fn()
+
+jest.mock('@linode/dex-client-grpc', () => ({
+  DexClient: jest.fn().mockImplementation(() => ({
+    createPassword: mockCreatePassword,
+    updatePassword: mockUpdatePassword,
+    deletePassword: mockDeletePassword,
+    terminateSessionsByUser: mockTerminateSessionsByUser,
+    verifyPassword: mockVerifyPassword,
+  })),
+}))
+
+// dexClient.ts reads DEX_GRPC_ADDRESS at module load via cleanEnv(); override it here so the
+// value doesn't depend on process.env assignment order relative to this file's own imports.
+jest.mock('src/validators', () => ({
+  ...jest.requireActual('src/validators'),
+  cleanEnv: (validators: Record<string, unknown>) => ({
+    ...jest.requireActual('src/validators').cleanEnv(validators),
+    DEX_GRPC_ADDRESS: 'localhost:5557',
+  }),
+}))
+
+import { DEX_NO_GROUPS_SENTINEL } from './dexConstants'
+import { AlreadyExists, NotExistError } from 'src/error'
+import {
+  createDexPassword,
+  decodeDexUserId,
+  deleteDexPassword,
+  DexProvisionError,
+  terminateSessionsByUser,
+  updateDexPassword,
+  verifyDexPassword,
+} from './dexClient'
+
+describe('dexClient', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('createDexPassword sends email, hash, username, user_id and groups', async () => {
+    mockCreatePassword.mockImplementation((_req, _metadata, _options, cb) => cb(null, { alreadyExists: false }))
+
+    await createDexPassword({
+      id: 'uuid-1',
+      email: 'a@b.com',
+      passwordHash: '$2a$10$hash',
+      username: 'a',
+      groups: ['platform-admin'],
+    })
+
+    expect(mockCreatePassword).toHaveBeenCalledWith(
+      {
+        password: {
+          email: 'a@b.com',
+          hash: Buffer.from('$2a$10$hash', 'utf-8'),
+          username: 'a',
+          userId: 'uuid-1',
+          groups: ['platform-admin'],
+        },
+      },
+      expect.any(Object),
+      expect.any(Object),
+      expect.any(Function),
+    )
+  })
+
+  it('createDexPassword sends the no-groups sentinel instead of an empty array', async () => {
+    mockCreatePassword.mockImplementation((_req, _metadata, _options, cb) => cb(null, { alreadyExists: false }))
+
+    await createDexPassword({ id: 'uuid-1', email: 'a@b.com', passwordHash: 'h', username: 'a', groups: [] })
+
+    expect(mockCreatePassword).toHaveBeenCalledWith(
+      expect.objectContaining({ password: expect.objectContaining({ groups: [DEX_NO_GROUPS_SENTINEL] }) }),
+      expect.any(Object),
+      expect.any(Object),
+      expect.any(Function),
+    )
+  })
+
+  it('createDexPassword rejects with DexProvisionError on RPC error', async () => {
+    mockCreatePassword.mockImplementation((_req, _metadata, _options, cb) => cb(new Error('unavailable'), null))
+
+    await expect(
+      createDexPassword({ id: 'uuid-1', email: 'a@b.com', passwordHash: 'h', username: 'a', groups: [] }),
+    ).rejects.toBeInstanceOf(DexProvisionError)
+  })
+
+  it('createDexPassword rejects with AlreadyExists (409) when Dex reports alreadyExists', async () => {
+    mockCreatePassword.mockImplementation((_req, _metadata, _options, cb) => cb(null, { alreadyExists: true }))
+
+    await expect(
+      createDexPassword({ id: 'uuid-1', email: 'a@b.com', passwordHash: 'h', username: 'a', groups: [] }),
+    ).rejects.toBeInstanceOf(AlreadyExists)
+  })
+
+  it('updateDexPassword only sets provided fields', async () => {
+    mockUpdatePassword.mockImplementation((_req, _metadata, _options, cb) => cb(null, { notFound: false }))
+
+    await updateDexPassword({ email: 'a@b.com', newGroups: ['team-blue'] })
+
+    expect(mockUpdatePassword).toHaveBeenCalledWith(
+      { email: 'a@b.com', newHash: Buffer.alloc(0), newUsername: '', newGroups: ['team-blue'] },
+      expect.any(Object),
+      expect.any(Object),
+      expect.any(Function),
+    )
+  })
+
+  it('updateDexPassword sends the no-groups sentinel when clearing groups to empty', async () => {
+    mockUpdatePassword.mockImplementation((_req, _metadata, _options, cb) => cb(null, { notFound: false }))
+
+    await updateDexPassword({ email: 'a@b.com', newGroups: [] })
+
+    expect(mockUpdatePassword).toHaveBeenCalledWith(
+      expect.objectContaining({ newGroups: [DEX_NO_GROUPS_SENTINEL] }),
+      expect.any(Object),
+      expect.any(Object),
+      expect.any(Function),
+    )
+  })
+
+  it('updateDexPassword leaves newGroups empty when groups are not being touched', async () => {
+    mockUpdatePassword.mockImplementation((_req, _metadata, _options, cb) => cb(null, { notFound: false }))
+
+    await updateDexPassword({ email: 'a@b.com', newUsername: 'a' })
+
+    expect(mockUpdatePassword).toHaveBeenCalledWith(
+      expect.objectContaining({ newGroups: [] }),
+      expect.any(Object),
+      expect.any(Object),
+      expect.any(Function),
+    )
+  })
+
+  it('updateDexPassword rejects with NotExistError (404) when the record is not found', async () => {
+    mockUpdatePassword.mockImplementation((_req, _metadata, _options, cb) => cb(null, { notFound: true }))
+
+    await expect(updateDexPassword({ email: 'ghost@b.com' })).rejects.toBeInstanceOf(NotExistError)
+  })
+
+  it('deleteDexPassword resolves even when Dex reports not found (idempotent)', async () => {
+    mockDeletePassword.mockImplementation((_req, _metadata, _options, cb) => cb(null, { notFound: true }))
+
+    await expect(deleteDexPassword('a@b.com')).resolves.toBeUndefined()
+    expect(mockDeletePassword).toHaveBeenCalledWith(
+      { email: 'a@b.com' },
+      expect.any(Object),
+      expect.any(Object),
+      expect.any(Function),
+    )
+  })
+
+  it('deleteDexPassword rejects with DexProvisionError on RPC error', async () => {
+    mockDeletePassword.mockImplementation((_req, _metadata, _options, cb) => cb(new Error('unavailable'), null))
+
+    await expect(deleteDexPassword('a@b.com')).rejects.toBeInstanceOf(DexProvisionError)
+  })
+
+  it('terminateSessionsByUser sends userId and resolves with sessionsTerminated', async () => {
+    mockTerminateSessionsByUser.mockImplementation((_req, _metadata, _options, cb) =>
+      cb(null, { sessionsTerminated: 2 }),
+    )
+
+    await expect(terminateSessionsByUser('uuid-1')).resolves.toBe(2)
+    expect(mockTerminateSessionsByUser).toHaveBeenCalledWith(
+      { userId: 'uuid-1' },
+      expect.any(Object),
+      expect.any(Object),
+      expect.any(Function),
+    )
+  })
+
+  it('terminateSessionsByUser rejects with DexProvisionError on RPC error', async () => {
+    mockTerminateSessionsByUser.mockImplementation((_req, _metadata, _options, cb) =>
+      cb(new Error('unavailable'), null),
+    )
+
+    await expect(terminateSessionsByUser('uuid-1')).rejects.toBeInstanceOf(DexProvisionError)
+  })
+
+  it('terminateSessionsByUser sends a finite deadline so an unreachable Dex cannot hang the call', async () => {
+    mockTerminateSessionsByUser.mockImplementation((_req, _metadata, _options, cb) =>
+      cb(null, { sessionsTerminated: 0 }),
+    )
+
+    await terminateSessionsByUser('uuid-1')
+
+    const [, , options] = mockTerminateSessionsByUser.mock.calls[0]
+    expect(typeof options.deadline).toBe('number')
+    expect(options.deadline).toBeGreaterThan(Date.now())
+  })
+
+  it('verifyDexPassword resolves true when Dex reports the password matches', async () => {
+    mockVerifyPassword.mockImplementation((_req, _metadata, _options, cb) =>
+      cb(null, { verified: true, notFound: false }),
+    )
+
+    await expect(verifyDexPassword('a@b.com', 'secret')).resolves.toBe(true)
+    expect(mockVerifyPassword).toHaveBeenCalledWith(
+      { email: 'a@b.com', password: 'secret' },
+      expect.any(Object),
+      expect.any(Object),
+      expect.any(Function),
+    )
+  })
+
+  it('verifyDexPassword resolves false when Dex reports the password does not match', async () => {
+    mockVerifyPassword.mockImplementation((_req, _metadata, _options, cb) =>
+      cb(null, { verified: false, notFound: false }),
+    )
+
+    await expect(verifyDexPassword('a@b.com', 'wrong')).resolves.toBe(false)
+  })
+
+  it('verifyDexPassword resolves false when Dex reports the email is not found', async () => {
+    mockVerifyPassword.mockImplementation((_req, _metadata, _options, cb) =>
+      cb(null, { verified: false, notFound: true }),
+    )
+
+    await expect(verifyDexPassword('ghost@b.com', 'secret')).resolves.toBe(false)
+  })
+
+  it('verifyDexPassword rejects with DexProvisionError on RPC error', async () => {
+    mockVerifyPassword.mockImplementation((_req, _metadata, _options, cb) => cb(new Error('unavailable'), null))
+
+    await expect(verifyDexPassword('a@b.com', 'secret')).rejects.toBeInstanceOf(DexProvisionError)
+  })
+
+  it('verifyDexPassword sends a finite deadline so an unreachable Dex cannot hang the call', async () => {
+    mockVerifyPassword.mockImplementation((_req, _metadata, _options, cb) =>
+      cb(null, { verified: true, notFound: false }),
+    )
+
+    await verifyDexPassword('a@b.com', 'secret')
+
+    const [, , options] = mockVerifyPassword.mock.calls[0]
+    expect(typeof options.deadline).toBe('number')
+    expect(options.deadline).toBeGreaterThan(Date.now())
+  })
+
+  it('decodeDexUserId extracts the raw user_id from a Dex-issued sub claim', () => {
+    expect(decodeDexUserId('ChJhcGwtcGxhdGZvcm0tYWRtaW4SBWxvY2Fs')).toBe('apl-platform-admin')
+  })
+
+  it('decodeDexUserId throws DexProvisionError when the sub is not a valid Dex subject', () => {
+    expect(() => decodeDexUserId('/w==')).toThrow(DexProvisionError) // truncated varint
+  })
+})
