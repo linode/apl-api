@@ -115,9 +115,44 @@ User:
       uniqueItems: true
     initialPassword:
       type: string
-      description: The initial password of the user
+      minLength: 8
+      maxLength: 32
+      description: The initial password of the user. With Dex as issuer, an admin may set this on create; otherwise one is generated.
   required:
     - email
-    - firstName
-    - lastName
+  type: object
+
+UserLogout:
+  description: Permission to log out the current session. Not a CRUD resource; gates POST /v2/user/logout only.
+  x-acl:
+    platformAdmin:
+      - create-any
+    teamAdmin:
+      - create-any
+    teamMember:
+      - create-any
+  properties: {}
+  type: object
+
+ResetPasswordRequest:
+  description: Permission to reset the caller's own password.
+  x-acl:
+    platformAdmin:
+      - create-any
+    teamAdmin:
+      - create-any
+    teamMember:
+      - create-any
+  properties:
+    currentPassword:
+      type: string
+      description: The caller's current password, verified by Dex before the change is applied.
+    newPassword:
+      type: string
+      minLength: 8
+      maxLength: 32
+      description: The new password.
+  required:
+    - currentPassword
+    - newPassword
   type: object

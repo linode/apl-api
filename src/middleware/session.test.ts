@@ -353,6 +353,40 @@ describe('session middleware', () => {
     })
   })
 
+  describe.each(['/v2/user/logout', '/v2/user/reset-password'])('POST %s', (path) => {
+    it('uses the read-only stack and does not create an editor session', async () => {
+      await sessionModule.getSessionStack()
+
+      const middleware = sessionModule.sessionMiddleware(undefined as unknown as http.Server)
+      const req = { ...createRequest('POST'), path }
+      const res = createResponse()
+      const next = jest.fn()
+
+      await middleware(req as unknown as Request, res, next)
+
+      expect(req.otomi).toBe(readOnlyStack)
+      expect(mockUuidv4).not.toHaveBeenCalled()
+      expect(mockSessionInitGitWorktree).not.toHaveBeenCalled()
+      expect(mockSessionCopyFrom).not.toHaveBeenCalled()
+      expect(next).toHaveBeenCalledTimes(1)
+    })
+
+    it('is not blocked while the API is locked', async () => {
+      await sessionModule.getSessionStack()
+      readOnlyStack.locked = true
+
+      const middleware = sessionModule.sessionMiddleware(undefined as unknown as http.Server)
+      const req = { ...createRequest('POST'), path }
+      const res = createResponse()
+      const next = jest.fn()
+
+      await middleware(req as unknown as Request, res, next)
+
+      expect(req.otomi).toBe(readOnlyStack)
+      expect(next).toHaveBeenCalledTimes(1)
+    })
+  })
+
   describe('write requests', () => {
     it.each(['PATCH', 'POST', 'PUT', 'DELETE'])('creates an isolated session stack for %s requests', async (method) => {
       const { req, next } = await runMiddleware(method)

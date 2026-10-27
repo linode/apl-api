@@ -50,6 +50,17 @@ SettingsInfo:
         hasExternalIDP:
           type: boolean
           default: false
+        oidc:
+          type: object
+          additionalProperties: false
+          properties:
+            authenticationLayer:
+              type: string
+              enum:
+                - dex
+                - keycloak
+              default: keycloak
+              description: Which app every consumer authenticates against.
         git:
           properties:
             repoUrl:
