@@ -321,6 +321,19 @@ describe('Work with values', () => {
   })
 })
 
+describe('Settings info', () => {
+  test('includes the OIDC authentication layer', async () => {
+    const otomiStack = new OtomiStack()
+    jest.spyOn(otomiStack, 'getSettings').mockResolvedValue({
+      otomi: { version: 'latest', oidc: { authenticationLayer: 'dex' } },
+    })
+
+    await expect(otomiStack.getSettingsInfo()).resolves.toMatchObject({
+      otomi: { oidc: { authenticationLayer: 'dex' } },
+    })
+  })
+})
+
 describe('Workload values', () => {
   let otomiStack: OtomiStack
   beforeEach(async () => {

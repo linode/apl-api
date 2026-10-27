@@ -438,6 +438,7 @@ export default class OtomiStack {
       'hasExternalIDP',
       'isPreInstalled',
       'aiEnabled',
+      'oidc.authenticationLayer',
       'git.repoUrl',
       'git.branch',
       'git.username',
