@@ -342,12 +342,12 @@ describe('session middleware', () => {
     })
   })
 
-  describe('POST /v2/user/logout', () => {
+  describe.each(['/v2/user/logout', '/v2/user/reset-password'])('POST %s', (path) => {
     it('uses the read-only stack and does not create an editor session', async () => {
       await sessionModule.getSessionStack()
 
       const middleware = sessionModule.sessionMiddleware(undefined as unknown as http.Server)
-      const req = { ...createRequest('POST'), path: '/v2/user/logout' }
+      const req = { ...createRequest('POST'), path }
       const res = createResponse()
       const next = jest.fn()
 
@@ -365,7 +365,7 @@ describe('session middleware', () => {
       readOnlyStack.locked = true
 
       const middleware = sessionModule.sessionMiddleware(undefined as unknown as http.Server)
-      const req = { ...createRequest('POST'), path: '/v2/user/logout' }
+      const req = { ...createRequest('POST'), path }
       const res = createResponse()
       const next = jest.fn()
 

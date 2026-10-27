@@ -27,7 +27,7 @@ RUN npm run lint
 RUN npm run test
 
 # --------------- Cleanup
-FROM ci as clean
+FROM ci AS clean
 # below command removes the packages specified in devDependencies and set NODE_ENV to production
 RUN npm prune --production
 # --------------- Production stage
