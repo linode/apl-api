@@ -1,4 +1,4 @@
-FROM node:24-alpine as ci
+FROM node:24.22.1-alpine AS ci
 
 ENV NODE_ENV=test
 ENV BLUEBIRD_DEBUG=0
@@ -10,10 +10,16 @@ WORKDIR /app
 
 # Install dependencies before copying the full source code to take advantage of Docker layer caching
 COPY package*.json ./
+COPY .npmrc ./
 # Needed for postinstall (build:models) during npm ci
 COPY src/build-spec.ts ./src/build-spec.ts
 COPY src/openapi ./src/openapi
-RUN npm ci
+# @linode/dex-client-grpc is hosted on GitHub Packages, which requires auth even for public pkg.
+RUN --mount=type=secret,id=NPM_TOKEN \
+  cp .npmrc .npmrc.orig && \
+  echo "//npm.pkg.github.com/:_authToken=$(cat /run/secrets/NPM_TOKEN)" >> .npmrc && \
+  npm ci && \
+  mv .npmrc.orig .npmrc
 
 COPY . .* ./
 RUN npm run build
@@ -21,11 +27,11 @@ RUN npm run lint
 RUN npm run test
 
 # --------------- Cleanup
-FROM ci as clean
+FROM ci AS clean
 # below command removes the packages specified in devDependencies and set NODE_ENV to production
 RUN npm prune --production
 # --------------- Production stage
-FROM node:24-alpine AS prod
+FROM node:24.22.1-alpine AS prod
 
 ENV NODE_ENV=production
 ENV NODE_PATH='dist'
