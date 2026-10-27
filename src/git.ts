@@ -10,9 +10,9 @@ import { CheckRepoActions, CleanOptions, CommitResult, ResetMode, simpleGit, Sim
 import { cleanEnv, GIT_LOCAL_PATH, GIT_PASSWORD, GIT_PUSH_RETRIES } from 'src/validators'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { GitPullError } from './error'
+import { getAuthenticatedUrl, getProtocol, getUrl } from './git/connect'
 import { Core, GitConfig } from './otomi-models'
 import { getSanitizedErrorMessage, removeBlankAttributes, sanitizeGitPassword } from './utils'
-import { getAuthenticatedUrl, getProtocol, getUrl } from './git/connect'
 
 const debug = Debug('otomi:repo')
 
@@ -180,9 +180,8 @@ export class Git {
         return await this.initFromTestFolder()
       }
       debug(`Cloning from '${this.url}' to '${this.path}'`)
-      await this.git.clone(this.urlAuth, this.path)
+      await this.git.clone(this.urlAuth, this.path, ['--single-branch', '-b', this.branch])
       await this.addConfig()
-      await this.git.checkout(this.branch)
     } else if (this.url) {
       debug('Repo already exists. Checking out correct branch.')
       // Git fetch ensures that local git repository is synced with remote repository
