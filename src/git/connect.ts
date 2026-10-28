@@ -19,13 +19,9 @@ export function getAuthenticatedUrl(gitConfig: { repoUrl: string; username?: str
   const { repoUrl, username, password } = gitConfig
   const urlNormalized = getUrl(repoUrl)
   const url = new URL(urlNormalized)
-  if (username) {
-    url.username = encodeURIComponent(username)
-    url.password = encodeURIComponent(password)
-  } else {
-    url.username = encodeURIComponent(password)
-    url.password = ''
-  }
+  // A PAT-only URL loses its credentials on redirect since libcurl 8.23
+  url.username = encodeURIComponent(username || 'otomi-admin')
+  url.password = encodeURIComponent(password)
   return url.toString()
 }
 
