@@ -162,6 +162,7 @@ export async function getAuthenticatedGitClient(
 
   const gitOptions: Partial<SimpleGitOptions> = {
     allowEnvironment: isSSH ? ['GIT_TERMINAL_PROMPT', 'GIT_SSH_COMMAND'] : ['GIT_TERMINAL_PROMPT'],
+    config: ['http.followRedirects=false'],
     ...(isSSH ? { unsafe: { allowUnsafeSshCommand: true } } : {}),
   }
   const git: SimpleGit = simpleGit(gitOptions).env('GIT_TERMINAL_PROMPT', '0')
