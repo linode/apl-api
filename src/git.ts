@@ -399,7 +399,7 @@ export default async function getRepo(
   const { repoUrl, branch, username, email } = gitConfig
   const urlNormalized = getUrl(repoUrl)
   const urlAuth = getAuthenticatedUrl(gitConfig)
-  const repo = new Git(path, urlNormalized, username ?? 'otomi-admin', email, urlAuth, branch)
+  const repo = new Git(path, urlNormalized, username || 'otomi-admin', email, urlAuth, branch)
   await repo[method]()
   return repo
 }
