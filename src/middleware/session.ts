@@ -115,10 +115,14 @@ export function sessionMiddleware(server: http.Server): RequestHandler {
         await verifyJwt(token)
         await completeAuthAttempt()
       } catch (error) {
-        if (error instanceof SocketAuthRateLimitError) return next(error)
         debug(`Transport JWT verification failed: ${getSanitizedErrorMessage(error)}`)
-        res.writeHead(401, { 'Content-Type': 'application/json' })
-        return res.end(JSON.stringify({ message: 'Unauthorized' }))
+        if (error instanceof SocketAuthRateLimitError) {
+          res.writeHead(error.data.status, { 'Content-Type': 'application/json' })
+          return res.end(JSON.stringify({ message: error.message, retryAfter: error.data.retryAfter }))
+        } else {
+          res.writeHead(401, { 'Content-Type': 'application/json' })
+          return res.end(JSON.stringify({ message: 'Unauthorized' }))
+        }
       }
       return next()
     })
