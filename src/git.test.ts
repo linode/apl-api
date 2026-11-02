@@ -52,7 +52,7 @@ describe('Git.testRemoteConnection', () => {
     expect(result).toBe(true)
   })
 
-  it('calls ls-remote with PAT only (no username) in url', async () => {
+  it('calls ls-remote with placeholder username when only a PAT is given', async () => {
     mockRaw.mockResolvedValue('abc123\trefs/heads/main\n')
     const repo = makeRepo()
     const gitConfig = {
@@ -63,7 +63,11 @@ describe('Git.testRemoteConnection', () => {
     }
     const result = await repo.testRemoteConnection(gitConfig)
     expect(result).toBe(true)
-    expect(mockRaw).toHaveBeenCalledWith(['ls-remote', 'https://mytoken@example.com/repo.git', 'refs/heads/main'])
+    expect(mockRaw).toHaveBeenCalledWith([
+      'ls-remote',
+      'https://otomi-admin:mytoken@example.com/repo.git',
+      'refs/heads/main',
+    ])
   })
 
   it('returns false when branch does not exist but remote has other refs', async () => {
@@ -137,7 +141,7 @@ describe('Git.pushToNewRemote', () => {
     expect(mockPush).toHaveBeenCalledWith('migration-remote', 'HEAD:refs/heads/main')
   })
 
-  it('uses PAT only (no username) in migration-remote url', async () => {
+  it('uses placeholder username in migration-remote url when only a PAT is given', async () => {
     mockFetch.mockResolvedValue({})
     mockRemote.mockResolvedValue('')
     mockPush.mockResolvedValue({})
@@ -151,7 +155,7 @@ describe('Git.pushToNewRemote', () => {
     await repo.pushToNewRemote(gitConfig)
 
     expect(mockRemote).toHaveBeenCalledWith(
-      expect.arrayContaining(['add', 'migration-remote', 'https://mytoken@example.com/repo.git']),
+      expect.arrayContaining(['add', 'migration-remote', 'https://otomi-admin:mytoken@example.com/repo.git']),
     )
   })
 
