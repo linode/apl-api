@@ -100,11 +100,9 @@ User:
       description: The last name of the user.
     isPlatformAdmin:
       type: boolean
-      default: false
       description: Select to assign the user the platform-admin role.
     isTeamAdmin:
       type: boolean
-      default: false
       description: Select to assign the user the team-admin role.
     teams:
       description: Select the team(s) to assign the user the team-member role.
