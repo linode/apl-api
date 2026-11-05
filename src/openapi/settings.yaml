@@ -1,3 +1,72 @@
+ObjStorageDisabled:
+  title: Disabled
+  type: object
+  properties:
+    type:
+      type: string
+      enum:
+        - disabled
+      default: disabled
+
+ObjStorageLinode:
+  title: Linode
+  type: object
+  x-hideTitle: true
+  properties:
+    linode:
+      type: object
+      title: Linode
+      description: Select to use Linode Object Storage.
+      properties:
+        region:
+          type: string
+          description: The name of the Linode region.
+          $ref: 'definitions.yaml#/wordCharacterPattern'
+        accessKeyId:
+          type: string
+          description: The ID of the access key.
+          $ref: 'definitions.yaml#/wordCharacterPattern'
+        secretAccessKey:
+          type: string
+          description: The Secret of the access key.
+          $ref: 'definitions.yaml#/wordCharacterPattern'
+          x-secret: true
+        buckets:
+          description: Add the preferred bucket names for each app.
+          properties:
+            loki:
+              type: string
+              $ref: 'definitions.yaml#/wordCharacterPattern'
+              default: loki
+            cnpg:
+              type: string
+              $ref: 'definitions.yaml#/wordCharacterPattern'
+              default: cnpg
+            harbor:
+              type: string
+              $ref: 'definitions.yaml#/wordCharacterPattern'
+              default: harbor
+            gitea:
+              type: string
+              $ref: 'definitions.yaml#/wordCharacterPattern'
+              default: gitea
+            kubeflow-pipelines:
+              type: string
+              $ref: 'definitions.yaml#/wordCharacterPattern'
+              default: kubeflow-pipelines
+      required:
+        - region
+        - accessKeyId
+        - secretAccessKey
+    type:
+      type: string
+      enum:
+        - linode
+      default: linode
+  required:
+    - linode
+    - type
+
 Settings:
   x-acl:
     platformAdmin: [read-any, update-any]
@@ -76,71 +145,8 @@ Settings:
           title: Object Storage provider
           description: Select the preferred Object Storage provider.
           oneOf:
-            - title: Disabled
-              type: object
-              properties:
-                type:
-                  type: string
-                  enum:
-                    - disabled
-                  default: disabled
-            - title: Linode
-              type: object
-              x-hideTitle: true
-              properties:
-                linode:
-                  type: object
-                  title: Linode
-                  description: Select to use Linode Object Storage.
-                  properties:
-                    region:
-                      type: string
-                      description: The name of the Linode region.
-                      $ref: 'definitions.yaml#/wordCharacterPattern'
-                    accessKeyId:
-                      type: string
-                      description: The ID of the access key.
-                      $ref: 'definitions.yaml#/wordCharacterPattern'
-                    secretAccessKey:
-                      type: string
-                      description: The Secret of the access key.
-                      $ref: 'definitions.yaml#/wordCharacterPattern'
-                      x-secret: true
-                    buckets:
-                      description: Add the preferred bucket names for each app.
-                      properties:
-                        loki:
-                          type: string
-                          $ref: 'definitions.yaml#/wordCharacterPattern'
-                          default: loki
-                        cnpg:
-                          type: string
-                          $ref: 'definitions.yaml#/wordCharacterPattern'
-                          default: cnpg
-                        harbor:
-                          type: string
-                          $ref: 'definitions.yaml#/wordCharacterPattern'
-                          default: harbor
-                        gitea:
-                          type: string
-                          $ref: 'definitions.yaml#/wordCharacterPattern'
-                          default: gitea
-                        kubeflow-pipelines:
-                          type: string
-                          $ref: 'definitions.yaml#/wordCharacterPattern'
-                          default: kubeflow-pipelines
-                  required:
-                    - region
-                    - accessKeyId
-                    - secretAccessKey
-                type:
-                  type: string
-                  enum:
-                    - linode
-                  default: linode
-              required:
-                - linode
-                - type
+            - $ref: '#/ObjStorageDisabled'
+            - $ref: '#/ObjStorageLinode'
     dns:
       $ref: 'definitions.yaml#/dns'
       x-externalDocsPath: dns
