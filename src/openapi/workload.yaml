@@ -153,9 +153,9 @@ Workload:
       title: Auto Image Updater
       type: object
       oneOf:
-        - ref: '#/ImageUpdateDisabled'
-        - ref: '#/ImageUpdateDigest'
-        - ref: '#/ImageUpdateSemver'
+        - $ref: '#/ImageUpdateDisabled'
+        - $ref: '#/ImageUpdateDigest'
+        - $ref: '#/ImageUpdateSemver'
   required:
     - name
     - url
