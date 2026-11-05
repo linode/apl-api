@@ -181,13 +181,6 @@ Settings:
               - $ref: 'definitions.yaml#/ingressClassParameters'
             required:
               - className
-    kms:
-      $ref: 'definitions.yaml#/kms'
-      x-externalDocsPath: sops
-      x-acl:
-        platformAdmin: [read-any, update-any]
-        teamAdmin: []
-        teamMember: []
     oidc:
       title: OIDC
       additionalProperties: false
