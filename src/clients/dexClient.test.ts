@@ -34,11 +34,29 @@ import {
   terminateSessionsByUser,
   updateDexPassword,
   verifyDexPassword,
+  withDexGroupLock,
 } from './dexClient'
 
 describe('dexClient', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+  })
+
+  it('withDexGroupLock runs callers one at a time and keeps going after a failure', async () => {
+    const events: string[] = []
+    const task = (name: string, fail = false) =>
+      withDexGroupLock(async () => {
+        events.push(`start ${name}`)
+        await new Promise((resolve) => setTimeout(resolve, 5))
+        events.push(`end ${name}`)
+        if (fail) throw new Error(name)
+        return name
+      })
+
+    const results = await Promise.allSettled([task('a'), task('b', true), task('c')])
+
+    expect(events).toEqual(['start a', 'end a', 'start b', 'end b', 'start c', 'end c'])
+    expect(results.map((r) => r.status)).toEqual(['fulfilled', 'rejected', 'fulfilled'])
   })
 
   it('createDexPassword sends email, hash, username, user_id and groups', async () => {

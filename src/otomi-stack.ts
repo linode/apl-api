@@ -161,6 +161,7 @@ import {
   terminateSessionsByUser,
   updateDexPassword,
   verifyDexPassword,
+  withDexGroupLock,
 } from './clients/dexClient'
 import {
   extractRepositoryRefs,
@@ -1100,10 +1101,12 @@ export default class OtomiStack {
   // Runs before the team is deleted so a Dex failure aborts the delete and a retry is safe.
   private async removeTeamFromDexUsers(teamId: string): Promise<void> {
     const teamGroup = `team-${teamId}`
-    const members = (await listDexPasswords()).filter((p) => p.groups.includes(teamGroup))
-    for (const member of members) {
-      await updateDexPassword({ email: member.email, newGroups: member.groups.filter((g) => g !== teamGroup) })
-    }
+    await withDexGroupLock(async () => {
+      const members = (await listDexPasswords()).filter((p) => p.groups.includes(teamGroup))
+      for (const member of members) {
+        await updateDexPassword({ email: member.email, newGroups: member.groups.filter((g) => g !== teamGroup) })
+      }
+    })
   }
 
   async saveTeamConfigItem(aplTeamObject: AplTeamObject): Promise<AplRecord> {
@@ -1426,6 +1429,10 @@ export default class OtomiStack {
   }
 
   private async editDexUser(id: string, data: User): Promise<User> {
+    return withDexGroupLock(() => this.editDexUserLocked(id, data))
+  }
+
+  private async editDexUserLocked(id: string, data: User): Promise<User> {
     const { match, user: existingUser } = await this.lookupDexUser(id)
     // email is immutable in Dex
     if (data.email !== undefined && data.email !== existingUser.email) {
@@ -1568,13 +1575,15 @@ export default class OtomiStack {
     data: Pick<User, 'id' | 'teams'>[],
     sessionUser: SessionUser,
   ): Promise<Pick<User, 'id' | 'teams'>[]> {
-    const dexPasswords = await listDexPasswords()
-    const updatedUsers: Pick<User, 'id' | 'teams'>[] = []
+    return withDexGroupLock(async () => {
+      const dexPasswords = await listDexPasswords()
+      const updatedUsers: Pick<User, 'id' | 'teams'>[] = []
 
-    for (const userData of data) {
-      updatedUsers.push(await this.applyDexTeamUpdate(userData, sessionUser, dexPasswords))
-    }
-    return updatedUsers
+      for (const userData of data) {
+        updatedUsers.push(await this.applyDexTeamUpdate(userData, sessionUser, dexPasswords))
+      }
+      return updatedUsers
+    })
   }
 
   private async applyDexTeamUpdate(
