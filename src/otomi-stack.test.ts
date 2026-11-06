@@ -1101,6 +1101,43 @@ describe('Users tests', () => {
       expect(users.map((u) => u.email)).toEqual(['a@example.com', 'b@example.com'])
     })
 
+    it('deleteAplTeam removes the team group from Dex users when AUTH_PROVIDER is dex', async () => {
+      mockListDexPasswords.mockResolvedValue([
+        dexPassword({ email: 'a@example.com', groups: ['team-admin', 'team-blue', 'team-red'] }),
+        dexPassword({ email: 'b@example.com', groups: ['team-blue'] }),
+        dexPassword({ email: 'c@example.com', groups: ['team-red'] }),
+      ])
+      const otomi = await getTestStack('dex')
+
+      await otomi.deleteAplTeam('blue')
+
+      expect(mockUpdateDexPassword.mock.calls.map((c) => c[0])).toEqual([
+        { email: 'a@example.com', newGroups: ['team-admin', 'team-red'] },
+        { email: 'b@example.com', newGroups: [] },
+      ])
+      expect(otomi.doDeleteDeployment).toHaveBeenCalled()
+    })
+
+    it('deleteAplTeam aborts before deleting the team when the Dex update fails', async () => {
+      mockListDexPasswords.mockResolvedValue([dexPassword({ groups: ['team-blue'] })])
+      mockUpdateDexPassword.mockRejectedValueOnce(new Error('dex unavailable'))
+      const otomi = await getTestStack('dex')
+
+      await expect(otomi.deleteAplTeam('blue')).rejects.toThrow('dex unavailable')
+
+      expect(otomi.git.removeDir).not.toHaveBeenCalled()
+      expect(otomi.doDeleteDeployment).not.toHaveBeenCalled()
+    })
+
+    it('deleteAplTeam does not call Dex when AUTH_PROVIDER is keycloak (default)', async () => {
+      const otomi = await getTestStack('keycloak')
+
+      await otomi.deleteAplTeam('blue')
+
+      expect(mockListDexPasswords).not.toHaveBeenCalled()
+      expect(mockUpdateDexPassword).not.toHaveBeenCalled()
+    })
+
     it('editUser looks the record up in Dex, sends newGroups, and writes nothing to Git when AUTH_PROVIDER is dex', async () => {
       mockListDexPasswords.mockResolvedValue([
         dexPassword({ userId: 'uuid-2', email: 'legacy@example.com', groups: [] }),

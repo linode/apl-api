@@ -1092,8 +1092,18 @@ export default class OtomiStack {
   }
 
   async deleteAplTeam(id: string): Promise<void> {
+    if (env.AUTH_PROVIDER === 'dex') await this.removeTeamFromDexUsers(id)
     const filePaths = await this.deleteTeamObjects(id)
     await this.doDeleteDeployment(filePaths)
+  }
+
+  // Runs before the team is deleted so a Dex failure aborts the delete and a retry is safe.
+  private async removeTeamFromDexUsers(teamId: string): Promise<void> {
+    const teamGroup = `team-${teamId}`
+    const members = (await listDexPasswords()).filter((p) => p.groups.includes(teamGroup))
+    for (const member of members) {
+      await updateDexPassword({ email: member.email, newGroups: member.groups.filter((g) => g !== teamGroup) })
+    }
   }
 
   async saveTeamConfigItem(aplTeamObject: AplTeamObject): Promise<AplRecord> {
