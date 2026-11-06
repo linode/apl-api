@@ -1479,7 +1479,7 @@ describe('Users tests', () => {
       const otomi = await getTestStack('dex')
 
       await expect(otomi.resetOwnPassword(sessionUser, 'wrong-pw', 'brand-new-password')).rejects.toMatchObject({
-        code: 401,
+        code: 400,
       })
 
       expect(mockUpdateDexPassword).not.toHaveBeenCalled()

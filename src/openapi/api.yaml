@@ -1765,8 +1765,8 @@ paths:
       responses:
         '204':
           description: Password updated.
-        '401':
-          description: The current password is incorrect.
+        '400':
+          description: The current password is incorrect, or the new password is invalid.
 
   /v1/apiDocs:
     get:

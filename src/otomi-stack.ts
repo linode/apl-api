@@ -23,7 +23,6 @@ import {
   HttpError,
   NotExistError,
   OtomiError,
-  UnauthorizedError,
   ValidationError,
 } from 'src/error'
 import { getSettingsFileMaps } from 'src/fileStore/file-map'
@@ -3088,7 +3087,7 @@ export default class OtomiStack {
     if (newPassword === currentPassword) throw new BadRequestError('New password must differ from the current one.')
     this.assertPasswordLength(newPassword)
     if (!(await verifyDexPassword(user.email, currentPassword))) {
-      throw new UnauthorizedError('Current password is incorrect.')
+      throw new BadRequestError('Current password is incorrect.')
     }
     // Revoke before writing the new hash: if this fails, the old password is still valid and the
     // caller can safely retry. Reversing the order would let a failed write-after-revoke leave the
