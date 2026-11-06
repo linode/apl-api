@@ -81,6 +81,7 @@ jest.mock('./clients/dexClient', () => ({
   terminateSessionsByUser: (...args: any[]) => mockTerminateSessionsByUser(...args),
   verifyDexPassword: (...args: any[]) => mockVerifyDexPassword(...args),
   decodeDexUserId: jest.requireActual('./clients/dexClient').decodeDexUserId,
+  withDexGroupLock: jest.requireActual('./clients/dexClient').withDexGroupLock,
   DEX_NO_GROUPS_SENTINEL: '__no_groups__',
   DexProvisionError: class DexProvisionError extends Error {},
 }))
@@ -886,6 +887,9 @@ describe('Users tests', () => {
     afterEach(() => {
       process.env.AUTH_PROVIDER = originalAuthProvider
       jest.clearAllMocks()
+      // useInMemoryDex installs implementations that clearAllMocks keeps; restore the defaults.
+      mockUpdateDexPassword.mockReset().mockResolvedValue(undefined)
+      mockListDexPasswords.mockReset().mockResolvedValue([])
     })
 
     // env.AUTH_PROVIDER is captured once, at module-load time, by otomi-stack.ts's own cleanEnv() call.
@@ -1099,6 +1103,81 @@ describe('Users tests', () => {
 
       expect(users).toHaveLength(2)
       expect(users.map((u) => u.email)).toEqual(['a@example.com', 'b@example.com'])
+    })
+
+    it('deleteAplTeam removes the team group from Dex users when AUTH_PROVIDER is dex', async () => {
+      mockListDexPasswords.mockResolvedValue([
+        dexPassword({ email: 'a@example.com', groups: ['team-admin', 'team-blue', 'team-red'] }),
+        dexPassword({ email: 'b@example.com', groups: ['team-blue'] }),
+        dexPassword({ email: 'c@example.com', groups: ['team-red'] }),
+      ])
+      const otomi = await getTestStack('dex')
+
+      await otomi.deleteAplTeam('blue')
+
+      expect(mockUpdateDexPassword.mock.calls.map((c) => c[0])).toEqual([
+        { email: 'a@example.com', newGroups: ['team-admin', 'team-red'] },
+        { email: 'b@example.com', newGroups: [] },
+      ])
+      expect(otomi.doDeleteDeployment).toHaveBeenCalled()
+    })
+
+    it('deleteAplTeam aborts before deleting the team when the Dex update fails', async () => {
+      mockListDexPasswords.mockResolvedValue([dexPassword({ groups: ['team-blue'] })])
+      mockUpdateDexPassword.mockRejectedValueOnce(new Error('dex unavailable'))
+      const otomi = await getTestStack('dex')
+
+      await expect(otomi.deleteAplTeam('blue')).rejects.toThrow('dex unavailable')
+
+      expect(otomi.git.removeDir).not.toHaveBeenCalled()
+      expect(otomi.doDeleteDeployment).not.toHaveBeenCalled()
+    })
+
+    // In-memory Dex whose UpdatePassword replaces groups after a delay, like the real API, so an
+    // unlocked read-modify-write would let concurrent writers overwrite each other.
+    function useInMemoryDex(records: ReturnType<typeof dexPassword>[]) {
+      const store = new Map(records.map((r) => [r.email, { ...r }]))
+      mockListDexPasswords.mockImplementation(async () => [...store.values()].map((r) => ({ ...r })))
+      mockUpdateDexPassword.mockImplementation(async ({ email, newGroups }) => {
+        await new Promise((resolve) => setTimeout(resolve, 10))
+        if (newGroups) store.get(email)!.groups = newGroups
+      })
+      return store
+    }
+
+    it("concurrent deleteAplTeam calls do not restore each other's removed team groups", async () => {
+      const store = useInMemoryDex([dexPassword({ email: 'a@example.com', groups: ['team-blue', 'team-red'] })])
+      const otomi = await getTestStack('dex')
+
+      await Promise.all([otomi.deleteAplTeam('blue'), otomi.deleteAplTeam('red')])
+
+      expect(store.get('a@example.com')!.groups).toEqual([])
+    })
+
+    it('a concurrent editUser role change is not overwritten by deleteAplTeam', async () => {
+      const store = useInMemoryDex([
+        dexPassword({ userId: 'uuid-1', email: 'a@example.com', groups: ['team-blue', 'team-red'] }),
+      ])
+      const otomi = await getTestStack('dex')
+      createTestTeam(otomi, 'blue')
+      createTestTeam(otomi, 'red')
+      const sessionUserArg = { isPlatformAdmin: true } as unknown as SessionUser
+
+      await Promise.all([
+        otomi.deleteAplTeam('blue'),
+        otomi.editUser('uuid-1', { isTeamAdmin: true } as User, sessionUserArg),
+      ])
+
+      expect(store.get('a@example.com')!.groups).toEqual(['team-admin', 'team-red'])
+    })
+
+    it('deleteAplTeam does not call Dex when AUTH_PROVIDER is keycloak (default)', async () => {
+      const otomi = await getTestStack('keycloak')
+
+      await otomi.deleteAplTeam('blue')
+
+      expect(mockListDexPasswords).not.toHaveBeenCalled()
+      expect(mockUpdateDexPassword).not.toHaveBeenCalled()
     })
 
     it('editUser looks the record up in Dex, sends newGroups, and writes nothing to Git when AUTH_PROVIDER is dex', async () => {
@@ -1400,7 +1479,7 @@ describe('Users tests', () => {
       const otomi = await getTestStack('dex')
 
       await expect(otomi.resetOwnPassword(sessionUser, 'wrong-pw', 'brand-new-password')).rejects.toMatchObject({
-        code: 401,
+        code: 400,
       })
 
       expect(mockUpdateDexPassword).not.toHaveBeenCalled()
