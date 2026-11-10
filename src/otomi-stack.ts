@@ -23,7 +23,6 @@ import {
   HttpError,
   NotExistError,
   OtomiError,
-  UnauthorizedError,
   ValidationError,
 } from 'src/error'
 import { getSettingsFileMaps } from 'src/fileStore/file-map'
@@ -161,6 +160,7 @@ import {
   terminateSessionsByUser,
   updateDexPassword,
   verifyDexPassword,
+  withDexGroupLock,
 } from './clients/dexClient'
 import {
   extractRepositoryRefs,
@@ -1092,8 +1092,20 @@ export default class OtomiStack {
   }
 
   async deleteAplTeam(id: string): Promise<void> {
+    if (env.AUTH_PROVIDER === 'dex') await this.removeTeamFromDexUsers(id)
     const filePaths = await this.deleteTeamObjects(id)
     await this.doDeleteDeployment(filePaths)
+  }
+
+  // Runs before the team is deleted so a Dex failure aborts the delete and a retry is safe.
+  private async removeTeamFromDexUsers(teamId: string): Promise<void> {
+    const teamGroup = `team-${teamId}`
+    await withDexGroupLock(async () => {
+      const members = (await listDexPasswords()).filter((p) => p.groups.includes(teamGroup))
+      for (const member of members) {
+        await updateDexPassword({ email: member.email, newGroups: member.groups.filter((g) => g !== teamGroup) })
+      }
+    })
   }
 
   async saveTeamConfigItem(aplTeamObject: AplTeamObject): Promise<AplRecord> {
@@ -1416,6 +1428,10 @@ export default class OtomiStack {
   }
 
   private async editDexUser(id: string, data: User): Promise<User> {
+    return withDexGroupLock(() => this.editDexUserLocked(id, data))
+  }
+
+  private async editDexUserLocked(id: string, data: User): Promise<User> {
     const { match, user: existingUser } = await this.lookupDexUser(id)
     // email is immutable in Dex
     if (data.email !== undefined && data.email !== existingUser.email) {
@@ -1558,13 +1574,15 @@ export default class OtomiStack {
     data: Pick<User, 'id' | 'teams'>[],
     sessionUser: SessionUser,
   ): Promise<Pick<User, 'id' | 'teams'>[]> {
-    const dexPasswords = await listDexPasswords()
-    const updatedUsers: Pick<User, 'id' | 'teams'>[] = []
+    return withDexGroupLock(async () => {
+      const dexPasswords = await listDexPasswords()
+      const updatedUsers: Pick<User, 'id' | 'teams'>[] = []
 
-    for (const userData of data) {
-      updatedUsers.push(await this.applyDexTeamUpdate(userData, sessionUser, dexPasswords))
-    }
-    return updatedUsers
+      for (const userData of data) {
+        updatedUsers.push(await this.applyDexTeamUpdate(userData, sessionUser, dexPasswords))
+      }
+      return updatedUsers
+    })
   }
 
   private async applyDexTeamUpdate(
@@ -3071,7 +3089,7 @@ export default class OtomiStack {
     if (newPassword === currentPassword) throw new BadRequestError('New password must differ from the current one.')
     this.assertPasswordLength(newPassword)
     if (!(await verifyDexPassword(user.email, currentPassword))) {
-      throw new UnauthorizedError('Current password is incorrect.')
+      throw new BadRequestError('Current password is incorrect.')
     }
     // Revoke before writing the new hash: if this fails, the old password is still valid and the
     // caller can safely retry. Reversing the order would let a failed write-after-revoke leave the
