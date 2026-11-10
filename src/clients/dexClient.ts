@@ -24,6 +24,16 @@ function dexCallOptions(): Partial<CallOptions> {
   return { deadline: Date.now() + env.DEX_RPC_DEADLINE_MS }
 }
 
+// Dex's UpdatePassword replaces the whole group list, so every read-modify-write of groups must
+// run under this lock or concurrent writers overwrite each other from stale snapshots.
+// ponytail: in-process lock, assumes a single apl-api replica; needs a distributed lock if scaled out.
+let dexGroupQueue: Promise<unknown> = Promise.resolve()
+export function withDexGroupLock<T>(fn: () => Promise<T>): Promise<T> {
+  const run = dexGroupQueue.then(() => fn())
+  dexGroupQueue = run.catch(() => undefined)
+  return run
+}
+
 function toDexGroups(groups: string[]): string[] {
   return groups.length > 0 ? groups : [DEX_NO_GROUPS_SENTINEL]
 }
