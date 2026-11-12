@@ -3,7 +3,7 @@ import Debug from 'debug'
 import { RequestHandler } from 'express'
 import { DEX_NO_GROUPS_SENTINEL } from 'src/clients/dexConstants'
 import { verifyJwt } from 'src/jwt-verification'
-import { getMockEmail, getMockGroups, getMockName } from 'src/mocks'
+import { getMockEmail, getMockGroups } from 'src/mocks'
 import { JWT, OpenApiRequestExt, SessionUser } from 'src/otomi-models'
 import OtomiStack from 'src/otomi-stack'
 import { cleanEnv } from 'src/validators'
@@ -62,7 +62,6 @@ export function jwtMiddleware(): RequestHandler {
     if (env.isDev) {
       req.user = getUser(
         {
-          name: getMockName(),
           email: getMockEmail(),
           groups: getMockGroups(),
           roles: [],
@@ -84,9 +83,9 @@ export function jwtMiddleware(): RequestHandler {
       const payload = await verifyJwt(token)
 
       // Extract user info from verified payload
-      const { name, email, roles, groups, sub } = payload
+      const { email, roles, groups, sub } = payload
 
-      req.user = getUser({ name, email, roles: roles || [], groups: groups || [], sub }, otomi)
+      req.user = getUser({ email, roles: roles || [], groups: groups || [], sub }, otomi)
 
       return next()
     } catch (error: any) {
