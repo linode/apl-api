@@ -198,25 +198,34 @@ Settings:
           x-secret: true
         platformAdminGroupID:
           title: Platform admin group ID.
+          description: (Keycloak only)
           type: string
         allTeamsAdminGroupID:
           title: All teams admin group ID.
+          description: (Keycloak only)
           type: string
         teamAdminGroupID:
           title: Team admin group ID.
+          description: (Keycloak only)
           type: string
         usernameClaimMapper:
-          description: Claim name used by Keycloak to identify incoming users from the identity provider.
+          description: Claim name used by Keycloak to identify incoming users from the identity provider. (Keycloak only)
           default: '${CLAIM.upn}'
           type: string
         subClaimMapper:
           type: string
-          description: Set OIDC claim to be passed by Keycloak as a unique user identifier. It is advised to not change the default.
+          description: Set OIDC claim to be passed by Keycloak as a unique user identifier. It is advised to not change the default. (Keycloak only)
           default: sub
         groupsClaimMapper:
           type: string
-          description: Claim name the identity provider uses for group membership. Some providers require a namespaced name instead of "groups".
+          description: Claim name the identity provider uses for group membership. Some providers require a namespaced name instead of "groups". (Dex only)
           default: groups
+        scopes:
+          type: array
+          description: OIDC scopes requested from the external identity provider. (Dex only)
+          items:
+            type: string
+          default: [openid, profile, email, groups]
       type: object
       x-externalDocsPath: oidc-settings
       x-acl:
