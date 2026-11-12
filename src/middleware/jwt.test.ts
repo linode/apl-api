@@ -24,7 +24,6 @@ const teamMemberGroups = ['team-member']
 const multiTeamGroups = ['team-team1', 'team-team2']
 const multiTeamUser = ['team1', 'team2']
 const platformAdminJWT: JWT = {
-  name: 'joe',
   email,
   groups: platformAdminGroups,
   sub: 'mock-sub-value',
