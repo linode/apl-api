@@ -14,7 +14,6 @@ const sessionTeam = (overrides: Partial<SessionUser> = {}): SessionUser => ({
   isPlatformAdmin: false,
   isTeamAdmin: false,
   roles: [SessionRole.TeamMember],
-  name: 'joe',
   email: 'a@b.c',
   teams: [teamId],
   ...overrides,

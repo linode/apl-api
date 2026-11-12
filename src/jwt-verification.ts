@@ -18,7 +18,6 @@ const JWKS_URL = env.SSO_JWKS_URI
 const JWKS = createRemoteJWKSet(new URL(JWKS_URL))
 
 export interface AppJWTPayload extends JWTPayload {
-  name: string
   email: string
   sub: string
   groups: string[]
@@ -35,7 +34,7 @@ export async function verifyJwt(token: string): Promise<AppJWTPayload> {
       audience: env.JWT_AUDIENCE,
       clockTolerance: 60, // 60 seconds clock tolerance for clock skew between issuer and verifier
     })
-    if (!payload.email || !payload.name || !payload.sub) {
+    if (!payload.email || !payload.sub) {
       throw new Error('JWT missing required claims')
     }
     debug('JWT verified successfully:', payload.sub)
@@ -43,7 +42,6 @@ export async function verifyJwt(token: string): Promise<AppJWTPayload> {
     return {
       payload,
       email: payload.email as string,
-      name: payload.name as string,
       sub: payload.sub,
       groups: (payload.groups as string[]) || [],
       roles: (payload.roles as string[]) || [],
