@@ -1,4 +1,4 @@
-import CloudTty, { TtyConfig } from './tty'
+import CloudTty, { TtyConfig, ttyId } from './tty'
 import { SessionUser } from './otomi-models'
 
 const mockCoreV1Api = {
@@ -54,7 +54,19 @@ jest.mock('@kubernetes/client-node', () => {
   }
 })
 
+describe('ttyId', () => {
+  test('turns a Dex sub into a stable, valid Kubernetes name part', () => {
+    const id = ttyId('ChJhcGwtcGxhdGZvcm0tYWRtaW4SBWxvY2Fs')
+    expect(id).toMatch(/^[a-f0-9]{16}$/)
+    expect(ttyId('ChJhcGwtcGxhdGZvcm0tYWRtaW4SBWxvY2Fs')).toBe(id)
+    expect(ttyId('ChJhcGwtcGxhdGZvcm0tYWRtaW4SBWxvY2FS')).not.toBe(id)
+  })
+})
+
 describe('CloudTty', () => {
+  // A real Dex sub: base64 with uppercase letters, not a valid Kubernetes name on its own.
+  const dexSub = 'ChJhcGwtcGxhdGZvcm0tYWRtaW4SBWxvY2Fs'
+  const id = ttyId(dexSub)
   const testConfig: TtyConfig = {
     imageRepository: 'tty-image',
     imageTag: 'tty-tag',
@@ -79,7 +91,7 @@ describe('CloudTty', () => {
   test('createAuthorizationPolicy passes expected API parameters', async () => {
     const tty = new CloudTty(testConfig)
 
-    await tty.createAuthorizationPolicy('team-a', 'user-1')
+    await tty.createAuthorizationPolicy('team-a', 'user-1', 'raw-sub')
 
     expect(mockCustomObjectsApi.createNamespacedCustomObject).toHaveBeenCalledTimes(1)
     const params = mockCustomObjectsApi.createNamespacedCustomObject.mock.calls[0][0]
@@ -101,7 +113,7 @@ describe('CloudTty', () => {
     expect(params.body.spec.rules[0].when[0]).toEqual(
       expect.objectContaining({
         key: 'request.auth.claims[sub]',
-        values: ['user-1'],
+        values: ['raw-sub'],
       }),
     )
   })
@@ -172,15 +184,15 @@ describe('CloudTty', () => {
     const createService = jest.spyOn(tty, 'createService').mockResolvedValue({ kind: 'ok' })
     const createRoute = jest.spyOn(tty, 'createRoute').mockResolvedValue({ kind: 'ok' })
 
-    await tty.createTty('team-1', { sub: 'user-1', isPlatformAdmin: true } as SessionUser, 'example.org')
+    await tty.createTty('team-1', { sub: dexSub, isPlatformAdmin: true } as SessionUser, 'example.org')
 
-    expect(createAuthorizationPolicy).toHaveBeenCalledWith('team-admin', 'user-1')
-    expect(createServiceAccount).toHaveBeenCalledWith('team-admin', 'user-1')
-    expect(createPod).toHaveBeenCalledWith('team-admin', 'user-1')
-    expect(createClusterRoleBinding).toHaveBeenCalledWith('team-admin', 'user-1')
+    expect(createAuthorizationPolicy).toHaveBeenCalledWith('team-admin', id, dexSub)
+    expect(createServiceAccount).toHaveBeenCalledWith('team-admin', id)
+    expect(createPod).toHaveBeenCalledWith('team-admin', id)
+    expect(createClusterRoleBinding).toHaveBeenCalledWith('team-admin', id)
     expect(createRoleBinding).not.toHaveBeenCalled()
-    expect(createService).toHaveBeenCalledWith('team-admin', 'user-1')
-    expect(createRoute).toHaveBeenCalledWith('team-admin', 'user-1', 'example.org')
+    expect(createService).toHaveBeenCalledWith('team-admin', id)
+    expect(createRoute).toHaveBeenCalledWith('team-admin', id, 'example.org')
   })
 
   test('createTty for team user creates role bindings for all teams', async () => {
@@ -193,12 +205,12 @@ describe('CloudTty', () => {
     jest.spyOn(tty, 'createService').mockResolvedValue({ kind: 'ok' })
     jest.spyOn(tty, 'createRoute').mockResolvedValue({ kind: 'ok' })
 
-    await tty.createTty('a', { sub: 'user-1', isPlatformAdmin: false, teams: ['a', 'b'] } as SessionUser, 'example.org')
+    await tty.createTty('a', { sub: dexSub, isPlatformAdmin: false, teams: ['a', 'b'] } as SessionUser, 'example.org')
 
     expect(createClusterRoleBinding).not.toHaveBeenCalled()
     expect(createRoleBinding).toHaveBeenCalledTimes(2)
-    expect(createRoleBinding).toHaveBeenNthCalledWith(1, 'team-a', 'team-a', 'user-1')
-    expect(createRoleBinding).toHaveBeenNthCalledWith(2, 'team-a', 'team-b', 'user-1')
+    expect(createRoleBinding).toHaveBeenNthCalledWith(1, 'team-a', 'team-a', id)
+    expect(createRoleBinding).toHaveBeenNthCalledWith(2, 'team-a', 'team-b', id)
   })
 
   test('deleteTty removes namespaced and team-scoped resources for team users', async () => {
@@ -211,16 +223,16 @@ describe('CloudTty', () => {
     const deleteService = jest.spyOn(tty, 'deleteService').mockResolvedValue()
     const deleteRoute = jest.spyOn(tty, 'deleteRoute').mockResolvedValue()
 
-    await tty.deleteTty('a', { sub: 'user-1', isPlatformAdmin: false, teams: ['a', 'b'] } as SessionUser)
+    await tty.deleteTty('a', { sub: dexSub, isPlatformAdmin: false, teams: ['a', 'b'] } as SessionUser)
 
-    expect(deleteAuthorizationPolicy).toHaveBeenCalledWith('team-a', 'user-1')
-    expect(deleteServiceAccount).toHaveBeenCalledWith('team-a', 'user-1')
-    expect(deletePod).toHaveBeenCalledWith('team-a', 'user-1')
+    expect(deleteAuthorizationPolicy).toHaveBeenCalledWith('team-a', id)
+    expect(deleteServiceAccount).toHaveBeenCalledWith('team-a', id)
+    expect(deletePod).toHaveBeenCalledWith('team-a', id)
     expect(deleteClusterRoleBinding).not.toHaveBeenCalled()
     expect(deleteRoleBinding).toHaveBeenCalledTimes(2)
-    expect(deleteRoleBinding).toHaveBeenNthCalledWith(1, 'team-a', 'user-1')
-    expect(deleteRoleBinding).toHaveBeenNthCalledWith(2, 'team-b', 'user-1')
-    expect(deleteService).toHaveBeenCalledWith('team-a', 'user-1')
-    expect(deleteRoute).toHaveBeenCalledWith('team-a', 'user-1')
+    expect(deleteRoleBinding).toHaveBeenNthCalledWith(1, 'team-a', id)
+    expect(deleteRoleBinding).toHaveBeenNthCalledWith(2, 'team-b', id)
+    expect(deleteService).toHaveBeenCalledWith('team-a', id)
+    expect(deleteRoute).toHaveBeenCalledWith('team-a', id)
   })
 })
