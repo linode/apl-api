@@ -147,7 +147,7 @@ import {
   UserSecretData,
   watchPodUntilRunning,
 } from './k8s-operations'
-import CloudTty from './tty'
+import CloudTty, { ttyId } from './tty'
 import {
   createDexPassword,
   decodeDexUserId,
@@ -1992,6 +1992,8 @@ export default class OtomiStack {
       debug('No user sub found, cannot connect to shell.')
       throw new OtomiError(500, 'No user sub found, cannot connect to shell.')
     }
+    const id = ttyId(sessionUser.sub)
+    const ttyName = `tty-${id}`
     const variables = {
       FQDN: '',
       SUB: sessionUser.sub,
@@ -2008,18 +2010,18 @@ export default class OtomiStack {
     }
 
     // if cloudtty shell does not exists then check if the pod is running and return it
-    if (await checkPodExists(targetNamespace, `tty-${sessionUser.sub}`)) {
-      return { iFrameUrl: `https://tty.${variables.FQDN}/${sessionUser.sub}` }
+    if (await checkPodExists(targetNamespace, ttyName)) {
+      return { iFrameUrl: `https://tty.${variables.FQDN}/${id}` }
     }
 
     await this.getCloudTty().createTty(teamId, sessionUser, variables.FQDN)
-    await watchPodUntilRunning(targetNamespace, `tty-${sessionUser.sub}`)
+    await watchPodUntilRunning(targetNamespace, ttyName)
 
     // check the pod every 30 minutes and terminate it after 2 hours of inactivity
     const ISACTIVE_INTERVAL = 30 * 60 * 1000
     const TERMINATE_TIMEOUT = 2 * 60 * 60 * 1000
     const intervalId = setInterval(() => {
-      getCloudttyActiveTime(targetNamespace, `tty-${sessionUser.sub}`).then(async (activeTime: number) => {
+      getCloudttyActiveTime(targetNamespace, ttyName).then(async (activeTime: number) => {
         if (activeTime > TERMINATE_TIMEOUT) {
           await this.getCloudTty().deleteTty(teamId, sessionUser)
           clearInterval(intervalId)
@@ -2028,7 +2030,7 @@ export default class OtomiStack {
       })
     }, ISACTIVE_INTERVAL)
 
-    return { iFrameUrl: `https://tty.${variables.FQDN}/${sessionUser.sub}` }
+    return { iFrameUrl: `https://tty.${variables.FQDN}/${id}` }
   }
 
   async deleteCloudtty(teamId: string, sessionUser: SessionUser): Promise<void> {
