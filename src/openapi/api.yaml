@@ -2177,7 +2177,7 @@ components:
       description: ID of the user
       required: true
       schema:
-        $ref: 'definitions.yaml#/uuid'
+        $ref: 'definitions.yaml#/userId'
     catalogParams:
       name: catalogId
       in: path
