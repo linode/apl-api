@@ -1,10 +1,17 @@
 import { KubernetesObject } from '@kubernetes/client-node'
+import { createHash } from 'crypto'
 import KubeApi from './kubeapi'
 import { SessionUser } from './otomi-models'
 
 export interface TtyConfig {
   imageRepository: string
   imageTag: string
+}
+
+// The OIDC `sub` can't be used in resource names: Dex subs are base64 (uppercase, `_`) and can exceed 63 chars.
+// Hashing gives a stable, lowercase hex id that is a valid Kubernetes name for any identity provider.
+export function ttyId(sub: string): string {
+  return createHash('sha256').update(sub).digest('hex').slice(0, 16)
 }
 
 export default class CloudTty extends KubeApi {
@@ -15,18 +22,18 @@ export default class CloudTty extends KubeApi {
     this.config = ttyConfig
   }
 
-  async createAuthorizationPolicy(namespace: string, sub: string): Promise<KubernetesObject> {
+  async createAuthorizationPolicy(namespace: string, id: string, sub: string): Promise<KubernetesObject> {
     const body = {
       apiVersion: 'security.istio.io/v1',
       kind: 'AuthorizationPolicy',
       metadata: {
-        name: `tty-${sub}`,
+        name: `tty-${id}`,
         namespace,
       },
       spec: {
         selector: {
           matchLabels: {
-            app: `tty-${sub}`,
+            app: `tty-${id}`,
           },
         },
         action: 'ALLOW',
@@ -56,22 +63,22 @@ export default class CloudTty extends KubeApi {
     )
   }
 
-  async deleteAuthorizationPolicy(namespace: string, sub: string): Promise<void> {
+  async deleteAuthorizationPolicy(namespace: string, id: string): Promise<void> {
     await this.deleteIfExists(this.customObjectsApi.deleteNamespacedCustomObject, {
       group: 'security.istio.io',
       version: 'v1',
       namespace,
       plural: 'authorizationpolicies',
-      name: `tty-${sub}`,
+      name: `tty-${id}`,
     })
   }
 
-  async createServiceAccount(namespace: string, sub: string): Promise<KubernetesObject> {
+  async createServiceAccount(namespace: string, id: string): Promise<KubernetesObject> {
     const body = {
       apiVersion: 'v1',
       kind: 'ServiceAccount',
       metadata: {
-        name: `tty-${sub}`,
+        name: `tty-${id}`,
         namespace,
       },
     }
@@ -81,25 +88,25 @@ export default class CloudTty extends KubeApi {
     })
   }
 
-  async deleteServiceAccount(namespace: string, sub: string): Promise<void> {
-    await this.deleteIfExists(this.coreApi.deleteNamespacedServiceAccount, { namespace, name: `tty-${sub}` })
+  async deleteServiceAccount(namespace: string, id: string): Promise<void> {
+    await this.deleteIfExists(this.coreApi.deleteNamespacedServiceAccount, { namespace, name: `tty-${id}` })
   }
 
-  async createPod(namespace: string, sub: string): Promise<KubernetesObject> {
+  async createPod(namespace: string, id: string): Promise<KubernetesObject> {
     const image = `${this.config.imageRepository}:${this.config.imageTag}`
     const body = {
       apiVersion: 'v1',
       kind: 'Pod',
       metadata: {
         labels: {
-          app: `tty-${sub}`,
+          app: `tty-${id}`,
           otomi: 'tty',
         },
-        name: `tty-${sub}`,
+        name: `tty-${id}`,
         namespace,
       },
       spec: {
-        serviceAccountName: `tty-${sub}`,
+        serviceAccountName: `tty-${id}`,
         securityContext: {
           runAsNonRoot: true,
           seccompProfile: {
@@ -145,16 +152,16 @@ export default class CloudTty extends KubeApi {
     })
   }
 
-  async deletePod(namespace: string, sub: string): Promise<void> {
-    await this.deleteIfExists(this.coreApi.deleteNamespacedPod, { namespace, name: `tty-${sub}` })
+  async deletePod(namespace: string, id: string): Promise<void> {
+    await this.deleteIfExists(this.coreApi.deleteNamespacedPod, { namespace, name: `tty-${id}` })
   }
 
-  async createRoleBinding(accountNamespace: string, targetNamespace: string, sub: string): Promise<KubernetesObject> {
+  async createRoleBinding(accountNamespace: string, targetNamespace: string, id: string): Promise<KubernetesObject> {
     const body = {
       apiVersion: 'rbac.authorization.k8s.io/v1',
       kind: 'RoleBinding',
       metadata: {
-        name: `tty-${sub}-rolebinding`,
+        name: `tty-${id}-rolebinding`,
         namespace: targetNamespace,
       },
       roleRef: {
@@ -165,7 +172,7 @@ export default class CloudTty extends KubeApi {
       subjects: [
         {
           kind: 'ServiceAccount',
-          name: `tty-${sub}`,
+          name: `tty-${id}`,
           namespace: accountNamespace,
         },
       ],
@@ -180,14 +187,14 @@ export default class CloudTty extends KubeApi {
     )
   }
 
-  async deleteRoleBinding(targetNamespace: string, sub: string): Promise<void> {
+  async deleteRoleBinding(targetNamespace: string, id: string): Promise<void> {
     await this.deleteIfExists(this.rbacAuthorizationApi.deleteNamespacedRoleBinding, {
       namespace: targetNamespace,
-      name: `tty-${sub}-rolebinding`,
+      name: `tty-${id}-rolebinding`,
     })
   }
 
-  async createClusterRoleBinding(namespace: string, sub: string): Promise<KubernetesObject> {
+  async createClusterRoleBinding(namespace: string, id: string): Promise<KubernetesObject> {
     const body = {
       apiVersion: 'rbac.authorization.k8s.io/v1',
       kind: 'ClusterRoleBinding',
@@ -202,7 +209,7 @@ export default class CloudTty extends KubeApi {
       subjects: [
         {
           kind: 'ServiceAccount',
-          name: `tty-${sub}`,
+          name: `tty-${id}`,
           namespace,
         },
       ],
@@ -220,15 +227,15 @@ export default class CloudTty extends KubeApi {
     })
   }
 
-  async createService(namespace: string, sub: string): Promise<KubernetesObject> {
+  async createService(namespace: string, id: string): Promise<KubernetesObject> {
     const body = {
       apiVersion: 'v1',
       kind: 'Service',
       metadata: {
         labels: {
-          app: `tty-${sub}`,
+          app: `tty-${id}`,
         },
-        name: `tty-${sub}`,
+        name: `tty-${id}`,
         namespace,
       },
       spec: {
@@ -241,7 +248,7 @@ export default class CloudTty extends KubeApi {
           },
         ],
         selector: {
-          app: `tty-${sub}`,
+          app: `tty-${id}`,
         },
         type: 'ClusterIP',
       },
@@ -252,16 +259,16 @@ export default class CloudTty extends KubeApi {
     })
   }
 
-  async deleteService(namespace: string, sub: string): Promise<void> {
-    await this.deleteIfExists(this.coreApi.deleteNamespacedService, { namespace, name: `tty-${sub}` })
+  async deleteService(namespace: string, id: string): Promise<void> {
+    await this.deleteIfExists(this.coreApi.deleteNamespacedService, { namespace, name: `tty-${id}` })
   }
 
-  async createRoute(namespace: string, sub: string, domain: string): Promise<KubernetesObject> {
+  async createRoute(namespace: string, id: string, domain: string): Promise<KubernetesObject> {
     const body = {
       apiVersion: 'gateway.networking.k8s.io/v1',
       kind: 'HTTPRoute',
       metadata: {
-        name: `tty-${sub}`,
+        name: `tty-${id}`,
         namespace,
       },
       spec: {
@@ -281,7 +288,7 @@ export default class CloudTty extends KubeApi {
               {
                 group: '',
                 kind: 'Service',
-                name: `tty-${sub}`,
+                name: `tty-${id}`,
                 port: 8080,
               },
             ],
@@ -289,7 +296,7 @@ export default class CloudTty extends KubeApi {
               {
                 path: {
                   type: 'PathPrefix',
-                  value: `/${sub}`,
+                  value: `/${id}`,
                 },
               },
             ],
@@ -321,47 +328,49 @@ export default class CloudTty extends KubeApi {
     )
   }
 
-  async deleteRoute(namespace: string, sub: string): Promise<void> {
+  async deleteRoute(namespace: string, id: string): Promise<void> {
     await this.deleteIfExists(this.customObjectsApi.deleteNamespacedCustomObject, {
       group: 'gateway.networking.k8s.io',
       version: 'v1',
       namespace,
       plural: 'httproutes',
-      name: `tty-${sub}`,
+      name: `tty-${id}`,
     })
   }
 
   async createTty(teamId: string, sessionUser: SessionUser, domain: string): Promise<void> {
     const { sub, isPlatformAdmin, teams } = sessionUser
+    const id = ttyId(sub!)
     const namespace = isPlatformAdmin ? 'team-admin' : `team-${teamId}`
-    await this.createAuthorizationPolicy(namespace, sub!)
-    await this.createServiceAccount(namespace, sub!)
-    await this.createPod(namespace, sub!)
+    await this.createAuthorizationPolicy(namespace, id, sub!)
+    await this.createServiceAccount(namespace, id)
+    await this.createPod(namespace, id)
     if (isPlatformAdmin) {
-      await this.createClusterRoleBinding(namespace, sub!)
+      await this.createClusterRoleBinding(namespace, id)
     } else if (teams) {
       for (const team of teams) {
-        await this.createRoleBinding(namespace, `team-${team}`, sub!)
+        await this.createRoleBinding(namespace, `team-${team}`, id)
       }
     }
-    await this.createService(namespace, sub!)
-    await this.createRoute(namespace, sub!, domain)
+    await this.createService(namespace, id)
+    await this.createRoute(namespace, id, domain)
   }
 
   async deleteTty(teamId: string, sessionUser: SessionUser): Promise<void> {
     const { sub, isPlatformAdmin, teams } = sessionUser
+    const id = ttyId(sub!)
     const namespace = isPlatformAdmin ? 'team-admin' : `team-${teamId}`
-    await this.deleteAuthorizationPolicy(namespace, sub!)
-    await this.deleteServiceAccount(namespace, sub!)
-    await this.deletePod(namespace, sub!)
+    await this.deleteAuthorizationPolicy(namespace, id)
+    await this.deleteServiceAccount(namespace, id)
+    await this.deletePod(namespace, id)
     if (isPlatformAdmin) {
       await this.deleteClusterRoleBinding()
     } else if (teams) {
       for (const team of teams) {
-        await this.deleteRoleBinding(`team-${team}`, sub!)
+        await this.deleteRoleBinding(`team-${team}`, id)
       }
     }
-    await this.deleteService(namespace, sub!)
-    await this.deleteRoute(namespace, sub!)
+    await this.deleteService(namespace, id)
+    await this.deleteRoute(namespace, id)
   }
 }
