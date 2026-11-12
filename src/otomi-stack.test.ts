@@ -367,7 +367,6 @@ describe('Users tests', () => {
   const domainSuffix = 'dev.linode-apl.net'
 
   const platformAdminSession: SessionUser = {
-    name: 'Platform Admin',
     email: `platform-admin@${domainSuffix}`,
     isPlatformAdmin: true,
     isTeamAdmin: false,
@@ -377,7 +376,6 @@ describe('Users tests', () => {
     sub: 'platform-admin',
   }
   const teamAdminSession: SessionUser = {
-    name: 'Team Admin',
     email: `team-admin@${domainSuffix}`,
     isPlatformAdmin: false,
     isTeamAdmin: true,
@@ -387,7 +385,6 @@ describe('Users tests', () => {
     sub: 'team-admin',
   }
   const sessionUser: SessionUser = {
-    name: 'Session User',
     email: `session@${domainSuffix}`,
     isPlatformAdmin: false,
     isTeamAdmin: false,

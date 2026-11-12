@@ -22,10 +22,6 @@ SessionUser:
     teamMember:
       - read
   properties:
-    name:
-      type: string
-      description: A user name
-      # readOnly: true
     email:
       $ref: 'definitions.yaml#/email'
     isPlatformAdmin:
@@ -66,7 +62,6 @@ SessionUser:
     - authz
     - isPlatformAdmin
     - isTeamAdmin
-    - name
     - email
     - teams
     - roles
