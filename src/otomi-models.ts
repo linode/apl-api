@@ -71,7 +71,6 @@ export type Alerts = Settings['alerts']
 export type Cluster = Settings['cluster']
 export type Dns = Settings['dns']
 export type Ingress = Settings['ingress']
-export type Kms = Settings['kms']
 export type Oidc = Settings['oidc']
 export type Otomi = Settings['otomi']
 export type Versions = Settings['versions']
@@ -108,7 +107,6 @@ export const APL_KINDS = [
   'AplDns',
   'AplIngress',
   'AplObjectStorage',
-  'AplKms',
   'AplIdentityProvider',
   'AplCapabilitySet',
   'AplBackupCollection',
@@ -278,7 +276,6 @@ export interface Core {
   appsInfo: Record<string, any>[]
   cluster: Cluster
   dns: Dns
-  kms: Kms
   oidc: Oidc
   otomi: Otomi
   teamApps: Record<string, any>[]

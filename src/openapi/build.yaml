@@ -81,105 +81,111 @@ AplBuildSpec:
       default: true
       description: Select to scan source code.
 
+DockerBuild:
+  title: Docker
+  type: object
+  x-hideTitle: true
+  description: Build from source with a Dockerfile.
+  properties:
+    docker:
+      additionalProperties: false
+      type: object
+      title: Docker
+      properties:
+        repoUrl:
+          description: The URL of the Git repo that contains the application code.
+          $ref: 'definitions.yaml#/url'
+          title: Repo URL
+        path:
+          description: The path to the Dockerfile to execute (defaults to ./Dockerfile).
+          type: string
+          default: ./Dockerfile
+        revision:
+          description: This can be a commit, a tag, or a branch.
+          $ref: 'definitions.yaml#/wordCharacterPattern'
+          default: HEAD
+        envVars:
+          title: Environment variables
+          type: array
+          items:
+            type: object
+            description: Environment variable to set during build-time.
+            properties:
+              name:
+                title: Name
+                type: string
+                example: MY_ENV_VAR
+              value:
+                title: Value
+                type: string
+                example: my-value
+            required:
+              - name
+              - value
+      required:
+        - repoUrl
+    type:
+      type: string
+      enum:
+        - docker
+      default: docker
+  required:
+    - docker
+    - type
+
+Buildpacks:
+  title: Buildpacks
+  type: object
+  x-hideTitle: true
+  description: Build from source using Buildpacks.
+  properties:
+    buildpacks:
+      additionalProperties: false
+      type: object
+      properties:
+        repoUrl:
+          description: The URL of the Git repo that contains the application code.
+          $ref: 'definitions.yaml#/url'
+          title: Repo URL
+        path:
+          description: 'Optional: A subpath within the repo where the source is located'
+          type: string
+          default: ''
+        revision:
+          description: This can be a commit, a tag, or a branch.
+          $ref: 'definitions.yaml#/wordCharacterPattern'
+          default: HEAD
+        envVars:
+          title: Environment variables
+          type: array
+          items:
+            type: object
+            description: Environment variable to set during build-time.
+            properties:
+              name:
+                title: Name
+                type: string
+              value:
+                title: Value
+                type: string
+            required:
+              - name
+              - value
+      required:
+        - repoUrl
+    type:
+      type: string
+      enum:
+        - buildpacks
+      default: buildpacks
+  required:
+    - buildpacks
+    - type
+
 buildMode:
   title: Mode
   description: Choose between Docker or Buildpacks.
   type: object
   oneOf:
-    - title: Docker
-      type: object
-      x-hideTitle: true
-      description: Build from source with a Dockerfile.
-      properties:
-        docker:
-          additionalProperties: false
-          type: object
-          title: Docker
-          properties:
-            repoUrl:
-              description: The URL of the Git repo that contains the application code.
-              $ref: 'definitions.yaml#/url'
-              title: Repo URL
-            path:
-              description: The path to the Dockerfile to execute (defaults to ./Dockerfile).
-              type: string
-              default: ./Dockerfile
-            revision:
-              description: This can be a commit, a tag, or a branch.
-              $ref: 'definitions.yaml#/wordCharacterPattern'
-              default: HEAD
-            envVars:
-              title: Environment variables
-              type: array
-              items:
-                type: object
-                description: Environment variable to set during build-time.
-                properties:
-                  name:
-                    title: Name
-                    type: string
-                    example: MY_ENV_VAR
-                  value:
-                    title: Value
-                    type: string
-                    example: my-value
-                required:
-                  - name
-                  - value
-          required:
-            - repoUrl
-        type:
-          type: string
-          enum:
-            - docker
-          default: docker
-      required:
-        - docker
-        - type
-    - title: Buildpacks
-      type: object
-      x-hideTitle: true
-      description: Build from source using Buildpacks.
-      properties:
-        buildpacks:
-          additionalProperties: false
-          type: object
-          properties:
-            repoUrl:
-              description: The URL of the Git repo that contains the application code.
-              $ref: 'definitions.yaml#/url'
-              title: Repo URL
-            path:
-              description: 'Optional: A subpath within the repo where the source is located'
-              type: string
-              default: ''
-            revision:
-              description: This can be a commit, a tag, or a branch.
-              $ref: 'definitions.yaml#/wordCharacterPattern'
-              default: HEAD
-            envVars:
-              title: Environment variables
-              type: array
-              items:
-                type: object
-                description: Environment variable to set during build-time.
-                properties:
-                  name:
-                    title: Name
-                    type: string
-                  value:
-                    title: Value
-                    type: string
-                required:
-                  - name
-                  - value
-          required:
-            - repoUrl
-        type:
-          type: string
-          enum:
-            - buildpacks
-          default: buildpacks
-      required:
-        - buildpacks
-        - type
+    - $ref: '#/DockerBuild'
+    - $ref: '#/Buildpacks'
