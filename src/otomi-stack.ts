@@ -1,4 +1,4 @@
-import { ApiException, CoreV1Api, KubeConfig, User as k8sUser, V1Secret } from '@kubernetes/client-node'
+import { ApiException, CoreV1Api, KubeConfig, V1Secret } from '@kubernetes/client-node'
 import Debug from 'debug'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
@@ -3096,7 +3096,7 @@ export default class OtomiStack {
     await updateDexPassword({ email: user.email, newHash: await hashPassword(newPassword) })
   }
 
-  async getSession(user: k8sUser): Promise<Session> {
+  async getSession(user: SessionUser): Promise<Session> {
     const rootStack = await getSessionStack()
     const valuesSchema = await getValuesSchema()
     const currentSha = rootStack.git.commitSha
@@ -3109,7 +3109,7 @@ export default class OtomiStack {
       editor: this.editor,
       inactivityTimeout: env.EDITOR_INACTIVITY_TIMEOUT,
       sealedSecretsPEM: await getSealedSecretsPEM(),
-      user: user as SessionUser,
+      user,
       defaultPlatformAdminEmail: env.DEFAULT_PLATFORM_ADMIN_EMAIL,
       objectStorage: {
         showWizard: obj?.showWizard ?? true,

@@ -255,7 +255,6 @@ export enum SessionRole {
 }
 
 export interface JWT {
-  name: string
   email: string
   groups: string[]
   roles?: string[]
