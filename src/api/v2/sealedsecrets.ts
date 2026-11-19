@@ -1,5 +1,6 @@
 import Debug from 'debug'
 import { Response } from 'express'
+import { ensureStatus } from 'src/api/response-utils'
 import { OpenApiRequestExt } from 'src/otomi-models'
 
 const debug = Debug('otomi:api:v2:sealedsecrets')
@@ -21,5 +22,5 @@ export const getAllAplSealedSecrets = (req: OpenApiRequestExt, res: Response): v
           : (secret.metadata.labels?.['apl.io/teamId'] as string)
         return teamId && req.user.teams.includes(teamId)
       })
-  res.json(v)
+  res.json(v.map((secret) => ensureStatus(secret)))
 }
