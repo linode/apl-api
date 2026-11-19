@@ -9,7 +9,7 @@ import TestAgent from 'supertest/lib/agent'
 import { FileStore } from './fileStore/file-store'
 import { Git } from './git'
 import { getSessionStack } from './middleware'
-import { AplKind } from './otomi-models'
+import { AplKind, SealedSecretManifestResponse } from './otomi-models'
 import * as getValuesSchemaModule from './utils'
 
 const platformAdminToken = getToken(['platform-admin'])
@@ -962,6 +962,34 @@ describe('API V2 authz tests', () => {
           .set('Authorization', `Bearer ${platformAdminToken}`)
           .expect(200)
         expect(res.body).toHaveLength(2)
+      })
+
+      test('returns status consistently with the namespace collection, preserving existing status', async () => {
+        const withoutStatus: Omit<SealedSecretManifestResponse, 'status'> = {
+          kind: 'SealedSecret',
+          metadata: { name: 'dns-secrets', namespace: 'apl-secrets', labels: { 'apl.io/teamId': 'apl-secrets' } },
+          spec: { encryptedData: { key: 'value' } },
+        }
+        const existingStatus = { phase: 'Ready', conditions: [] }
+        const secrets: SealedSecretManifestResponse[] = [
+          withoutStatus as SealedSecretManifestResponse,
+          { ...withoutStatus, metadata: { ...withoutStatus.metadata, name: 'other' }, status: existingStatus },
+        ]
+        jest.spyOn(otomiStack, 'getAllAplSealedSecrets').mockReturnValue(secrets)
+        jest.spyOn(otomiStack, 'getAplNamespaceSealedSecrets').mockReturnValue(secrets)
+
+        const all = await agent
+          .get('/v2/sealedsecrets')
+          .set('Authorization', `Bearer ${platformAdminToken}`)
+          .expect(200)
+        const namespace = await agent
+          .get('/v2/namespaces/apl-secrets/sealedsecrets')
+          .set('Authorization', `Bearer ${platformAdminToken}`)
+          .expect(200)
+
+        expect(all.body).toEqual(namespace.body)
+        expect(all.body[0]).toEqual({ ...withoutStatus, status: {} })
+        expect(all.body[1].status).toEqual(existingStatus)
       })
 
       test('rejects forged teamId via query string (undeclared param for this operation)', async () => {
