@@ -61,14 +61,6 @@ export function getFileMaps(envDir: string): Map<AplKind, FileMap> {
     name: 'ingress',
   })
 
-  maps.set('AplKms', {
-    kind: 'AplKms',
-    envDir,
-    pathGlob: `${envDir}/env/settings/*kms.yaml`,
-    pathTemplate: 'env/settings/kms.yaml',
-    name: 'kms',
-  })
-
   maps.set('AplObjectStorage', {
     kind: 'AplObjectStorage',
     envDir,
