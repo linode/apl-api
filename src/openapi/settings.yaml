@@ -84,13 +84,13 @@ Settings:
                   enum:
                     - disabled
                   default: disabled
-            - title: objLinode
+            - title: Linode
               type: object
-              x-hideTitle: true
               properties:
                 linode:
                   type: object
-                  title: Linode
+                  title: objLinode
+                  x-hideTitle: true
                   description: Select to use Linode Object Storage.
                   properties:
                     region:
