@@ -467,23 +467,24 @@ function decodeUserSecret(name: string, data: Record<string, string>): UserSecre
   }
 }
 
-/**
- * List all user secrets from the apl-users namespace and return decoded user data.
- */
-export async function listUserSecretsFromK8s(namespace = 'apl-users'): Promise<UserSecretData[]> {
+export async function readUserSecretsFromK8s(namespace = 'apl-users'): Promise<UserSecretData[]> {
   const kc = new KubeConfig()
   kc.loadFromDefault()
   const k8sApi = kc.makeApiClient(CoreV1Api)
+  const res: any = await k8sApi.listNamespacedSecret({ namespace })
+  const users: UserSecretData[] = []
+  for (const item of res.items || []) {
+    // Skip service account tokens and other non-user secrets
+    if (item.type !== 'kubernetes.io/opaque') continue
+    if (!item.data?.email) continue
+    users.push(decodeUserSecret(item.metadata.name, item.data))
+  }
+  return users
+}
+
+export async function listUserSecretsFromK8s(namespace = 'apl-users'): Promise<UserSecretData[]> {
   try {
-    const res: any = await k8sApi.listNamespacedSecret({ namespace })
-    const users: UserSecretData[] = []
-    for (const item of res.items || []) {
-      // Skip service account tokens and other non-user secrets
-      if (item.type !== 'kubernetes.io/opaque') continue
-      if (!item.data?.email) continue
-      users.push(decodeUserSecret(item.metadata.name, item.data))
-    }
-    return users
+    return await readUserSecretsFromK8s(namespace)
   } catch (error) {
     debug(`Failed to list user secrets from k8s for ${namespace}.`)
     return []

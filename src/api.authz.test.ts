@@ -361,6 +361,25 @@ describe('API authz tests', () => {
     })
   })
 
+  describe('Maintenance import-keycloak-users endpoint tests', () => {
+    const url = '/v1/maintenance/import-keycloak-users'
+
+    test('platform admin can import keycloak users', async () => {
+      jest.spyOn(otomiStack, 'importKeycloakUsers').mockResolvedValue({ results: [] })
+      await agent.post(url).set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
+    })
+
+    test('team admin cannot import keycloak users', async () => {
+      const spy = jest.spyOn(otomiStack, 'importKeycloakUsers')
+      await agent.post(url).set('Authorization', `Bearer ${teamAdminToken}`).expect(403)
+      expect(spy).not.toHaveBeenCalled()
+    })
+
+    test('team member cannot import keycloak users', async () => {
+      await agent.post(url).set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
+    })
+  })
+
   describe('Cloud TTY endpoint tests', () => {
     beforeEach(() => {
       jest.spyOn(otomiStack, 'connectCloudtty').mockResolvedValue({ iFrameUrl: 'https://tty.example.com' } as any)

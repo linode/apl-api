@@ -1,0 +1,39 @@
+KeycloakUserImport:
+  type: object
+  x-acl:
+    platformAdmin:
+      - create-any
+  properties:
+    results:
+      type: array
+      items:
+        $ref: '#/KeycloakUserImportResult'
+  required:
+    - results
+
+KeycloakUserImportResult:
+  type: object
+  properties:
+    email:
+      type: string
+    status:
+      type: string
+      enum:
+        - created
+        - exists
+        - skipped
+        - failed
+    initialPassword:
+      type: string
+      description: Generated password, only present when status is created. Not stored anywhere else.
+    reason:
+      type: string
+      description: Why the user was skipped or failed.
+    teams:
+      type: array
+      description: Teams the user was given, only present when status is created.
+      items:
+        type: string
+  required:
+    - email
+    - status
