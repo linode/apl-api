@@ -1080,6 +1080,22 @@ paths:
         '200':
           description: Successfully removed cloudtty url
 
+  '/v1/maintenance/import-keycloak-users':
+    post:
+      operationId: importKeycloakUsers
+      x-eov-operation-handler: v1/maintenance
+      description: Create a Dex user for every user secret in apl-users (Keycloak to Dex migration)
+      x-aclSchema: KeycloakUserImport
+      responses:
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '200':
+          description: Per-user import result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeycloakUserImport'
+
   '/v1/users':
     get:
       operationId: getAllUsers
@@ -2836,6 +2852,8 @@ components:
       $ref: 'kubecfg.yaml#/Kubecfg'
     K8sVersion:
       $ref: 'k8sVersion.yaml#/K8sVersion'
+    KeycloakUserImport:
+      $ref: 'keycloakUserImport.yaml#/KeycloakUserImport'
     Netpol:
       $ref: 'netpol.yaml#/Netpol'
     DockerConfig:

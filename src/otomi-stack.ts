@@ -75,6 +75,8 @@ import {
   Service,
   ServiceSpec,
   Session,
+  KeycloakUserImport,
+  KeycloakUserImportResult,
   SessionUser,
   Settings,
   SettingsInfo,
@@ -142,6 +144,7 @@ import {
   getTeamSecretsFromK8s,
   isK8sReachable,
   mergeCanaryServices,
+  readUserSecretsFromK8s,
   setApiStatusInConfigMap,
   toK8sService,
   UserSecretData,
@@ -1382,6 +1385,61 @@ export default class OtomiStack {
     }
     const keycloakEmails = await getKeycloakUsers(keycloakBaseUrl, realm, username, adminPassword)
     return keycloakEmails.filter((email) => !existingEmails.includes(email))
+  }
+
+  async importKeycloakUsers(): Promise<KeycloakUserImport> {
+    this.assertKeycloakUserImportAllowed()
+    const userSecrets = await readUserSecretsFromK8s()
+    const dexEmails = new Set((await listDexPasswords()).map((password) => password.email))
+    const results: KeycloakUserImportResult[] = []
+    for (const userSecret of userSecrets) {
+      results.push(await this.importKeycloakUser(userSecret, dexEmails))
+    }
+    return { results }
+  }
+
+  private assertKeycloakUserImportAllowed(): void {
+    if (env.AUTH_PROVIDER !== 'dex' || !this.isKeycloakEnabled()) {
+      throw new BadRequestError('Importing Keycloak users requires Dex as authentication layer and Keycloak enabled.')
+    }
+  }
+
+  private isKeycloakEnabled(): boolean {
+    try {
+      return this.getApp('keycloak').values?.enabled !== false
+    } catch {
+      return false
+    }
+  }
+
+  private async importKeycloakUser(
+    userSecret: UserSecretData,
+    dexEmails: Set<string>,
+  ): Promise<KeycloakUserImportResult> {
+    const { email } = userSecret
+    if (email === env.DEFAULT_PLATFORM_ADMIN_EMAIL) {
+      return { email, status: 'skipped', reason: 'Platform admin is a Dex static password.' }
+    }
+    if (dexEmails.has(email)) return { email, status: 'exists' }
+    return this.createDexUserFromSecret(userSecret)
+  }
+
+  private async createDexUserFromSecret(userSecret: UserSecretData): Promise<KeycloakUserImportResult> {
+    const { email } = userSecret
+    const teams = this.keepExistingTeams(userSecret.teams)
+    const initialPassword = this.generateInitialPassword()
+    try {
+      await this.provisionDexUser({ ...userSecretDataToUser(userSecret), teams }, initialPassword)
+      return { email, status: 'created', initialPassword, teams }
+    } catch (err) {
+      if (err instanceof AlreadyExists) return { email, status: 'exists' }
+      return { email, status: 'failed', reason: err instanceof Error ? err.message : String(err) }
+    }
+  }
+
+  private keepExistingTeams(teamIds: string[]): string[] {
+    const existingTeamIds = new Set(this.getTeamIds())
+    return teamIds.filter((teamId) => existingTeamIds.has(teamId))
   }
 
   private async provisionDexUser(user: User, plaintextPassword: string): Promise<void> {

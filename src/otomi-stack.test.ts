@@ -51,6 +51,7 @@ jest.mock('src/utils/userUtils', () => {
 
 const mockListUserSecretsFromK8s = jest.fn().mockResolvedValue([])
 const mockGetUserSecretFromK8s = jest.fn().mockResolvedValue(undefined)
+const mockReadUserSecretsFromK8s = jest.fn().mockResolvedValue([])
 jest.mock('./k8s-operations', () => {
   const originalModule = jest.requireActual('./k8s-operations')
   return {
@@ -58,6 +59,7 @@ jest.mock('./k8s-operations', () => {
     ...originalModule,
     listUserSecretsFromK8s: (...args: any[]) => mockListUserSecretsFromK8s(...args),
     getUserSecretFromK8s: (...args: any[]) => mockGetUserSecretFromK8s(...args),
+    readUserSecretsFromK8s: (...args: any[]) => mockReadUserSecretsFromK8s(...args),
     getSecretValues: jest.fn().mockResolvedValue({ adminPassword: 'test-admin-password' }),
   }
 })
@@ -1068,6 +1070,136 @@ describe('Users tests', () => {
       ).rejects.toMatchObject({ publicMessage: 'User email already exists' })
 
       expect(mockCreateDexPassword).not.toHaveBeenCalled()
+    })
+
+    describe('importKeycloakUsers', () => {
+      afterEach(() => mockReadUserSecretsFromK8s.mockReset().mockResolvedValue([]))
+
+      function userSecret(overrides: Record<string, unknown> = {}) {
+        return {
+          id: 'uuid-kc-1',
+          email: 'kc@example.com',
+          firstName: 'K',
+          lastName: 'C',
+          initialPassword: 'old-keycloak-password',
+          isPlatformAdmin: false,
+          isTeamAdmin: true,
+          teams: ['blue'],
+          ...overrides,
+        }
+      }
+
+      it('creates a Dex user with the same id, email and groups, and a new password', async () => {
+        mockReadUserSecretsFromK8s.mockResolvedValue([userSecret()])
+        const otomi = await getTestStack('dex')
+        createTestTeam(otomi, 'blue')
+
+        const { results } = await otomi.importKeycloakUsers()
+
+        expect(results).toHaveLength(1)
+        expect(results[0]).toMatchObject({ email: 'kc@example.com', status: 'created' })
+        const [{ initialPassword }] = results
+        expect(initialPassword).toBeDefined()
+        expect(initialPassword).not.toEqual('old-keycloak-password')
+        const [[call]] = mockCreateDexPassword.mock.calls
+        expect(call).toMatchObject({ id: 'uuid-kc-1', email: 'kc@example.com', groups: ['team-admin', 'team-blue'] })
+        expect(await bcrypt.compare(initialPassword as string, call.passwordHash)).toBe(true)
+        expect(otomi.git.writeTextFile).not.toHaveBeenCalled()
+        expect(otomi.doDeployment).not.toHaveBeenCalled()
+      })
+
+      it('reports users already in Dex (by email) as exists and leaves them unchanged', async () => {
+        mockReadUserSecretsFromK8s.mockResolvedValue([userSecret()])
+        mockListDexPasswords.mockResolvedValue([dexPassword({ email: 'kc@example.com' })])
+        const otomi = await getTestStack('dex')
+
+        const { results } = await otomi.importKeycloakUsers()
+
+        expect(results).toEqual([{ email: 'kc@example.com', status: 'exists' }])
+        expect(mockCreateDexPassword).not.toHaveBeenCalled()
+        expect(mockUpdateDexPassword).not.toHaveBeenCalled()
+      })
+
+      it('skips the default platform admin, matched by email', async () => {
+        const adminEmail = process.env.DEFAULT_PLATFORM_ADMIN_EMAIL ?? 'platform-admin@dev.linode-apl.net'
+        mockReadUserSecretsFromK8s.mockResolvedValue([
+          userSecret({ id: 'some-other-id', email: adminEmail, isPlatformAdmin: true }),
+        ])
+        const otomi = await getTestStack('dex')
+
+        const { results } = await otomi.importKeycloakUsers()
+
+        expect(results[0]).toMatchObject({ email: adminEmail, status: 'skipped' })
+        expect(results[0].initialPassword).toBeUndefined()
+        expect(mockCreateDexPassword).not.toHaveBeenCalled()
+      })
+
+      it('leaves out teams that no longer exist and returns the teams given', async () => {
+        mockReadUserSecretsFromK8s.mockResolvedValue([userSecret({ teams: ['blue', 'gone'] })])
+        const otomi = await getTestStack('dex')
+        createTestTeam(otomi, 'blue')
+
+        const { results } = await otomi.importKeycloakUsers()
+
+        expect(results[0]).toMatchObject({ status: 'created', teams: ['blue'] })
+        expect(mockCreateDexPassword.mock.calls[0][0].groups).toEqual(['team-admin', 'team-blue'])
+      })
+
+      it('reports a failing user and continues with the rest, without leaking the password', async () => {
+        mockReadUserSecretsFromK8s.mockResolvedValue([
+          userSecret({ id: 'a', email: 'a@example.com', teams: [] }),
+          userSecret({ id: 'b', email: 'b@example.com', teams: [] }),
+        ])
+        mockCreateDexPassword.mockRejectedValueOnce(new Error('dex down'))
+        const otomi = await getTestStack('dex')
+
+        const { results } = await otomi.importKeycloakUsers()
+
+        expect(results[0]).toEqual({ email: 'a@example.com', status: 'failed', reason: 'dex down' })
+        expect(results[1]).toMatchObject({ email: 'b@example.com', status: 'created' })
+      })
+
+      it('creates no duplicates when run twice', async () => {
+        const dexStore: any[] = []
+        mockListDexPasswords.mockImplementation(async () => [...dexStore])
+        mockCreateDexPassword.mockImplementation(async (input: any) => {
+          dexStore.push(dexPassword({ userId: input.id, email: input.email, groups: input.groups }))
+        })
+        mockReadUserSecretsFromK8s.mockResolvedValue([userSecret({ teams: [] })])
+        const otomi = await getTestStack('dex')
+
+        await otomi.importKeycloakUsers()
+        const { results } = await otomi.importKeycloakUsers()
+
+        expect(results).toEqual([{ email: 'kc@example.com', status: 'exists' }])
+        expect(dexStore).toHaveLength(1)
+        mockCreateDexPassword.mockReset().mockResolvedValue(undefined)
+      })
+
+      it('fails instead of reporting an empty import when the user secrets cannot be listed', async () => {
+        mockReadUserSecretsFromK8s.mockRejectedValue(new Error('k8s unreachable'))
+        const otomi = await getTestStack('dex')
+
+        await expect(otomi.importKeycloakUsers()).rejects.toThrow('k8s unreachable')
+      })
+
+      it('returns 400 and does nothing when AUTH_PROVIDER is keycloak', async () => {
+        mockReadUserSecretsFromK8s.mockResolvedValue([userSecret()])
+        const otomi = await getTestStack('keycloak')
+
+        await expect(otomi.importKeycloakUsers()).rejects.toMatchObject({ code: 400 })
+        expect(mockReadUserSecretsFromK8s).not.toHaveBeenCalled()
+        expect(mockCreateDexPassword).not.toHaveBeenCalled()
+      })
+
+      it('returns 400 and does nothing when Keycloak is disabled', async () => {
+        mockReadUserSecretsFromK8s.mockResolvedValue([userSecret()])
+        const otomi = await getTestStack('dex')
+        jest.spyOn(otomi, 'getApp').mockReturnValue({ id: 'keycloak', values: { enabled: false } })
+
+        await expect(otomi.importKeycloakUsers()).rejects.toMatchObject({ code: 400 })
+        expect(mockCreateDexPassword).not.toHaveBeenCalled()
+      })
     })
 
     it('getUser reads the record back from Dex when AUTH_PROVIDER is dex', async () => {
