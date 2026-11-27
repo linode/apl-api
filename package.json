@@ -7,7 +7,7 @@
     "@apidevtools/json-schema-ref-parser": "16.0.5",
     "@casl/ability": "7.1.1",
     "@grpc/grpc-js": "^1.14.7",
-    "@kubernetes/client-node": "1.4.0",
+    "@kubernetes/client-node": "2.0.2",
     "@linode/api-v4": "0.158.0",
     "@linode/dex-client-grpc": "0.1.0",
     "@linode/kubeseal-encrypt": "^1.0.1",
