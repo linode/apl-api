@@ -178,7 +178,7 @@ import {
   GiteaAdminClient,
   giteaErrorMessage,
   GiteaUser,
-  PROTECTED_GITEA_USERNAMES,
+  isProtectedGiteaUser,
 } from './utils/giteaUtils'
 import { isKnativeSupported } from './utils/k8sUtils'
 import { getV1ObjectFromApl } from './utils/manifests'
@@ -1425,8 +1425,7 @@ export default class OtomiStack {
     this.assertGiteaUserDeletionAllowed()
     const adminUsername = this.giteaAdminUsername()
     const gitea = await this.giteaAdminClient(adminUsername)
-    const protectedUsernames = new Set([...PROTECTED_GITEA_USERNAMES, adminUsername.toLowerCase()])
-    const users = (await gitea.listUsers()).filter((user) => !protectedUsernames.has(user.username.toLowerCase()))
+    const users = (await gitea.listUsers()).filter((user) => !isProtectedGiteaUser(user.username, adminUsername))
     const results: GiteaUserDeletionResult[] = []
     for (const user of users) {
       results.push(await this.deleteGiteaUser(gitea, user, dryRun))

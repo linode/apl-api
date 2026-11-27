@@ -1100,7 +1100,7 @@ paths:
     post:
       operationId: deleteGiteaUsers
       x-eov-operation-handler: v1/maintenance
-      description: Delete all Gitea users and their personal repositories, except admin and otomi-admin (Keycloak to Dex migration)
+      description: Delete all Gitea users and their personal repositories, except admin, otomi-admin and the organization service accounts (Keycloak to Dex migration)
       x-aclSchema: GiteaUserDeletion
       parameters:
         - name: dryRun

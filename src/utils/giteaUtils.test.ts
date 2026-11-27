@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { createGiteaAdminClient, giteaErrorMessage } from './giteaUtils'
+import { createGiteaAdminClient, giteaErrorMessage, isProtectedGiteaUser } from './giteaUtils'
 
 jest.mock('axios', () => {
   const actual = jest.requireActual('axios')
@@ -66,5 +66,19 @@ describe('giteaUtils', () => {
 
     expect(giteaErrorMessage(err)).toBe('user is last owner of org')
     expect(giteaErrorMessage(new Error('boom'))).toBe('boom')
+  })
+})
+
+describe('isProtectedGiteaUser', () => {
+  it.each([
+    ['admin', true],
+    ['OTOMI-ADMIN', true],
+    ['custom-admin', true],
+    ['organization-team-demo', true],
+    ['organization-otomi', true],
+    ['alice', false],
+    ['team-demo', false],
+  ])('%s is protected: %s', (username, expected) => {
+    expect(isProtectedGiteaUser(username, 'custom-admin')).toBe(expected)
   })
 })

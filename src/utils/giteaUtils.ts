@@ -3,7 +3,18 @@ import axios, { AxiosInstance } from 'axios'
 export const GITEA_INTERNAL_API_URL = 'http://gitea-http.gitea.svc.cluster.local:3000/api/v1'
 const PAGE_SIZE = 50
 // Built-in Gitea accounts that must never be deleted
-export const PROTECTED_GITEA_USERNAMES: readonly string[] = ['admin', 'otomi-admin']
+const PROTECTED_GITEA_USERNAMES: readonly string[] = ['admin', 'otomi-admin']
+// Service accounts the Gitea operator creates per organization: organization-team-<teamId> and organization-otomi
+const ORGANIZATION_SERVICE_ACCOUNT_PREFIX = 'organization-'
+
+export function isProtectedGiteaUser(username: string, adminUsername: string): boolean {
+  const name = username.toLowerCase()
+  return (
+    PROTECTED_GITEA_USERNAMES.includes(name) ||
+    name === adminUsername.toLowerCase() ||
+    name.startsWith(ORGANIZATION_SERVICE_ACCOUNT_PREFIX)
+  )
+}
 
 export interface GiteaUser {
   username: string

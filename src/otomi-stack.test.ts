@@ -1275,6 +1275,20 @@ describe('Users tests', () => {
         expect(mockGiteaClient.deleteUser).not.toHaveBeenCalled()
       })
 
+      it('never deletes the organization service accounts created by the Gitea operator', async () => {
+        mockGiteaClient.listUsers.mockResolvedValue([
+          { username: 'organization-team-demo', email: 'team-demo@mail.com' },
+          { username: 'organization-otomi', email: 'otomi@mail.com' },
+          { username: 'alice', email: 'alice@example.com' },
+        ])
+        const otomi = await getGiteaTestStack()
+
+        const { results } = await otomi.deleteGiteaUsers()
+
+        expect(results.map((result) => result.username)).toEqual(['alice'])
+        expect(mockGiteaClient.deleteUser.mock.calls).toEqual([['alice']])
+      })
+
       it('never deletes the account it authenticates with when a custom admin username is configured', async () => {
         appValues.gitea = { adminUsername: 'custom-admin' }
         mockGiteaClient.listUsers.mockResolvedValue([{ username: 'custom-admin', email: 'c@example.com' }])
