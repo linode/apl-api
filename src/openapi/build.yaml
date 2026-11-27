@@ -86,7 +86,7 @@ buildMode:
   description: Choose between Docker or Buildpacks.
   type: object
   oneOf:
-    - title: Docker
+    - title: buildModeDocker
       type: object
       x-hideTitle: true
       description: Build from source with a Dockerfile.
@@ -136,7 +136,7 @@ buildMode:
       required:
         - docker
         - type
-    - title: Buildpacks
+    - title: buildModeBuildpacks
       type: object
       x-hideTitle: true
       description: Build from source using Buildpacks.
