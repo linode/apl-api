@@ -204,69 +204,37 @@ export class Git {
     return summary
   }
 
-  async pull(skipRequest = false, skipMsg = false): Promise<any> {
+  /**
+   * Root only: make the checkout match the remote branch. Root never commits, so there is nothing to merge
+   * or push back; a hard reset always succeeds regardless of local state or shallow history.
+   * Must not run concurrently on the same checkout; OtomiStack.requestSync() guarantees that.
+   */
+  async pull(): Promise<void> {
     // test root can't pull as it has no remote
     if (!this.url) return
-    debug('Pulling')
+    debug('Syncing with remote')
     try {
-      const summary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true', '--depth': '5' })
-      const summJson = JSON.stringify(summary)
-      debug(`Pull summary: ${summJson}`)
+      await this.git.fetch(this.remote, this.branch, { '--depth': '5' })
+      await this.git.checkout(this.branch)
+      await this.git.reset(ResetMode.HARD, [this.remoteBranch])
+      await this.git.clean(CleanOptions.FORCE, ['-d'])
       this.commitSha = await this.getCommitSha()
-    } catch (e) {
-      const eMessage = getSanitizedErrorMessage(e)
-      debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', eMessage)
-      this.corrupt = true
-      try {
-        // Remove local changes so that no conflict can happen
-        debug('Removing local changes.')
-        await this.git.reset(ResetMode.HARD)
-        if (this.isRootClone()) {
-          debug(`Go to ${this.branch} branch`)
-          await this.git.checkout(this.branch)
-          debug('Removing local changes.')
-          await this.git.reset(ResetMode.HARD)
-          debug('Cleaning local values and directories.')
-          await this.git.clean(CleanOptions.FORCE, ['-d'])
-          debug('Get the latest branch from:', this.remote)
-          await this.git.fetch(this.remote, this.branch)
-          debug('Reconciling divergent branches.')
-          await this.git.merge([`${this.remote}/${this.branch}`, '--strategy-option=theirs'])
-          debug('Trying to remove upstream commits: ', this.remote)
-          await this.git.push([this.remote, this.branch, '--force'])
-        } else {
-          // Worktree recovery: rebase session branch on top of remote; our changes win conflicts
-          debug('Get the latest branch from:', this.remote)
-          await this.git.fetch(this.remote, this.branch)
-          debug('Rebasing session branch on top of remote.')
-          await this.git.raw(['rebase', `${this.remote}/${this.branch}`, '--strategy-option=ours'])
-        }
-      } catch (error) {
-        const errorMessage = getSanitizedErrorMessage(error)
-        debug('Failed to remove upstream commits: ', errorMessage)
-        throw new GitPullError('Failed to remove upstream commits!')
-      }
-      debug('Removed upstream commits!')
       this.corrupt = false
+    } catch (e) {
+      this.corrupt = true
+      e.message = getSanitizedErrorMessage(e)
+      throw e
     }
   }
 
-  async push(): Promise<any> {
-    if (!this.url && this.isRootClone()) return
+  /**
+   * Pushes the session branch to the remote branch. Pushes by URL instead of remote name, so git does not
+   * update the remote-tracking ref that all worktrees share.
+   */
+  async push(): Promise<void> {
+    if (!this.url) return
     debug('Pushing')
-
-    // For worktrees, push current branch (session branch) to main branch
-    // For main repo, push normally
-    if (!this.isRootClone()) {
-      const currentBranch = await this.git.revparse(['--abbrev-ref', 'HEAD'])
-      const summary = await this.git.push([this.remote, `${currentBranch}:${this.branch}`])
-      debug('Pushed session branch to main. Summary: ', summary)
-    } else {
-      // Original push logic for main repo
-      const summary = await this.git.push(this.remote, this.branch)
-      debug('Pushed. Summary: ', summary)
-    }
-    return
+    await this.git.push(this.urlAuth, `HEAD:refs/heads/${this.branch}`)
   }
 
   async testRemoteConnection(gitConfig: GitConfig): Promise<boolean> {
@@ -338,31 +306,29 @@ export class Git {
     return this.git.revparse('HEAD')
   }
 
+  /**
+   * Session only: put the session commit on top of the latest remote branch and push it. Safe to run in many
+   * worktrees at once: the fetch only fills this worktree's own FETCH_HEAD (empty --refmap), and the push goes by URL.
+   * A rejected push means someone else pushed first, so we fetch, rebase and try again.
+   */
   async pushWithRetry(): Promise<void> {
-    try {
-      const retries = env.GIT_PUSH_RETRIES
-      for (let attempt = 1; attempt <= retries; attempt++) {
-        try {
-          // Do advanced pull every third attempt
-          if (attempt % 3 === 0) {
-            await this.pull(true, true)
-          } else {
-            await this.git.pull(this.remote, this.branch, { '--rebase': 'true', '--depth': '5' })
-          }
-          await this.push()
-          break
-        } catch (error) {
-          if (attempt === retries) throw error
-          debug(`Attempt ${attempt} of ${retries} failed. Retrying...`)
-          await new Promise((resolve) => setTimeout(resolve, 50))
-        }
+    if (!this.url) return
+    const retries = env.GIT_PUSH_RETRIES
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        await this.git.raw(['fetch', '--refmap=', this.urlAuth, `refs/heads/${this.branch}`])
+        await this.git.rebase(['FETCH_HEAD'])
+        await this.push()
+        return
+      } catch (e) {
+        await this.git.rebase(['--abort']).catch(() => undefined)
+        const sanitizedCommands = sanitizeGitPassword(JSON.stringify(e.task?.commands))
+        debug(
+          `Attempt ${attempt} of ${retries} failed: ${getSanitizedErrorMessage(e)} for command ${sanitizedCommands}`,
+        )
+        if (attempt === retries) throw new GitPullError()
+        await new Promise((resolve) => setTimeout(resolve, 50))
       }
-    } catch (e) {
-      const sanitizedMessage = getSanitizedErrorMessage(e)
-      const sanitizedCommands = sanitizeGitPassword(JSON.stringify(e.task?.commands))
-      debug(`${sanitizedMessage} for command ${sanitizedCommands}`)
-      debug('Git save error')
-      throw new GitPullError()
     }
   }
 
@@ -383,11 +349,8 @@ export async function getWorktreeRepo(
 
   await mainRepo.createWorktree(worktreePath, branch)
 
-  const worktreeRepo = new Git(worktreePath, mainRepo.url, mainRepo.user, mainRepo.email, mainRepo.urlAuth, branch)
-
-  await worktreeRepo.addConfig()
-
-  return worktreeRepo
+  // no addConfig(): worktrees share Root's .git/config, and concurrent writes to it fail on its lock
+  return new Git(worktreePath, mainRepo.url, mainRepo.user, mainRepo.email, mainRepo.urlAuth, branch)
 }
 
 export default async function getRepo(
