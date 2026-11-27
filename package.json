@@ -49,7 +49,7 @@
     "@eslint/compat": "2.1.1",
     "@redocly/openapi-cli": "1.0.0-beta.95",
     "@types/async-retry": "^1.4.8",
-    "@types/bcryptjs": "^2.4.6",
+    "@types/bcryptjs": "^3.0.0",
     "@types/debug": "^4.1.13",
     "@types/expect": "24.3.2",
     "@types/express": "^5.0.6",
