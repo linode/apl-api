@@ -1434,11 +1434,7 @@ export default class OtomiStack {
   }
 
   private assertGiteaUserDeletionAllowed(): void {
-    if (env.AUTH_PROVIDER !== 'dex' || !this.isKeycloakEnabled() || !this.isGiteaEnabled()) {
-      throw new BadRequestError(
-        'Deleting Gitea users requires Dex as authentication layer and both Keycloak and Gitea enabled.',
-      )
-    }
+    if (!this.isGiteaEnabled()) throw new BadRequestError('Deleting Gitea users requires Gitea to be enabled.')
   }
 
   private isGiteaEnabled(): boolean {

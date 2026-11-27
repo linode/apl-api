@@ -1334,17 +1334,25 @@ describe('Users tests', () => {
         await expect(otomi.deleteGiteaUsers()).rejects.toThrow('gitea unreachable')
       })
 
-      it.each([
-        ['Dex is not the authentication layer', 'keycloak', {}],
-        ['Keycloak is disabled', 'dex', { keycloak: { enabled: false } }],
-        ['Gitea is disabled', 'dex', { gitea: { enabled: false } }],
-      ] as const)('returns 400 and does nothing when %s', async (_case, authProvider, values) => {
-        Object.assign(appValues, values)
-        const otomi = await getGiteaTestStack(authProvider)
+      it('returns 400 and does nothing when Gitea is disabled', async () => {
+        appValues.gitea = { enabled: false }
+        const otomi = await getGiteaTestStack()
 
         await expect(otomi.deleteGiteaUsers()).rejects.toMatchObject({ code: 400 })
         expect(mockCreateGiteaAdminClient).not.toHaveBeenCalled()
         expect(mockGiteaClient.deleteUser).not.toHaveBeenCalled()
+      })
+
+      it.each([
+        ['Keycloak is the authentication layer', 'keycloak', {}],
+        ['Keycloak is disabled', 'dex', { keycloak: { enabled: false } }],
+      ] as const)('deletes users when Gitea is enabled, also when %s', async (_case, authProvider, values) => {
+        Object.assign(appValues, values)
+        const otomi = await getGiteaTestStack(authProvider)
+
+        const { results } = await otomi.deleteGiteaUsers()
+
+        expect(results.map((result) => result.status)).toEqual(['deleted', 'deleted'])
       })
     })
 
