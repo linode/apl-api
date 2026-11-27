@@ -306,25 +306,34 @@ export class Git {
     return this.git.revparse('HEAD')
   }
 
+  /** Last commit a session in this process pushed. All worktrees share Root's objects, so it is available locally. */
+  static latestSha?: string
+
   /**
    * Session only: put the session commit on top of the latest remote branch and push it. Safe to run in many
    * worktrees at once: the fetch only fills this worktree's own FETCH_HEAD (empty --refmap), and the push goes by URL.
-   * A rejected push means someone else pushed first, so we fetch, rebase and try again.
+   * If another session in this process pushed since our last attempt, we rebase onto its commit locally
+   * instead of fetching; otherwise someone outside pushed and we fetch.
    */
   async pushWithRetry(): Promise<void> {
     if (!this.url) return
     const retries = env.GIT_PUSH_RETRIES
+    let seen: string | undefined
     for (let attempt = 1; attempt <= retries; attempt++) {
+      const pushed = Git.latestSha
+      const local = pushed !== undefined && pushed !== seen
+      seen = pushed
       try {
-        await this.git.raw(['fetch', '--refmap=', this.urlAuth, `refs/heads/${this.branch}`])
-        await this.git.rebase(['FETCH_HEAD'])
+        if (!local) await this.git.raw(['fetch', '--refmap=', this.urlAuth, `refs/heads/${this.branch}`])
+        await this.git.rebase([local ? pushed : 'FETCH_HEAD'])
         await this.push()
+        Git.latestSha = (await this.getCommitSha()).trim()
         return
       } catch (e) {
         await this.git.rebase(['--abort']).catch(() => undefined)
         const sanitizedCommands = sanitizeGitPassword(JSON.stringify(e.task?.commands))
         debug(
-          `Attempt ${attempt} of ${retries} failed: ${getSanitizedErrorMessage(e)} for command ${sanitizedCommands}`,
+          `Attempt ${attempt} of ${retries} (${local ? 'local' : 'fetch'}) failed: ${getSanitizedErrorMessage(e)} for command ${sanitizedCommands}`,
         )
         if (attempt === retries) throw new GitPullError()
         await new Promise((resolve) => setTimeout(resolve, 50))
