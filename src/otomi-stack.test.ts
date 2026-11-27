@@ -52,6 +52,17 @@ jest.mock('src/utils/userUtils', () => {
 const mockListUserSecretsFromK8s = jest.fn().mockResolvedValue([])
 const mockGetUserSecretFromK8s = jest.fn().mockResolvedValue(undefined)
 const mockReadUserSecretsFromK8s = jest.fn().mockResolvedValue([])
+const mockGiteaClient = {
+  listUsers: jest.fn(),
+  listUserRepos: jest.fn(),
+  deleteUser: jest.fn(),
+}
+const mockCreateGiteaAdminClient = jest.fn(() => mockGiteaClient)
+jest.mock('./utils/giteaUtils', () => ({
+  ...jest.requireActual('./utils/giteaUtils'),
+  createGiteaAdminClient: (...args: any[]) => mockCreateGiteaAdminClient(...(args as [])),
+}))
+
 jest.mock('./k8s-operations', () => {
   const originalModule = jest.requireActual('./k8s-operations')
   return {
@@ -1199,6 +1210,149 @@ describe('Users tests', () => {
 
         await expect(otomi.importKeycloakUsers()).rejects.toMatchObject({ code: 400 })
         expect(mockCreateDexPassword).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('deleteGiteaUsers', () => {
+      const appValues: Record<string, Record<string, unknown>> = {}
+
+      async function getGiteaTestStack(authProvider: 'keycloak' | 'dex' = 'dex'): Promise<OtomiStack> {
+        const otomi = await getTestStack(authProvider)
+        jest
+          .spyOn(otomi, 'getApp')
+          .mockImplementation((id: string) => ({ id, values: { enabled: true, ...appValues[id] } }) as any)
+        return otomi
+      }
+
+      beforeEach(() => {
+        mockGiteaClient.listUsers.mockResolvedValue([
+          { username: 'admin', email: 'admin@example.com' },
+          { username: 'otomi-admin', email: 'otomi-admin@example.com' },
+          { username: 'alice', email: 'alice@example.com' },
+          { username: 'bob', email: 'bob@example.com' },
+        ])
+        mockGiteaClient.listUserRepos.mockImplementation(async (username: string) =>
+          username === 'alice' ? ['alice/notes'] : [],
+        )
+        mockGiteaClient.deleteUser.mockResolvedValue(undefined)
+      })
+
+      afterEach(() => {
+        Object.keys(appValues).forEach((id) => delete appValues[id])
+        jest.restoreAllMocks()
+        mockGiteaClient.listUsers.mockReset()
+        mockGiteaClient.listUserRepos.mockReset()
+        mockGiteaClient.deleteUser.mockReset()
+        mockCreateGiteaAdminClient.mockClear()
+      })
+
+      it('deletes every user except admin and otomi-admin and reports their personal repos', async () => {
+        const otomi = await getGiteaTestStack()
+
+        const response = await otomi.deleteGiteaUsers()
+
+        expect(response).toEqual({
+          dryRun: false,
+          results: [
+            { username: 'alice', email: 'alice@example.com', repos: ['alice/notes'], status: 'deleted' },
+            { username: 'bob', email: 'bob@example.com', repos: [], status: 'deleted' },
+          ],
+        })
+        expect(mockGiteaClient.deleteUser.mock.calls).toEqual([['alice'], ['bob']])
+        expect(mockCreateGiteaAdminClient).toHaveBeenCalledWith('otomi-admin', 'test-admin-password')
+      })
+
+      it('never deletes the built-in accounts, regardless of case', async () => {
+        mockGiteaClient.listUsers.mockResolvedValue([
+          { username: 'Admin', email: 'a@example.com' },
+          { username: 'OTOMI-ADMIN', email: 'b@example.com' },
+        ])
+        const otomi = await getGiteaTestStack()
+
+        const { results } = await otomi.deleteGiteaUsers()
+
+        expect(results).toEqual([])
+        expect(mockGiteaClient.deleteUser).not.toHaveBeenCalled()
+      })
+
+      it('never deletes the organization service accounts created by the Gitea operator', async () => {
+        mockGiteaClient.listUsers.mockResolvedValue([
+          { username: 'organization-team-demo', email: 'team-demo@mail.com' },
+          { username: 'organization-otomi', email: 'otomi@mail.com' },
+          { username: 'alice', email: 'alice@example.com' },
+        ])
+        const otomi = await getGiteaTestStack()
+
+        const { results } = await otomi.deleteGiteaUsers()
+
+        expect(results.map((result) => result.username)).toEqual(['alice'])
+        expect(mockGiteaClient.deleteUser.mock.calls).toEqual([['alice']])
+      })
+
+      it('never deletes the account it authenticates with when a custom admin username is configured', async () => {
+        appValues.gitea = { adminUsername: 'custom-admin' }
+        mockGiteaClient.listUsers.mockResolvedValue([{ username: 'custom-admin', email: 'c@example.com' }])
+        const otomi = await getGiteaTestStack()
+
+        const { results } = await otomi.deleteGiteaUsers()
+
+        expect(results).toEqual([])
+        expect(mockCreateGiteaAdminClient).toHaveBeenCalledWith('custom-admin', 'test-admin-password')
+      })
+
+      it('lists users and their personal repos without deleting anything on a dry run', async () => {
+        const otomi = await getGiteaTestStack()
+
+        const response = await otomi.deleteGiteaUsers(true)
+
+        expect(response).toEqual({
+          dryRun: true,
+          results: [
+            { username: 'alice', email: 'alice@example.com', repos: ['alice/notes'], status: 'dry-run' },
+            { username: 'bob', email: 'bob@example.com', repos: [], status: 'dry-run' },
+          ],
+        })
+        expect(mockGiteaClient.deleteUser).not.toHaveBeenCalled()
+      })
+
+      it('reports a failing user with its error and continues with the rest', async () => {
+        mockGiteaClient.deleteUser.mockRejectedValueOnce(new Error('gitea down'))
+        const otomi = await getGiteaTestStack()
+
+        const { results } = await otomi.deleteGiteaUsers()
+
+        expect(results).toEqual([
+          { username: 'alice', email: 'alice@example.com', status: 'failed', error: 'gitea down' },
+          { username: 'bob', email: 'bob@example.com', repos: [], status: 'deleted' },
+        ])
+      })
+
+      it('fails instead of reporting an empty result when Gitea users cannot be listed', async () => {
+        mockGiteaClient.listUsers.mockRejectedValue(new Error('gitea unreachable'))
+        const otomi = await getGiteaTestStack()
+
+        await expect(otomi.deleteGiteaUsers()).rejects.toThrow('gitea unreachable')
+      })
+
+      it('returns 400 and does nothing when Gitea is disabled', async () => {
+        appValues.gitea = { enabled: false }
+        const otomi = await getGiteaTestStack()
+
+        await expect(otomi.deleteGiteaUsers()).rejects.toMatchObject({ code: 400 })
+        expect(mockCreateGiteaAdminClient).not.toHaveBeenCalled()
+        expect(mockGiteaClient.deleteUser).not.toHaveBeenCalled()
+      })
+
+      it.each([
+        ['Keycloak is the authentication layer', 'keycloak', {}],
+        ['Keycloak is disabled', 'dex', { keycloak: { enabled: false } }],
+      ] as const)('deletes users when Gitea is enabled, also when %s', async (_case, authProvider, values) => {
+        Object.assign(appValues, values)
+        const otomi = await getGiteaTestStack(authProvider)
+
+        const { results } = await otomi.deleteGiteaUsers()
+
+        expect(results.map((result) => result.status)).toEqual(['deleted', 'deleted'])
       })
     })
 

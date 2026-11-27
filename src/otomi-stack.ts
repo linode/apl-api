@@ -77,6 +77,8 @@ import {
   Session,
   KeycloakUserImport,
   KeycloakUserImportResult,
+  GiteaUserDeletion,
+  GiteaUserDeletionResult,
   SessionUser,
   Settings,
   SettingsInfo,
@@ -171,6 +173,13 @@ import {
   getGiteaRepoUrls,
   normalizeRepoUrl,
 } from './utils/codeRepoUtils'
+import {
+  createGiteaAdminClient,
+  GiteaAdminClient,
+  giteaErrorMessage,
+  GiteaUser,
+  isProtectedGiteaUser,
+} from './utils/giteaUtils'
 import { isKnativeSupported } from './utils/k8sUtils'
 import { getV1ObjectFromApl } from './utils/manifests'
 import { hashPassword } from './utils/passwordUtils'
@@ -1409,6 +1418,62 @@ export default class OtomiStack {
       return this.getApp('keycloak').values?.enabled !== false
     } catch {
       return false
+    }
+  }
+
+  async deleteGiteaUsers(dryRun = false): Promise<GiteaUserDeletion> {
+    this.assertGiteaUserDeletionAllowed()
+    const adminUsername = this.giteaAdminUsername()
+    const gitea = await this.giteaAdminClient(adminUsername)
+    const users = (await gitea.listUsers()).filter((user) => !isProtectedGiteaUser(user.username, adminUsername))
+    const results: GiteaUserDeletionResult[] = []
+    for (const user of users) {
+      results.push(await this.deleteGiteaUser(gitea, user, dryRun))
+    }
+    return { dryRun, results }
+  }
+
+  private assertGiteaUserDeletionAllowed(): void {
+    if (!this.isGiteaEnabled()) throw new BadRequestError('Deleting Gitea users requires Gitea to be enabled.')
+  }
+
+  private isGiteaEnabled(): boolean {
+    try {
+      return !!this.getApp('gitea').values?.enabled
+    } catch {
+      return false
+    }
+  }
+
+  private giteaAdminUsername(): string {
+    return (this.getApp('gitea').values?.adminUsername as string) || 'otomi-admin'
+  }
+
+  private async giteaAdminClient(adminUsername: string): Promise<GiteaAdminClient> {
+    const giteaSecrets = await getSecretValues(GITEA_SECRETS_NAME, APL_SECRETS_NAMESPACE)
+    if (!giteaSecrets?.adminPassword) {
+      const error = new OtomiError('Gitea admin credentials not found')
+      error.code = 500
+      throw error
+    }
+    return createGiteaAdminClient(adminUsername, giteaSecrets.adminPassword)
+  }
+
+  private async deleteGiteaUser(
+    gitea: GiteaAdminClient,
+    { username, email }: GiteaUser,
+    dryRun: boolean,
+  ): Promise<GiteaUserDeletionResult> {
+    try {
+      const repos = await gitea.listUserRepos(username)
+      if (dryRun) return { username, email, repos, status: 'dry-run' }
+      await gitea.deleteUser(username)
+      console.info(`Deleted Gitea user ${username} and personal repositories: ${repos.join(', ') || 'none'}`)
+      return { username, email, repos, status: 'deleted' }
+    } catch (err) {
+      const error = giteaErrorMessage(err)
+      console.warn(`Failed to delete Gitea user ${username}: ${error}`)
+      return { username, email, status: 'failed', error }
     }
   }
 

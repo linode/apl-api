@@ -1,0 +1,40 @@
+GiteaUserDeletion:
+  type: object
+  x-acl:
+    platformAdmin:
+      - create-any
+  properties:
+    dryRun:
+      type: boolean
+    results:
+      type: array
+      items:
+        $ref: '#/GiteaUserDeletionResult'
+  required:
+    - dryRun
+    - results
+
+GiteaUserDeletionResult:
+  type: object
+  properties:
+    username:
+      type: string
+    email:
+      type: string
+    repos:
+      type: array
+      description: Personal repositories of the user, deleted together with the user.
+      items:
+        type: string
+    status:
+      type: string
+      enum:
+        - deleted
+        - failed
+        - dry-run
+    error:
+      type: string
+      description: Why the user could not be deleted, only present when status is failed.
+  required:
+    - username
+    - status

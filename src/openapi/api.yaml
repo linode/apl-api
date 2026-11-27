@@ -1096,6 +1096,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/KeycloakUserImport'
 
+  '/v1/maintenance/delete-gitea-users':
+    post:
+      operationId: deleteGiteaUsers
+      x-eov-operation-handler: v1/maintenance
+      description: Delete all Gitea users and their personal repositories, except admin, otomi-admin and the organization service accounts (Keycloak to Dex migration)
+      x-aclSchema: GiteaUserDeletion
+      parameters:
+        - name: dryRun
+          in: query
+          description: Only list the users that would be deleted
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '200':
+          description: Per-user deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GiteaUserDeletion'
+
   '/v1/users':
     get:
       operationId: getAllUsers
@@ -2854,6 +2877,8 @@ components:
       $ref: 'k8sVersion.yaml#/K8sVersion'
     KeycloakUserImport:
       $ref: 'keycloakUserImport.yaml#/KeycloakUserImport'
+    GiteaUserDeletion:
+      $ref: 'giteaUserDeletion.yaml#/GiteaUserDeletion'
     Netpol:
       $ref: 'netpol.yaml#/Netpol'
     DockerConfig:

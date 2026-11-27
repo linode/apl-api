@@ -380,6 +380,34 @@ describe('API authz tests', () => {
     })
   })
 
+  describe('Maintenance delete-gitea-users endpoint tests', () => {
+    const url = '/v1/maintenance/delete-gitea-users'
+
+    test('platform admin can delete gitea users', async () => {
+      const spy = jest.spyOn(otomiStack, 'deleteGiteaUsers').mockResolvedValue({ dryRun: false, results: [] })
+      await agent.post(url).set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
+      expect(spy).toHaveBeenCalledWith(false)
+    })
+
+    test('platform admin can do a dry run', async () => {
+      const spy = jest.spyOn(otomiStack, 'deleteGiteaUsers').mockResolvedValue({ dryRun: true, results: [] })
+      await agent.post(`${url}?dryRun=true`).set('Authorization', `Bearer ${platformAdminToken}`).expect(200)
+      expect(spy).toHaveBeenCalledWith(true)
+    })
+
+    test('team admin cannot delete gitea users', async () => {
+      const spy = jest.spyOn(otomiStack, 'deleteGiteaUsers')
+      await agent.post(url).set('Authorization', `Bearer ${teamAdminToken}`).expect(403)
+      expect(spy).not.toHaveBeenCalled()
+    })
+
+    test('team member cannot delete gitea users', async () => {
+      const spy = jest.spyOn(otomiStack, 'deleteGiteaUsers')
+      await agent.post(url).set('Authorization', `Bearer ${teamMemberToken}`).expect(403)
+      expect(spy).not.toHaveBeenCalled()
+    })
+  })
+
   describe('Cloud TTY endpoint tests', () => {
     beforeEach(() => {
       jest.spyOn(otomiStack, 'connectCloudtty').mockResolvedValue({ iFrameUrl: 'https://tty.example.com' } as any)
