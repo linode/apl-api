@@ -203,6 +203,7 @@ azureClientSecret:
     teamAdmin: []
     teamMember: []
 azureDns:
+  title: dnsAzure
   x-hideTitle: true
   properties:
     resourceGroup:
@@ -329,6 +330,7 @@ dns:
         - title: Akamai
           properties:
             akamai:
+              title: dnsAkamai
               x-hideTitle: true
               properties:
                 host:
@@ -375,6 +377,7 @@ dns:
         - title: AWS
           properties:
             aws:
+              title: dnsAws
               x-hideTitle: true
               properties:
                 credentials:
@@ -414,6 +417,7 @@ dns:
         - title: CloudFlare
           properties:
             cloudflare:
+              title: dnsCloudflare
               x-hideTitle: true
               properties:
                 apiToken:
@@ -444,6 +448,7 @@ dns:
         - title: Digital Ocean
           properties:
             digitalocean:
+              title: dnsDigitalocean
               x-hideTitle: true
               properties:
                 apiToken:
@@ -460,6 +465,7 @@ dns:
         - title: Linode
           properties:
             linode:
+              title: dnsLinode
               x-hideTitle: true
               properties:
                 apiToken:
@@ -476,6 +482,7 @@ dns:
         - title: Google
           properties:
             google:
+              title: dnsGoogle
               x-hideTitle: true
               properties:
                 serviceAccountKey:
@@ -496,6 +503,8 @@ dns:
         - title: Other
           properties:
             other:
+              title: dnsOther
+              x-hideTitle: true
               description: This option requires configuration for both external-dns as well as cert-manager. No schema validation is available so provide correct data.
               type: object
               properties:
@@ -689,12 +698,12 @@ ingressClassParameters:
       $ref: '#/ipV4Address'
       description: 'Optional: An IP address that will be used for DNS records.'
     annotations:
-      additionalProperties: false
       title: Annotations
       description: Annotations for the Load Balancer service resource.
       type: array
       items:
         type: object
+        additionalProperties: false
         properties:
           key:
             title: Key
@@ -705,147 +714,6 @@ ingressClassParameters:
 ipV4Address:
   type: string
   pattern: ^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$
-kms:
-  additionalProperties: false
-  description: Manage settings for retrieving encryption/decryption keys.
-  title: Platform Secrets Engine settings
-  type: object
-  properties:
-    sops:
-      description: Select encryption engine for SOPS to encrypt the platform secrets.
-      title: SOPS configuration
-      type: object
-      oneOf:
-        - $ref: '#/offChoice'
-        - properties:
-            provider:
-              type: string
-              enum:
-                - age
-              default: age
-            age:
-              type: object
-              properties:
-                publicKey:
-                  title: Public key
-                  description: Age public key
-                  type: string
-                privateKey:
-                  $ref: '#/agePrivateKey'
-                  x-acl:
-                    platformAdmin: [read-any, update-any]
-                    teamAdmin: []
-                    teamMember: []
-              required:
-                - publicKey
-                - privateKey
-              title: Age configuration
-          required:
-            - age
-          title: Age
-          type: object
-        - properties:
-            provider:
-              type: string
-              enum:
-                - aws
-              default: aws
-            aws:
-              type: object
-              properties:
-                keys:
-                  description: Comma separated list of one or two ARNs to keys as defined in AWS KMS. One if used for both enc+dec. Two if one for enc, other for dec.
-                  title: AWS KMS keys
-                  type: string
-                accessKey:
-                  $ref: '#/awsAccessKey'
-                  x-acl:
-                    platformAdmin: [read-any, update-any]
-                    teamAdmin: []
-                    teamMember: []
-                secretKey:
-                  $ref: '#/awsSecretKey'
-                  x-acl:
-                    platformAdmin: [read-any, update-any]
-                    teamAdmin: []
-                    teamMember: []
-                region:
-                  $ref: '#/awsRegion'
-              required:
-                - accessKey
-                - keys
-                - secretKey
-              title: AWS configuration
-          required:
-            - aws
-          title: AWS KMS
-          type: object
-        - properties:
-            provider:
-              type: string
-              default: azure
-              enum:
-                - azure
-            azure:
-              type: object
-              properties:
-                keys:
-                  description: Comma separated list of one or two paths to keys as defined in Azure Keyvault. One if used for both enc+dec. Two if one for enc, other for dec.
-                  title: Azure Keyvault keys
-                  type: string
-                clientId:
-                  $ref: '#/azureClientId'
-                  x-acl:
-                    platformAdmin: [read-any, update-any]
-                    teamAdmin: []
-                    teamMember: []
-                clientSecret:
-                  $ref: '#/azureClientSecret'
-                  x-acl:
-                    platformAdmin: [read-any, update-any]
-                    teamAdmin: []
-                    teamMember: []
-                tenantId:
-                  $ref: '#/azureTenantId'
-              required:
-                - clientId
-                - clientSecret
-                - keys
-              title: Azure configuration
-          required:
-            - azure
-          title: Azure Keyvault
-          type: object
-        - properties:
-            provider:
-              type: string
-              default: google
-              enum:
-                - google
-            google:
-              type: object
-              properties:
-                keys:
-                  description: Comma separated list of one or two paths to keys as defined in GCP KMS. One if used for both enc+dec. Two if one for enc, other for dec.
-                  title: GCP KMS keys
-                  type: string
-                accountJson:
-                  $ref: '#/googleAccountJson'
-                  x-acl:
-                    platformAdmin: [read-any, update-any]
-                    teamAdmin: []
-                    teamMember: []
-                project:
-                  $ref: '#/googleProject'
-              required:
-                - keys
-                - accountJson
-                - project
-              title: GCP configuration
-          required:
-            - google
-          title: Google KMS
-          type: object
 labels:
   $ref: '#/annotations'
   description: A set of labels.
