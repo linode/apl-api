@@ -68,85 +68,7 @@ Workload:
       type: boolean
       default: false
     imageUpdateStrategy:
-      description: Automatically update the image. Only supported when the image is stored in Harbor.
-      title: Auto Image Updater
-      type: object
-      oneOf:
-        - title: Disabled
-          x-hideTitle: true
-          type: object
-          properties:
-            type:
-              type: string
-              enum:
-                - disabled
-              default: disabled
-        - title: digest
-          type: object
-          x-hideTitle: true
-          description: Update to the most recent pushed version of a given tag.
-          properties:
-            digest:
-              additionalProperties: false
-              type: object
-              title: Digest
-              properties:
-                imageRepository:
-                  type: string
-                  description: The image repository name.
-                  $ref: 'definitions.yaml#/wordCharacterPattern'
-                tag:
-                  description: Tag of the build.
-                  type: string
-                  default: latest
-                  $ref: 'definitions.yaml#/wordCharacterPattern'
-                imageParameter:
-                  type: string
-                  default: image.repository
-                tagParameter:
-                  type: string
-                  default: image.tag
-              required:
-                - imageRepository
-                - tag
-            type:
-              type: string
-              enum:
-                - digest
-              default: digest
-        - title: semver
-          x-hideTitle: true
-          type: object
-          description: Update to a semantic version.
-          properties:
-            semver:
-              additionalProperties: false
-              type: object
-              title: Semver
-              properties:
-                imageRepository:
-                  type: string
-                  description: The container image repository name.
-                  $ref: 'definitions.yaml#/wordCharacterPattern'
-                versionConstraint:
-                  type: string
-                  default: 'v1.0'
-                  description: 'Example: v1.0 would allow the image to be updated to any patch version within the v1.0 minor release.'
-                  $ref: 'definitions.yaml#/wordCharacterPattern'
-                imageParameter:
-                  type: string
-                  default: image.repository
-                tagParameter:
-                  type: string
-                  default: image.tag
-              required:
-                - imageRepository
-                - versionConstraint
-            type:
-              type: string
-              enum:
-                - semver
-              default: semver
+      $ref: '#/ImageUpdateStrategy'
   required:
     - name
     - url
@@ -218,86 +140,89 @@ AplWorkloadSpec:
       type: boolean
       default: false
     imageUpdateStrategy:
-      description: Automatically update the image. Only supported when the image is stored in Harbor.
-      title: Auto Image Updater
-      type: object
-      oneOf:
-        - title: Disabled
-          x-hideTitle: true
-          type: object
-          properties:
-            type:
-              type: string
-              enum:
-                - disabled
-              default: disabled
-        - title: digest
-          type: object
-          x-hideTitle: true
-          description: Update to the most recent pushed version of a given tag.
-          properties:
-            digest:
-              additionalProperties: false
-              type: object
-              title: Digest
-              properties:
-                imageRepository:
-                  type: string
-                  description: The image repository name.
-                  $ref: 'definitions.yaml#/wordCharacterPattern'
-                tag:
-                  description: Tag of the build.
-                  type: string
-                  default: latest
-                  $ref: 'definitions.yaml#/wordCharacterPattern'
-                imageParameter:
-                  type: string
-                  default: image.repository
-                tagParameter:
-                  type: string
-                  default: image.tag
-              required:
-                - imageRepository
-                - tag
-            type:
-              type: string
-              enum:
-                - digest
-              default: digest
-        - title: semver
-          x-hideTitle: true
-          type: object
-          description: Update to a semantic version.
-          properties:
-            semver:
-              additionalProperties: false
-              type: object
-              title: Semver
-              properties:
-                imageRepository:
-                  type: string
-                  description: The container image repository name.
-                  $ref: 'definitions.yaml#/wordCharacterPattern'
-                versionConstraint:
-                  type: string
-                  default: 'v1.0'
-                  description: 'Example: v1.0 would allow the image to be updated to any patch version within the v1.0 minor release.'
-                  $ref: 'definitions.yaml#/wordCharacterPattern'
-                imageParameter:
-                  type: string
-                  default: image.repository
-                tagParameter:
-                  type: string
-                  default: image.tag
-              required:
-                - imageRepository
-                - versionConstraint
-            type:
-              type: string
-              enum:
-                - semver
-              default: semver
+      $ref: '#/ImageUpdateStrategy'
     values:
       type: string
   required:
     - url
+
+ImageUpdateStrategy:
+  description: Automatically update the image. Only supported when the image is stored in Harbor.
+  title: Auto Image Updater
+  type: object
+  oneOf:
+    - title: autoUpdateDisabled
+      x-hideTitle: true
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - disabled
+          default: disabled
+    - title: autoUpdateDigest
+      type: object
+      x-hideTitle: true
+      description: Update to the most recent pushed version of a given tag.
+      properties:
+        digest:
+          additionalProperties: false
+          type: object
+          title: Digest
+          properties:
+            imageRepository:
+              type: string
+              description: The image repository name.
+              $ref: 'definitions.yaml#/wordCharacterPattern'
+            tag:
+              description: Tag of the build.
+              type: string
+              default: latest
+              $ref: 'definitions.yaml#/wordCharacterPattern'
+            imageParameter:
+              type: string
+              default: image.repository
+            tagParameter:
+              type: string
+              default: image.tag
+          required:
+            - imageRepository
+            - tag
+        type:
+          type: string
+          enum:
+            - digest
+          default: digest
+    - title: autoUpdateSemver
+      x-hideTitle: true
+      type: object
+      description: Update to a semantic version.
+      properties:
+        semver:
+          additionalProperties: false
+          type: object
+          title: Semver
+          properties:
+            imageRepository:
+              type: string
+              description: The container image repository name.
+              $ref: 'definitions.yaml#/wordCharacterPattern'
+            versionConstraint:
+              type: string
+              default: 'v1.0'
+              description: 'Example: v1.0 would allow the image to be updated to any patch version within the v1.0 minor release.'
+              $ref: 'definitions.yaml#/wordCharacterPattern'
+            imageParameter:
+              type: string
+              default: image.repository
+            tagParameter:
+              type: string
+              default: image.tag
+          required:
+            - imageRepository
+            - versionConstraint
+        type:
+          type: string
+          enum:
+            - semver
+          default: semver
