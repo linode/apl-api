@@ -131,7 +131,7 @@ export const EXPRESS_PAYLOAD_LIMIT = str({
 })
 export const GIT_PUSH_RETRIES = num({
   desc: 'Amount of retries we do to push and pull in the git save function',
-  default: 12,
+  default: 20,
 })
 export const GIT_INIT_MAX_RETRIES = num({
   desc: 'Maximum number of retries for git initialization before exiting',

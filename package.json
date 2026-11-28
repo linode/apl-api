@@ -148,6 +148,7 @@
     "start": "node dist/src/app.js",
     "test": "npm run build:models && jest",
     "test:pattern": "npm run build:models && jest --forceExit",
+    "test:git-stress": "GIT_STRESS=1 jest src/git.concurrency.test.ts",
     "types": "tsc --noEmit",
     "prepare": "husky install",
     "watch": "npm-watch",

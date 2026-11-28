@@ -204,69 +204,34 @@ export class Git {
     return summary
   }
 
-  async pull(skipRequest = false, skipMsg = false): Promise<any> {
+  /** Makes Root's checkout match the remote branch. Root never commits, so a hard reset loses nothing. */
+  async pull(): Promise<void> {
     // test root can't pull as it has no remote
     if (!this.url) return
-    debug('Pulling')
+    if (!this.isRootClone()) throw new Error('Only Root pulls; sessions rebase in pushWithRetry')
+    debug('Syncing with remote')
     try {
-      const summary = await this.git.pull(this.remote, this.branch, { '--rebase': 'true', '--depth': '5' })
-      const summJson = JSON.stringify(summary)
-      debug(`Pull summary: ${summJson}`)
+      await this.git.fetch(this.remote, this.branch)
+      await this.git.checkout(this.branch)
+      await this.git.reset(ResetMode.HARD, [this.remoteBranch])
+      await this.git.clean(CleanOptions.FORCE, ['-d'])
       this.commitSha = await this.getCommitSha()
-    } catch (e) {
-      const eMessage = getSanitizedErrorMessage(e)
-      debug('Could not pull from remote. Upstream commits? Marked db as corrupt.', eMessage)
-      this.corrupt = true
-      try {
-        // Remove local changes so that no conflict can happen
-        debug('Removing local changes.')
-        await this.git.reset(ResetMode.HARD)
-        if (this.isRootClone()) {
-          debug(`Go to ${this.branch} branch`)
-          await this.git.checkout(this.branch)
-          debug('Removing local changes.')
-          await this.git.reset(ResetMode.HARD)
-          debug('Cleaning local values and directories.')
-          await this.git.clean(CleanOptions.FORCE, ['-d'])
-          debug('Get the latest branch from:', this.remote)
-          await this.git.fetch(this.remote, this.branch)
-          debug('Reconciling divergent branches.')
-          await this.git.merge([`${this.remote}/${this.branch}`, '--strategy-option=theirs'])
-          debug('Trying to remove upstream commits: ', this.remote)
-          await this.git.push([this.remote, this.branch, '--force'])
-        } else {
-          // Worktree recovery: rebase session branch on top of remote; our changes win conflicts
-          debug('Get the latest branch from:', this.remote)
-          await this.git.fetch(this.remote, this.branch)
-          debug('Rebasing session branch on top of remote.')
-          await this.git.raw(['rebase', `${this.remote}/${this.branch}`, '--strategy-option=ours'])
-        }
-      } catch (error) {
-        const errorMessage = getSanitizedErrorMessage(error)
-        debug('Failed to remove upstream commits: ', errorMessage)
-        throw new GitPullError('Failed to remove upstream commits!')
-      }
-      debug('Removed upstream commits!')
       this.corrupt = false
+    } catch (e) {
+      this.corrupt = true
+      e.message = getSanitizedErrorMessage(e)
+      throw e
     }
   }
 
-  async push(): Promise<any> {
-    if (!this.url && this.isRootClone()) return
+  /**
+   * Pushes the session commit (HEAD) onto the remote branch. We push to the URL instead of `origin`,
+   * because pushing to `origin` also writes refs/remotes/origin/<branch>, a file all worktrees share.
+   */
+  async push(): Promise<void> {
+    if (!this.url) return
     debug('Pushing')
-
-    // For worktrees, push current branch (session branch) to main branch
-    // For main repo, push normally
-    if (!this.isRootClone()) {
-      const currentBranch = await this.git.revparse(['--abbrev-ref', 'HEAD'])
-      const summary = await this.git.push([this.remote, `${currentBranch}:${this.branch}`])
-      debug('Pushed session branch to main. Summary: ', summary)
-    } else {
-      // Original push logic for main repo
-      const summary = await this.git.push(this.remote, this.branch)
-      debug('Pushed. Summary: ', summary)
-    }
-    return
+    await this.git.push(this.urlAuth, `HEAD:refs/heads/${this.branch}`)
   }
 
   async testRemoteConnection(gitConfig: GitConfig): Promise<boolean> {
@@ -307,8 +272,8 @@ export class Git {
     const sessionId = basename(worktreePath)
     const sessionBranch = sessionId
 
-    // Create worktree with session branch
-    await this.git.raw(['worktree', 'add', '-b', sessionBranch, worktreePath, branch])
+    const startPoint = Git.latestSha ?? branch
+    await this.git.raw(['worktree', 'add', '-b', sessionBranch, worktreePath, startPoint])
     debug(`Worktree created successfully at: ${worktreePath} on branch: ${sessionBranch}`)
   }
 
@@ -332,38 +297,56 @@ export class Git {
         }
       }
     }
+    await this.deleteSessionBranch(basename(worktreePath))
+  }
+
+  /** The session branch is named after the worktree folder and can only be deleted once the worktree is gone. */
+  private async deleteSessionBranch(sessionBranch: string): Promise<void> {
+    try {
+      await this.git.raw(['branch', '-D', sessionBranch])
+    } catch (e) {
+      debug(`Could not delete session branch ${sessionBranch}: ${getSanitizedErrorMessage(e)}`)
+    }
   }
 
   async getCommitSha(): Promise<string> {
     return this.git.revparse('HEAD')
   }
 
+  /** Newest commit pushed from this process. Every worktree has it locally through Root's shared objects. */
+  static latestSha?: string
+
+  /** Puts the session commit on top of the remote branch and pushes it. See docs/adr/0003-git-concurrency.md. */
   async pushWithRetry(): Promise<void> {
-    try {
-      const retries = env.GIT_PUSH_RETRIES
-      for (let attempt = 1; attempt <= retries; attempt++) {
-        try {
-          // Do advanced pull every third attempt
-          if (attempt % 3 === 0) {
-            await this.pull(true, true)
-          } else {
-            await this.git.pull(this.remote, this.branch, { '--rebase': 'true', '--depth': '5' })
-          }
-          await this.push()
-          break
-        } catch (error) {
-          if (attempt === retries) throw error
-          debug(`Attempt ${attempt} of ${retries} failed. Retrying...`)
-          await new Promise((resolve) => setTimeout(resolve, 50))
-        }
+    if (!this.url) return
+    if (this.isRootClone()) throw new Error('Root never pushes; only sessions do')
+    let lastSeen: string | undefined
+    let fetches = 0
+    while (fetches < env.GIT_PUSH_RETRIES) {
+      const latest = Git.latestSha
+      const pushedHereSinceLastTry = latest !== undefined && latest !== lastSeen
+      lastSeen = latest
+      if (!pushedHereSinceLastTry) fetches++
+      try {
+        const base = pushedHereSinceLastTry ? latest : await this.fetchRemoteBranch()
+        await this.git.rebase([base])
+        await this.push()
+        Git.latestSha = (await this.getCommitSha()).trim()
+        return
+      } catch (e) {
+        await this.git.rebase(['--abort']).catch(() => undefined)
+        const commands = sanitizeGitPassword(JSON.stringify(e.task?.commands))
+        debug(`Push attempt failed (fetch ${fetches}): ${getSanitizedErrorMessage(e)} for command ${commands}`)
+        await new Promise((resolve) => setTimeout(resolve, 50))
       }
-    } catch (e) {
-      const sanitizedMessage = getSanitizedErrorMessage(e)
-      const sanitizedCommands = sanitizeGitPassword(JSON.stringify(e.task?.commands))
-      debug(`${sanitizedMessage} for command ${sanitizedCommands}`)
-      debug('Git save error')
-      throw new GitPullError()
     }
+    throw new GitPullError()
+  }
+
+  /** Fetches into this worktree's own FETCH_HEAD only, so no ref shared between worktrees is written. */
+  private async fetchRemoteBranch(): Promise<string> {
+    await this.git.raw(['fetch', '--refmap=', this.urlAuth, `refs/heads/${this.branch}`])
+    return 'FETCH_HEAD'
   }
 
   async save(editor: string): Promise<void> {
@@ -383,11 +366,7 @@ export async function getWorktreeRepo(
 
   await mainRepo.createWorktree(worktreePath, branch)
 
-  const worktreeRepo = new Git(worktreePath, mainRepo.url, mainRepo.user, mainRepo.email, mainRepo.urlAuth, branch)
-
-  await worktreeRepo.addConfig()
-
-  return worktreeRepo
+  return new Git(worktreePath, mainRepo.url, mainRepo.user, mainRepo.email, mainRepo.urlAuth, branch)
 }
 
 export default async function getRepo(

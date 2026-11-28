@@ -1,5 +1,6 @@
 import { ApiException, CoreV1Api, KubeConfig, V1Secret } from '@kubernetes/client-node'
 import Debug from 'debug'
+import { CleanOptions } from 'simple-git'
 
 import { getRegions, ObjectStorageKeyRegions, Region, ResourcePage } from '@linode/api-v4'
 import { existsSync, rmSync } from 'fs'
@@ -133,7 +134,7 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { getAIModels } from './ai/aiModelHandler'
 import { DatabaseCR } from './ai/DatabaseCR'
 import { getResourceFilePath } from './fileStore/file-map'
-import { getAuthenticatedUrl } from './git/connect'
+import getLatestRemoteCommitSha, { getAuthenticatedUrl } from './git/connect'
 import {
   checkPodExists,
   getCloudttyActiveTime,
@@ -272,6 +273,8 @@ export default class OtomiStack {
   git: Git
   fileStore: FileStore
   private cloudTty: CloudTty
+  private syncing?: Promise<void>
+  private syncAgain = false
 
   constructor(editor?: string, sessionId?: string) {
     this.editor = editor
@@ -414,14 +417,6 @@ export default class OtomiStack {
     } catch (error) {
       const errorMessage = getSanitizedErrorMessage(error)
       throw new Error(`Main repository does not have branch '${branch}'. Cannot create worktree. ${errorMessage}`)
-    }
-
-    // Pull latest changes so the worktree starts from up-to-date state
-    try {
-      debug(`Pulled latest changes before creating worktree for session ${this.sessionId}`)
-      await mainRepo.pull(true, true)
-    } catch (e) {
-      debug(`Warning: could not pull latest before creating worktree: ${getSanitizedErrorMessage(e)}`)
     }
 
     const worktreePath = this.getRepoPath()
@@ -2367,8 +2362,6 @@ export default class OtomiStack {
     try {
       // Commit and push Git changes
       await this.git.save(this.editor!)
-      // Pull the latest changes to ensure we have the most recent state
-      await rootStack.git.git.pull()
 
       for (const aplRecord of aplRecords) {
         rootStack.fileStore.set(aplRecord.filePath, aplRecord.content)
@@ -2390,8 +2383,6 @@ export default class OtomiStack {
     try {
       // Commit and push Git changes
       await this.git.save(this.editor!)
-      // Pull the latest changes to ensure we have the most recent state
-      await rootStack.git.git.pull()
 
       rootStack.fileStore.set(aplRecord.filePath, aplRecord.content)
 
@@ -2411,8 +2402,6 @@ export default class OtomiStack {
     try {
       // Commit and push Git changes
       await this.git.save(this.editor!)
-      // Pull the latest changes to ensure we have the most recent state
-      await rootStack.git.git.pull()
 
       for (const filePath of filePaths) {
         rootStack.fileStore.delete(filePath)
@@ -2902,6 +2891,36 @@ export default class OtomiStack {
     debug('Loading values')
     await this.initRepo()
     this.isLoaded = true
+  }
+
+  /** Brings Root's checkout and FileStore up to date. Runs one sync at a time; callers during a sync share it. */
+  async requestSync(): Promise<void> {
+    if (!this.git.isRootClone()) throw new Error('Only Root syncs with the remote')
+    if (this.syncing) {
+      this.syncAgain = true
+      return this.syncing
+    }
+    this.syncing = (async () => {
+      try {
+        do {
+          this.syncAgain = false
+          await this.syncWithGit()
+        } while (this.syncAgain)
+      } finally {
+        this.syncing = undefined
+      }
+    })()
+    return this.syncing
+  }
+
+  private async syncWithGit(): Promise<void> {
+    const latest = await getLatestRemoteCommitSha(this.git)
+    if (!latest || latest === this.git.commitSha) return
+    debug('Local values differentiate from Git repository, retrieving latest values')
+    // Remove all .dec files
+    await this.git.git.clean([CleanOptions.FORCE, CleanOptions.IGNORED_ONLY, CleanOptions.RECURSIVE])
+    await this.git.pull()
+    await this.loadValues()
   }
 
   private async unlockApi() {

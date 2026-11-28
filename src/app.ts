@@ -7,7 +7,6 @@ import { Server } from 'http'
 import { createLightship } from 'lightship'
 import logger from 'morgan'
 import path from 'path'
-import { CleanOptions } from 'simple-git'
 import { default as Authz } from 'src/authz'
 import { waitForJwksReady } from 'src/jwt-verification'
 import {
@@ -23,18 +22,16 @@ import { apiRateLimiter, authRateLimiter } from 'src/middleware/rate-limit'
 import { setMockIdx } from 'src/mocks'
 import { AplResponseObject, OpenAPIDoc, Schema, SealedSecretManifestResponse } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
-import { getValuesSchema } from 'src/utils'
+import { getSanitizedErrorMessage, getValuesSchema } from 'src/utils'
 import {
   API_VALIDATE_RESPONSE,
   CATALOG_CACHE_REFRESH_INTERVAL_MS,
   CHECK_LATEST_COMMIT_INTERVAL,
   cleanEnv,
   EXPRESS_PAYLOAD_LIMIT,
-  GIT_PUSH_RETRIES,
   TRUST_PROXY,
 } from 'src/validators'
 import swaggerUi from 'swagger-ui-express'
-import getLatestRemoteCommitSha from './git/connect'
 import { getBuildStatus, getSealedSecretStatus, getServiceStatus, getWorkloadStatus } from './k8s-operations'
 
 const env = cleanEnv({
@@ -42,7 +39,6 @@ const env = cleanEnv({
   CATALOG_CACHE_REFRESH_INTERVAL_MS,
   CHECK_LATEST_COMMIT_INTERVAL,
   EXPRESS_PAYLOAD_LIMIT,
-  GIT_PUSH_RETRIES,
   TRUST_PROXY,
 })
 
@@ -59,27 +55,10 @@ const checkAgainstGit = async () => {
   const otomiStack = await getSessionStack()
   await otomiStack.updateGitConfig()
   await otomiStack.refreshGitClient()
-  const latestOtomiVersion = await getLatestRemoteCommitSha(otomiStack.git)
-  // check the local version against the latest online version
-  // if the latest online is newer it will be pulled locally
-  if (latestOtomiVersion && latestOtomiVersion !== otomiStack.git.commitSha) {
-    debug('Local values differentiate from Git repository, retrieving latest values')
-    // Remove all .dec files
-    await otomiStack.git.git.clean([CleanOptions.FORCE, CleanOptions.IGNORED_ONLY, CleanOptions.RECURSIVE])
-    const retries = env.GIT_PUSH_RETRIES
-    for (let attempt = 1; attempt <= retries; attempt++) {
-      try {
-        await otomiStack.git.pull(false, true)
-        break
-      } catch (error) {
-        if (attempt === retries) throw error
-        debug(`Attempt ${attempt} of ${retries} failed. Retrying...`)
-        await new Promise((resolve) => setTimeout(resolve, 50))
-      }
-    }
-    // inflate new db
-    await otomiStack.loadValues()
-  }
+  // runs from setInterval: a rejection here would stop the process
+  await otomiStack
+    .requestSync()
+    .catch((e) => debug(`Root sync failed, retried on next check: ${getSanitizedErrorMessage(e)}`))
 }
 
 const resourceStatus = async (errorSet) => {
