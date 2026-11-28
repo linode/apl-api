@@ -419,7 +419,6 @@ export default class OtomiStack {
       throw new Error(`Main repository does not have branch '${branch}'. Cannot create worktree. ${errorMessage}`)
     }
 
-    // Starts at the newest local commit (Git.latestSha); the save rebases onto the latest remote before pushing
     const worktreePath = this.getRepoPath()
     this.git = await getWorktreeRepo(mainRepo, worktreePath, mainRepo.branch)
     this.fileStore = new FileStore()
@@ -2894,12 +2893,9 @@ export default class OtomiStack {
     this.isLoaded = true
   }
 
-  /**
-   * Root only: brings Root's checkout and FileStore up to date with the remote.
-   * Single-flight: Root's checkout has exactly one writer. A request during a running sync schedules one more run
-   * and shares its promise, so callers never run git on Root concurrently.
-   */
+  /** Brings Root's checkout and FileStore up to date. Runs one sync at a time; callers during a sync share it. */
   async requestSync(): Promise<void> {
+    if (!this.git.isRootClone()) throw new Error('Only Root syncs with the remote')
     if (this.syncing) {
       this.syncAgain = true
       return this.syncing

@@ -204,17 +204,13 @@ export class Git {
     return summary
   }
 
-  /**
-   * Root only: make the checkout match the remote branch. Root never commits, so there is nothing to merge
-   * or push back; a hard reset always succeeds regardless of local state or shallow history.
-   * Must not run concurrently on the same checkout; OtomiStack.requestSync() guarantees that.
-   */
+  /** Makes Root's checkout match the remote branch. Root never commits, so a hard reset loses nothing. */
   async pull(): Promise<void> {
     // test root can't pull as it has no remote
     if (!this.url) return
+    if (!this.isRootClone()) throw new Error('Only Root pulls; sessions rebase in pushWithRetry')
     debug('Syncing with remote')
     try {
-      // no --depth: it rewrites .git/shallow, which session git commands in all worktrees read at the same time
       await this.git.fetch(this.remote, this.branch)
       await this.git.checkout(this.branch)
       await this.git.reset(ResetMode.HARD, [this.remoteBranch])
@@ -228,10 +224,7 @@ export class Git {
     }
   }
 
-  /**
-   * Pushes the session branch to the remote branch. Pushes by URL instead of remote name, so git does not
-   * update the remote-tracking ref that all worktrees share.
-   */
+  /** Pushes by URL, so git leaves the remote-tracking ref that all worktrees share alone. */
   async push(): Promise<void> {
     if (!this.url) return
     debug('Pushing')
@@ -276,7 +269,6 @@ export class Git {
     const sessionId = basename(worktreePath)
     const sessionBranch = sessionId
 
-    // Start from the newest commit this process knows (shared objects, so no fetch); Root's branch until there is one
     const startPoint = Git.latestSha ?? branch
     await this.git.raw(['worktree', 'add', '-b', sessionBranch, worktreePath, startPoint])
     debug(`Worktree created successfully at: ${worktreePath} on branch: ${sessionBranch}`)
@@ -308,42 +300,40 @@ export class Git {
     return this.git.revparse('HEAD')
   }
 
-  /** Last commit a session in this process pushed. All worktrees share Root's objects, so it is available locally. */
+  /** Newest commit pushed from this process. Every worktree has it locally through Root's shared objects. */
   static latestSha?: string
 
-  /**
-   * Session only: put the session commit on top of the latest remote branch and push it. Safe to run in many
-   * worktrees at once: the fetch only fills this worktree's own FETCH_HEAD (empty --refmap), and the push goes by URL.
-   * If another session in this process pushed since our last attempt, we rebase onto its commit locally
-   * instead of fetching; otherwise someone outside pushed and we fetch. Only fetches count as retries:
-   * a local retry means another push succeeded, so they stop once every session here has pushed.
-   */
+  /** Puts the session commit on top of the remote branch and pushes it. See docs/adr/0003-git-concurrency.md. */
   async pushWithRetry(): Promise<void> {
     if (!this.url) return
-    const retries = env.GIT_PUSH_RETRIES
-    let seen: string | undefined
-    let attempt = 0
-    while (attempt < retries) {
-      const pushed = Git.latestSha
-      const local = pushed !== undefined && pushed !== seen
-      seen = pushed
-      if (!local) attempt++
+    if (this.isRootClone()) throw new Error('Root never pushes; only sessions do')
+    let lastSeen: string | undefined
+    let fetches = 0
+    while (fetches < env.GIT_PUSH_RETRIES) {
+      const latest = Git.latestSha
+      const pushedHereSinceLastTry = latest !== undefined && latest !== lastSeen
+      lastSeen = latest
+      if (!pushedHereSinceLastTry) fetches++
       try {
-        if (!local) await this.git.raw(['fetch', '--refmap=', this.urlAuth, `refs/heads/${this.branch}`])
-        await this.git.rebase([local ? pushed : 'FETCH_HEAD'])
+        const base = pushedHereSinceLastTry ? latest : await this.fetchRemoteBranch()
+        await this.git.rebase([base])
         await this.push()
         Git.latestSha = (await this.getCommitSha()).trim()
         return
       } catch (e) {
         await this.git.rebase(['--abort']).catch(() => undefined)
-        const sanitizedCommands = sanitizeGitPassword(JSON.stringify(e.task?.commands))
-        debug(
-          `Attempt ${attempt} of ${retries} (${local ? 'local' : 'fetch'}) failed: ${getSanitizedErrorMessage(e)} for command ${sanitizedCommands}`,
-        )
+        const commands = sanitizeGitPassword(JSON.stringify(e.task?.commands))
+        debug(`Push attempt failed (fetch ${fetches}): ${getSanitizedErrorMessage(e)} for command ${commands}`)
         await new Promise((resolve) => setTimeout(resolve, 50))
       }
     }
     throw new GitPullError()
+  }
+
+  /** Fetches into this worktree's own FETCH_HEAD only, so no ref shared between worktrees is written. */
+  private async fetchRemoteBranch(): Promise<string> {
+    await this.git.raw(['fetch', '--refmap=', this.urlAuth, `refs/heads/${this.branch}`])
+    return 'FETCH_HEAD'
   }
 
   async save(editor: string): Promise<void> {
@@ -363,7 +353,6 @@ export async function getWorktreeRepo(
 
   await mainRepo.createWorktree(worktreePath, branch)
 
-  // no addConfig(): worktrees share Root's .git/config, and concurrent writes to it fail on its lock
   return new Git(worktreePath, mainRepo.url, mainRepo.user, mainRepo.email, mainRepo.urlAuth, branch)
 }
 

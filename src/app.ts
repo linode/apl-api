@@ -55,7 +55,7 @@ const checkAgainstGit = async () => {
   const otomiStack = await getSessionStack()
   await otomiStack.updateGitConfig()
   await otomiStack.refreshGitClient()
-  // a failed sync must not reject: this runs from setInterval, where an unhandled rejection stops the process
+  // runs from setInterval: a rejection here would stop the process
   await otomiStack
     .requestSync()
     .catch((e) => debug(`Root sync failed, retried on next check: ${getSanitizedErrorMessage(e)}`))
