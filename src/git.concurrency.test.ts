@@ -1,8 +1,8 @@
 /**
  * Many concurrent API writes against a real git remote, using the real Git class and OtomiStack.requestSync.
  *
- * Per request it mirrors the publish flow: worktree at Root's commit, write one file, save (commit + push),
- * request a Root sync, remove the worktree. Meanwhile a periodic Root sync (like checkAgainstGit) and an external
+ * Per request it mirrors the publish flow: worktree at the newest local commit, write one file, save (commit + push),
+ * remove the worktree. Meanwhile a periodic Root sync (like checkAgainstGit) and an external
  * writer (another pod / the operator) run. Takes ~40s, so it only runs via `npm run test:git-stress`.
  * Tune with GIT_STRESS_PARALLEL and GIT_STRESS_ROUNDS.
  */
@@ -79,7 +79,6 @@ describeStress('git under concurrent writes', () => {
   it('handles concurrent requests without git errors or lost commits', async () => {
     const userVisible: Failure[] = [] // thrown out of the request
     const logged: Failure[] = [] // swallowed, only debug-logged
-    const syncs: Promise<void>[] = []
     const expectedFiles: string[] = []
     let running = true
 
@@ -88,16 +87,17 @@ describeStress('git under concurrent writes', () => {
         logged.push({ where, message: firstLine(e) })
       })
 
-    // One API write request, as doDeployment does it
-    const request = async (id: string) => {
+    // One API write request, as doDeployment does it. Every round edits the same file per team again,
+    // so a session that starts from a stale commit would conflict on the rebase.
+    const request = async (round: number, team: string) => {
+      const id = `r${round}-${team}`
       let session: Git | undefined
       try {
         session = await gitModule.getWorktreeRepo(root, join(base, 'sessions', id), branch)
-        const file = `env/teams/${id}/netpols/np.yaml`
-        await session.writeFile(file, { kind: 'AplTeamNetworkControl', metadata: { name: id } })
+        const file = `env/teams/${team}/netpols/np.yaml`
+        await session.writeFile(file, { kind: 'AplTeamNetworkControl', metadata: { name: team }, spec: { round } })
         await session.save('editor@test')
         expectedFiles.push(file)
-        syncs.push(requestSync('publish sync')) // not awaited, like doDeployment
       } catch (e) {
         userVisible.push({ where: session ? 'save/publish' : 'worktree add', message: firstLine(e) })
       } finally {
@@ -141,11 +141,10 @@ describeStress('git under concurrent writes', () => {
 
     const background = [periodicSync(), externalWriter()]
     for (let round = 0; round < ROUNDS; round++) {
-      await Promise.all(Array.from({ length: PARALLEL }, (_, i) => request(`r${round}-t${i}`)))
+      await Promise.all(Array.from({ length: PARALLEL }, (_, i) => request(round, `t${i}`)))
     }
     running = false
     await Promise.all(background)
-    await Promise.all(syncs)
 
     const remoteFiles = (await simpleGit(remotePath).raw(['ls-tree', '-r', '--name-only', branch])).split('\n')
     const lost = expectedFiles.filter((f) => !remoteFiles.includes(f))

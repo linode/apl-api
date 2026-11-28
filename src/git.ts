@@ -214,7 +214,8 @@ export class Git {
     if (!this.url) return
     debug('Syncing with remote')
     try {
-      await this.git.fetch(this.remote, this.branch, { '--depth': '5' })
+      // no --depth: it rewrites .git/shallow, which session git commands in all worktrees read at the same time
+      await this.git.fetch(this.remote, this.branch)
       await this.git.checkout(this.branch)
       await this.git.reset(ResetMode.HARD, [this.remoteBranch])
       await this.git.clean(CleanOptions.FORCE, ['-d'])
@@ -275,8 +276,9 @@ export class Git {
     const sessionId = basename(worktreePath)
     const sessionBranch = sessionId
 
-    // Create worktree with session branch
-    await this.git.raw(['worktree', 'add', '-b', sessionBranch, worktreePath, branch])
+    // Start from the newest commit this process knows (shared objects, so no fetch); Root's branch until there is one
+    const startPoint = Git.latestSha ?? branch
+    await this.git.raw(['worktree', 'add', '-b', sessionBranch, worktreePath, startPoint])
     debug(`Worktree created successfully at: ${worktreePath} on branch: ${sessionBranch}`)
   }
 
@@ -313,16 +315,19 @@ export class Git {
    * Session only: put the session commit on top of the latest remote branch and push it. Safe to run in many
    * worktrees at once: the fetch only fills this worktree's own FETCH_HEAD (empty --refmap), and the push goes by URL.
    * If another session in this process pushed since our last attempt, we rebase onto its commit locally
-   * instead of fetching; otherwise someone outside pushed and we fetch.
+   * instead of fetching; otherwise someone outside pushed and we fetch. Only fetches count as retries:
+   * a local retry means another push succeeded, so they stop once every session here has pushed.
    */
   async pushWithRetry(): Promise<void> {
     if (!this.url) return
     const retries = env.GIT_PUSH_RETRIES
     let seen: string | undefined
-    for (let attempt = 1; attempt <= retries; attempt++) {
+    let attempt = 0
+    while (attempt < retries) {
       const pushed = Git.latestSha
       const local = pushed !== undefined && pushed !== seen
       seen = pushed
+      if (!local) attempt++
       try {
         if (!local) await this.git.raw(['fetch', '--refmap=', this.urlAuth, `refs/heads/${this.branch}`])
         await this.git.rebase([local ? pushed : 'FETCH_HEAD'])
@@ -335,10 +340,10 @@ export class Git {
         debug(
           `Attempt ${attempt} of ${retries} (${local ? 'local' : 'fetch'}) failed: ${getSanitizedErrorMessage(e)} for command ${sanitizedCommands}`,
         )
-        if (attempt === retries) throw new GitPullError()
         await new Promise((resolve) => setTimeout(resolve, 50))
       }
     }
+    throw new GitPullError()
   }
 
   async save(editor: string): Promise<void> {

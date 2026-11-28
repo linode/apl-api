@@ -419,7 +419,7 @@ export default class OtomiStack {
       throw new Error(`Main repository does not have branch '${branch}'. Cannot create worktree. ${errorMessage}`)
     }
 
-    // Starts at Root's commit; the save rebases onto the latest remote before pushing
+    // Starts at the newest local commit (Git.latestSha); the save rebases onto the latest remote before pushing
     const worktreePath = this.getRepoPath()
     this.git = await getWorktreeRepo(mainRepo, worktreePath, mainRepo.branch)
     this.fileStore = new FileStore()
@@ -2363,7 +2363,6 @@ export default class OtomiStack {
     try {
       // Commit and push Git changes
       await this.git.save(this.editor!)
-      this.syncRoot(rootStack)
 
       for (const aplRecord of aplRecords) {
         rootStack.fileStore.set(aplRecord.filePath, aplRecord.content)
@@ -2385,7 +2384,6 @@ export default class OtomiStack {
     try {
       // Commit and push Git changes
       await this.git.save(this.editor!)
-      this.syncRoot(rootStack)
 
       rootStack.fileStore.set(aplRecord.filePath, aplRecord.content)
 
@@ -2405,7 +2403,6 @@ export default class OtomiStack {
     try {
       // Commit and push Git changes
       await this.git.save(this.editor!)
-      this.syncRoot(rootStack)
 
       for (const filePath of filePaths) {
         rootStack.fileStore.delete(filePath)
@@ -2928,13 +2925,6 @@ export default class OtomiStack {
     await this.git.git.clean([CleanOptions.FORCE, CleanOptions.IGNORED_ONLY, CleanOptions.RECURSIVE])
     await this.git.pull()
     await this.loadValues()
-  }
-
-  /** Called after a successful push: Root catches up in the background; a failed sync never fails the request. */
-  private syncRoot(rootStack: OtomiStack): void {
-    rootStack
-      .requestSync()
-      .catch((e) => debug(`Root sync failed, retried on next sync: ${getSanitizedErrorMessage(e)}`))
   }
 
   private async unlockApi() {

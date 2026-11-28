@@ -22,7 +22,7 @@ import { apiRateLimiter, authRateLimiter } from 'src/middleware/rate-limit'
 import { setMockIdx } from 'src/mocks'
 import { AplResponseObject, OpenAPIDoc, Schema, SealedSecretManifestResponse } from 'src/otomi-models'
 import { default as OtomiStack } from 'src/otomi-stack'
-import { getValuesSchema } from 'src/utils'
+import { getSanitizedErrorMessage, getValuesSchema } from 'src/utils'
 import {
   API_VALIDATE_RESPONSE,
   CATALOG_CACHE_REFRESH_INTERVAL_MS,
@@ -55,7 +55,10 @@ const checkAgainstGit = async () => {
   const otomiStack = await getSessionStack()
   await otomiStack.updateGitConfig()
   await otomiStack.refreshGitClient()
-  await otomiStack.requestSync()
+  // a failed sync must not reject: this runs from setInterval, where an unhandled rejection stops the process
+  await otomiStack
+    .requestSync()
+    .catch((e) => debug(`Root sync failed, retried on next check: ${getSanitizedErrorMessage(e)}`))
 }
 
 const resourceStatus = async (errorSet) => {
