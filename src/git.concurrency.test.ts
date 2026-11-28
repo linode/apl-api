@@ -150,6 +150,7 @@ describeStress('git under concurrent writes', () => {
     const lost = expectedFiles.filter((f) => !remoteFiles.includes(f))
 
     await rootStack.requestSync()
+    const leftoverBranches = (await root.git.branchLocal()).all.filter((b) => b !== branch)
     const remoteHead = (await simpleGit(remotePath).revparse(branch)).trim()
     const rootHead = (await root.git.revparse('HEAD')).trim()
 
@@ -162,6 +163,7 @@ describeStress('git under concurrent writes', () => {
           logged: summary(logged),
           lostCommits: lost,
           rootInSync: rootHead === remoteHead,
+          leftoverBranches: leftoverBranches.length,
         },
         null,
         2,
@@ -172,5 +174,6 @@ describeStress('git under concurrent writes', () => {
     expect(logged).toEqual([])
     expect(lost).toEqual([])
     expect(rootHead).toBe(remoteHead)
+    expect(leftoverBranches).toEqual([])
   })
 })

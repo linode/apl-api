@@ -39,6 +39,54 @@ We use the local git storage that all worktrees already share, instead of the ne
 3. **`requestSync()` runs one sync at a time.** The periodic check is Root's only git writer. Callers during a running sync share it, so Root's checkout never sees two git commands at once.
 4. **Sessions don't write shared git state.** They fetch into their own `FETCH_HEAD`, push by URL, and don't write `.git/config`. That removed the `cannot lock ref` and `could not lock config file` errors.
 
+### A write request
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Session (worktree)
+    participant G as Shared .git
+    participant R as Remote (git-server)
+    participant F as Root FileStore
+
+    C->>S: POST / PUT / DELETE
+    S->>G: worktree add, starting from Git.latestSha<br/>(Root's branch if not set yet)
+    S->>S: write files, commit
+    loop until the push is accepted
+        alt a session in this pod pushed since the last try
+            S->>G: rebase onto Git.latestSha (local, no network)
+        else
+            S->>R: fetch into own FETCH_HEAD
+            S->>S: rebase onto FETCH_HEAD
+        end
+        S->>R: push HEAD to the remote branch (by URL)
+        R-->>S: accepted, or rejected because another push won
+    end
+    S->>S: Git.latestSha = pushed commit
+    S->>F: update FileStore in memory
+    S->>G: worktree remove
+    S-->>C: 200
+```
+
+### Root's periodic sync
+
+```mermaid
+sequenceDiagram
+    participant T as checkAgainstGit (interval)
+    participant O as Root (requestSync)
+    participant R as Remote (git-server)
+
+    T->>O: requestSync()
+    Note over O: one sync at a time,<br/>callers during a sync share it
+    O->>R: ls-remote: latest commit
+    alt remote has a newer commit
+        O->>R: fetch
+        O->>O: reset --hard, clean
+        O->>O: loadValues() into the FileStore
+    end
+    Note over T,O: a failed sync is logged and retried on the next interval
+```
+
 The table lists every change.
 
 | Area               | Now                                                                                                                                                    | Replaces                                                             | Why                                                                                                                                          |
@@ -66,12 +114,14 @@ Usually the winning push comes from another session in the same pod, so its comm
 
 A local retry only happens after another session's push succeeded, so local retries always end. That's why only fetches count toward `GIT_PUSH_RETRIES`.
 
+This approach is based on [Scaling Git at OpenAI](https://openai.com/index/scaling-git-at-openai/). OpenAI found that concurrent pushes only conflict on the branch ref. Their solution was to make retrying after a rejected push as cheap as possible.
+
 ## Considered Options
 
 - **A lock around all git commands.** The values layout keeps concurrent writes on separate files, so a lock would slow down the whole API for no gain.
 - **A push queue per pod.** Running only the rebase and push one at a time would also remove the rejected pushes. We left it out because `latestSha` already removes the expensive fetches without a lock. It's the next step if rejected pushes turn out to load git-server.
 - **Group commit.** Sending all waiting commits in one push gives the most throughput, but requests would then depend on each other's results. Worth considering after a push queue.
-- **A custom git backend**, like OpenAI's Pando. That's a server-side change and out of scope for apl-api.
+- **A custom git backend**, like OpenAI's Pando from the same article. That's a server-side change and out of scope for apl-api.
 
 ## Consequences
 
@@ -79,6 +129,6 @@ A local retry only happens after another session's push succeeded, so local retr
 - There are more push attempts than before. A rejected push is cheap for git-server, though not free.
 - `latestSha` is kept in memory. After a restart the first session starts from Root's branch and fetches before pushing.
 - Root's checkout can run behind the remote until the next periodic sync. Reads are not affected, because they come from the FileStore.
-- Fetch and push now pass the authenticated URL as an argument, which makes the git password visible in `ps` inside the pod. A credential helper would fix this.
-- Session branches are never deleted, as before. This needs a separate fix.
+- Fetch and push pass the authenticated URL as an argument, so the git password shows up in `ps` inside the pod. It already did through the `origin` URL. We accept this, because anyone who can run `ps` in the pod can also read its environment.
+- The session branch is now deleted together with its worktree. Branches left behind by a crash stay until someone cleans them up.
 - Multiple API replicas still work correctly, but the `latestSha` speedup only helps within one pod. Each pod's FileStore still only sees other pods' writes after its periodic sync.

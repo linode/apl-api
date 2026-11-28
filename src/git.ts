@@ -224,7 +224,10 @@ export class Git {
     }
   }
 
-  /** Pushes by URL, so git leaves the remote-tracking ref that all worktrees share alone. */
+  /**
+   * Pushes the session commit (HEAD) onto the remote branch. We push to the URL instead of `origin`,
+   * because pushing to `origin` also writes refs/remotes/origin/<branch>, a file all worktrees share.
+   */
   async push(): Promise<void> {
     if (!this.url) return
     debug('Pushing')
@@ -293,6 +296,16 @@ export class Git {
           debug(`Manually removed worktree directory: ${worktreePath}`)
         }
       }
+    }
+    await this.deleteSessionBranch(basename(worktreePath))
+  }
+
+  /** The session branch is named after the worktree folder and can only be deleted once the worktree is gone. */
+  private async deleteSessionBranch(sessionBranch: string): Promise<void> {
+    try {
+      await this.git.raw(['branch', '-D', sessionBranch])
+    } catch (e) {
+      debug(`Could not delete session branch ${sessionBranch}: ${getSanitizedErrorMessage(e)}`)
     }
   }
 
